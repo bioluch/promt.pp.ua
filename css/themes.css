@@ -1,0 +1,733 @@
+/* ================================================================
+   JS PROMPT — css/themes.css
+   Embossed Metal Interface — 4 colour palettes
+   Single button cycle: Blue Navy → Night → Green → Day → Blue Navy
+   Adapted from Qwen_html_20260630 reference design.
+
+   Emboss shadow convention:
+     Raised:  box-shadow:  3px  3px  8px var(--shadow-dark),
+                          -2px -2px  6px var(--shadow-light);
+     Inset:   box-shadow: inset  2px  2px  5px var(--shadow-dark),
+                          inset -2px -2px  5px var(--shadow-light);
+================================================================ */
+
+/* ══════════════════════════════════════════════════════════════
+   BLUE NAVY — default (no class needed)
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-primary: #0b1a2e;
+  --bg-card: #112240;
+  --bg-0: #0b1a2e;
+  --bg-1: #112240;
+  --bg-2: #1a3356;
+  --bg-3: #234170;
+  --bg-4: #2e5a8a;
+
+  --accent: #4fc3f7;
+  --accent-2: #81d4fa;
+  --accent-3: #29b6f6;
+
+  --text-primary: #e3f2fd;
+  --text-secondary: #90a4ae;
+  --text: #e3f2fd;
+  --text-dim: #90a4ae;
+
+  --metal-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+
+  --shadow-light: rgba(100, 180, 255, 0.10);
+  --shadow-dark: rgba(0, 8, 24, 0.65);
+
+  --border-color: #1e4976;
+  --border: rgba(79, 195, 247, 0.20);
+
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+  --error: #ff6b6b;
+  --warn: #ffb74d;
+  --ok: #66bb6a;
+
+  --scrim-heavy: rgba(6, 17, 31, 0.85);
+  --border-default: rgba(79, 195, 247, 0.25);
+  --accent-500: #4fc3f7;
+  --success-400: #66bb6a;
+  --radius-full: 9999px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --font-play: 'Play', system-ui, sans-serif;
+  --font-brand: 'Play', system-ui, sans-serif;
+  --font-mono: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
+  --text-sm: 14px;
+  --weight-bold: 600;
+  --tracking-wide: 0.04em;
+
+  --text-shadow-emboss: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --text-shadow-emboss-light: 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NIGHT — dark grey
+   ══════════════════════════════════════════════════════════════ */
+body.theme-night {
+  --bg-primary: #1a1a1e;
+  --bg-card: #28282e;
+  --bg-0: #1a1a1e;
+  --bg-1: #28282e;
+  --bg-2: #36363e;
+  --bg-3: #46464e;
+  --bg-4: #58585e;
+
+  --text-primary: #f0f0f0;
+  --text-secondary: #b8b8be;
+  --text: #f0f0f0;
+  --text-dim: #8e8e96;
+
+  --metal-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.015) 40%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+
+  --shadow-light: rgba(255, 255, 255, 0.06);
+  --shadow-dark: rgba(0, 0, 0, 0.55);
+
+  --border-color: #3a3a42;
+  --border: rgba(255, 255, 255, 0.10);
+
+  --accent: #90a4ae;
+  --accent-2: #b0bec5;
+  --accent-3: #78909c;
+
+  --scrim-heavy: rgba(17, 17, 20, 0.90);
+  --border-default: rgba(255, 255, 255, 0.13);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  --text-shadow-emboss: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --text-shadow-emboss-light: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GREEN — Emerald dark
+   ══════════════════════════════════════════════════════════════ */
+body.theme-green {
+  --bg-primary: #0c2018;
+  --bg-card: #14382a;
+  --bg-0: #0c2018;
+  --bg-1: #14382a;
+  --bg-2: #1e5a3d;
+  --bg-3: #267050;
+  --bg-4: #2e8860;
+
+  --text-primary: #e8f5e9;
+  --text-secondary: #a5d6a7;
+  --text: #e8f5e9;
+  --text-dim: #81c784;
+
+  --metal-gradient: linear-gradient(
+    145deg,
+    rgba(180, 255, 200, 0.06) 0%,
+    rgba(180, 255, 200, 0.02) 40%,
+    rgba(0, 20, 10, 0.08) 100%
+  );
+
+  --shadow-light: rgba(100, 220, 160, 0.10);
+  --shadow-dark: rgba(0, 18, 8, 0.65);
+
+  --border-color: #1e5a3d;
+  --border: rgba(102, 187, 106, 0.22);
+
+  --accent: #66bb6a;
+  --accent-2: #a5d6a7;
+  --accent-3: #4caf50;
+
+  --scrim-heavy: rgba(10, 31, 20, 0.90);
+  --border-default: rgba(102, 187, 106, 0.25);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.48);
+
+  --text-shadow-emboss: 0 1px 2px rgba(0, 16, 8, 0.6);
+  --text-shadow-emboss-light: 0 1px 0 rgba(180, 255, 200, 0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DAY — light / white
+   ══════════════════════════════════════════════════════════════ */
+body.theme-day {
+  --bg-primary: #e8eaed;
+  --bg-card: #f4f5f7;
+  --bg-0: #e8eaed;
+  --bg-1: #f4f5f7;
+  --bg-2: #dcdee2;
+  --bg-3: #cfd2d8;
+  --bg-4: #b8bcc4;
+
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a5e;
+  --text: #1a1a2e;
+  --text-dim: #6a6a7e;
+
+  --metal-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.4) 40%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+
+  --shadow-light: rgba(255, 255, 255, 0.85);
+  --shadow-dark: rgba(0, 0, 0, 0.18);
+
+  --border-color: #d0d3d9;
+  --border: rgba(0, 0, 0, 0.10);
+
+  --accent: #3a7bd5;
+  --accent-2: #1976d2;
+  --accent-3: #0d47a1;
+
+  --scrim-heavy: rgba(232, 234, 237, 0.92);
+  --border-default: rgba(0, 0, 0, 0.13);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+
+  --text-shadow-emboss: 0 1px 0 rgba(255, 255, 255, 0.8);
+  --text-shadow-emboss-light: 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL TRANSITIONS
+   ══════════════════════════════════════════════════════════════ */
+body {
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+header,
+footer,
+#appFooter,
+.tabs,
+.tab,
+.output-panel,
+.source-panel,
+.modal-box,
+.card,
+.drop-zone,
+textarea,
+input,
+select,
+button,
+.stat,
+.file-item,
+.output-box,
+.api-key-banner,
+.error-item,
+.engine-tabs,
+.output-view-tabs,
+.lang-switcher {
+  transition:
+    background 0.4s ease,
+    color 0.4s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EMBOSSED METAL — surface styles
+   ══════════════════════════════════════════════════════════════ */
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Body gradient overlay: visible in blue & green, flat in night & day */
+body::before {
+  transition: opacity 0.4s ease;
+}
+body.theme-day::before,
+body.theme-night::before {
+  opacity: 0;
+}
+
+/* ── HEADER — embossed raised metal plate ── */
+header {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+}
+
+/* Blue navy header: add backdrop blur */
+body:not(.theme-day):not(.theme-night):not(.theme-green) header {
+  background: rgba(17, 34, 64, 0.88);
+  background-image: var(--metal-gradient);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── LOGO ── */
+.logo-name {
+  text-shadow: var(--text-shadow-emboss);
+}
+
+/* ── TABS container ── */
+.tabs {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+/* Individual tab */
+.tab {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+  text-shadow: var(--text-shadow-emboss);
+}
+.tab:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow:
+    2px 2px 5px var(--shadow-dark),
+    -1px -1px 3px var(--shadow-light);
+}
+.tab.active {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  color: var(--text-primary);
+  border-color: var(--accent);
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+  text-shadow: var(--text-shadow-emboss);
+}
+body:not(.theme-day):not(.theme-night) .tab.active {
+  color: var(--accent-2);
+}
+
+/* ── CARDS / PANELS — raised metal plate ── */
+.card {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    4px 4px 12px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light);
+}
+
+.output-panel,
+.source-panel {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    4px 4px 10px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light);
+}
+
+/* ── TEXTAREA / INPUT / SELECT — inset emboss ── */
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+textarea:focus,
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light),
+    0 0 0 3px rgba(79, 195, 247, 0.12);
+}
+
+/* Day mode: dark text in fields */
+body.theme-day textarea,
+body.theme-day input,
+body.theme-day select {
+  color: #1a1a2e;
+}
+
+/* ── OUTPUT BOX — inset ── */
+.output-box {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  box-shadow:
+    inset 3px 3px 8px var(--shadow-dark),
+    inset -2px -2px 6px var(--shadow-light);
+}
+
+/* ── DROP ZONE — inset ── */
+.drop-zone {
+  background: var(--bg-primary);
+  border: 2px dashed var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+.drop-zone:hover,
+.drop-zone.drag {
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+/* ── BUTTONS (generic raised metal) ── */
+.btn {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+  text-shadow: var(--text-shadow-emboss);
+}
+.btn:hover {
+  box-shadow:
+    4px 4px 12px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light);
+  transform: translateY(-1px);
+}
+.btn:active {
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+  transform: translateY(0);
+}
+
+/* Primary button — accent metal */
+.btn-primary {
+  background: linear-gradient(145deg, var(--accent-3), var(--accent));
+  color: var(--bg-0);
+  border-color: var(--accent);
+  box-shadow:
+    3px 3px 10px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.btn-primary:hover {
+  box-shadow:
+    4px 4px 14px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.btn-primary:active {
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.3),
+    inset -1px -1px 4px rgba(255, 255, 255, 0.1);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  color: var(--text);
+  border: 1px solid var(--border-color);
+}
+
+/* Ghost button — flat with border */
+.btn-ghost {
+  background: transparent;
+  background-image: none;
+  color: var(--text-dim);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  text-shadow: none;
+}
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  box-shadow:
+    2px 2px 6px var(--shadow-dark),
+    -1px -1px 4px var(--shadow-light);
+}
+
+/* ── STAT blocks ── */
+.stat {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+}
+.stat .value {
+  text-shadow: var(--text-shadow-emboss);
+}
+
+/* ── FILE ITEMS ── */
+.file-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    inset 1px 1px 3px var(--shadow-dark),
+    inset -1px -1px 3px var(--shadow-light);
+}
+
+/* ── ERROR ITEMS ── */
+.error-item {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--error);
+  box-shadow:
+    inset 2px 2px 4px var(--shadow-dark),
+    inset -1px -1px 3px var(--shadow-light);
+}
+
+/* ── FOOTER — embossed raised ── */
+footer,
+#appFooter {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border-top: 1px solid var(--border-color);
+  box-shadow:
+    -3px -3px 8px var(--shadow-light),
+    3px 3px 8px var(--shadow-dark);
+}
+body:not(.theme-day):not(.theme-night):not(.theme-green) footer,
+body:not(.theme-day):not(.theme-night):not(.theme-green) #appFooter {
+  background: rgba(17, 34, 64, 0.75);
+  background-image: var(--metal-gradient);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── MODAL — raised metal ── */
+.modal-box {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    6px 6px 20px var(--shadow-dark),
+    -4px -4px 12px var(--shadow-light);
+}
+
+/* ── API KEY BANNER ── */
+.api-key-banner {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+}
+.api-key-banner.has-key {
+  border-color: var(--ok);
+}
+
+/* ── BADGE ── */
+.badge {
+  background: var(--bg-3);
+  background-image: var(--metal-gradient);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    2px 2px 4px var(--shadow-dark),
+    -1px -1px 3px var(--shadow-light);
+  text-shadow: var(--text-shadow-emboss);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THEME TOGGLE — single embossed button
+   ══════════════════════════════════════════════════════════════ */
+.header-theme {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+}
+
+.footer-theme {
+  display: none;
+}
+
+#themeToggle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  color: var(--text-primary);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    3px 3px 8px var(--shadow-dark),
+    -2px -2px 6px var(--shadow-light);
+  transition: all 0.25s ease;
+  touch-action: manipulation;
+}
+
+#themeToggle:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    4px 4px 12px var(--shadow-dark),
+    -3px -3px 8px var(--shadow-light);
+  border-color: var(--accent);
+}
+
+#themeToggle:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LANG SWITCHER — emboss style
+   ══════════════════════════════════════════════════════════════ */
+.lang-switcher {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+.lang-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lang-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+.lang-btn.active {
+  background: var(--bg-card);
+  background-image: var(--metal-gradient);
+  color: var(--text-primary);
+  box-shadow:
+    2px 2px 5px var(--shadow-dark),
+    -1px -1px 3px var(--shadow-light);
+}
+body:not(.theme-day):not(.theme-night) .lang-btn.active {
+  color: var(--accent-2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ENGINE SELECTOR — emboss
+   ══════════════════════════════════════════════════════════════ */
+.engine-tabs {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+.engine-tab {
+  color: var(--text-secondary);
+}
+.engine-tab:hover {
+  color: var(--text-primary);
+}
+.engine-tab.active {
+  background: linear-gradient(145deg, var(--accent-3), var(--accent));
+  color: var(--bg-0);
+  box-shadow:
+    2px 2px 5px var(--shadow-dark),
+    -1px -1px 3px var(--shadow-light);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OUTPUT VIEW TABS — emboss
+   ══════════════════════════════════════════════════════════════ */
+.output-view-tabs {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    inset 2px 2px 5px var(--shadow-dark),
+    inset -2px -2px 5px var(--shadow-light);
+}
+
+.output-view-tab {
+  color: var(--text-secondary);
+}
+.output-view-tab:hover {
+  color: var(--text-primary);
+}
+.output-view-tab.active {
+  background: linear-gradient(145deg, var(--accent-3), var(--accent));
+  color: var(--bg-0);
+  box-shadow:
+    2px 2px 5px var(--shadow-dark),
+    -1px -1px 3px var(--shadow-light);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   API KEYS MODAL — theme-aware colors
+   ═══════════════════════════════════════════════════════════════ */
+
+body:not(.theme-day):not(.theme-night):not(.theme-green) .api-keys-modal {
+  --api-title: #1a3a5c;
+  --api-text: #000000;
+  --api-placeholder: #333333;
+  --api-accent: #1a3a5c;
+}
+body.theme-night .api-keys-modal {
+  --api-title: #4fc3f7;
+  --api-text: #FFFFFF;
+  --api-placeholder: #CCCCCC;
+  --api-accent: #4fc3f7;
+}
+body.theme-green .api-keys-modal {
+  --api-title: #2E7D52;
+  --api-text: #E8F5E9;
+  --api-placeholder: #A5D6A7;
+  --api-accent: #2E7D52;
+}
+body.theme-day .api-keys-modal {
+  --api-title: #0d47a1;
+  --api-text: #000000;
+  --api-placeholder: #555555;
+  --api-accent: #0d47a1;
+}
+
+.api-keys-modal .modal-title { color: var(--api-title) !important; }
+.api-keys-modal .provider-tab { color: var(--api-text) !important; }
+.api-keys-modal .provider-tab.active { color: var(--api-accent) !important; }
+.api-keys-modal .api-key-card-title { color: var(--api-title) !important; }
+.api-keys-modal .api-key-card-subtitle { color: var(--api-text) !important; }
+.api-keys-modal .api-key-label { color: var(--api-text) !important; }
+.api-keys-modal .api-key-input { color: var(--api-text) !important; }
+.api-keys-modal .api-key-input::placeholder { color: var(--api-placeholder) !important; }
+.api-keys-modal .btn-cancel { color: var(--api-text) !important; }
+.api-keys-modal .btn-save { color: var(--api-text) !important; }
+.api-keys-modal .btn-import,
+.api-keys-modal .btn-export { color: var(--api-text) !important; }
+.api-keys-modal .modal-close { color: var(--api-text) !important; }
+.api-keys-modal .lock-icon { color: var(--api-accent) !important; }

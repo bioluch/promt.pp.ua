@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 Secure API Key Encryptor — Embossed Metal UI</title>
+<style>
+  /* ============ ТЕМИ (CSS Variables) ============ */
+  :root {
+    --bg-1: #d8dde3;
+    --bg-2: #b8bec6;
+    --metal-1: #e8ebef;
+    --metal-2: #c8ccd2;
+    --metal-3: #a8acb4;
+    --text: #1a1d22;
+    --text-dim: #4a5058;
+    --accent: #2a6df4;
+    --accent-2: #1a4db4;
+    --shadow-light: rgba(255, 255, 255, 0.8);
+    --shadow-dark: rgba(0, 0, 0, 0.25);
+    --shadow-deep: rgba(0, 0, 0, 0.45);
+    --inset-light: rgba(255, 255, 255, 0.6);
+    --inset-dark: rgba(0, 0, 0, 0.2);
+    --border: rgba(0, 0, 0, 0.15);
+  }
+
+  [data-theme="dark"] {
+    --bg-1: #1a1d22;
+    --bg-2: #0d0f12;
+    --metal-1: #2a2d34;
+    --metal-2: #1e2128;
+    --metal-3: #14161b;
+    --text: #e8ebef;
+    --text-dim: #9aa0a8;
+    --accent: #5a8df4;
+    --accent-2: #3a6dd4;
+    --shadow-light: rgba(255, 255, 255, 0.06);
+    --shadow-dark: rgba(0, 0, 0, 0.7);
+    --shadow-deep: rgba(0, 0, 0, 0.9);
+    --inset-light: rgba(255, 255, 255, 0.04);
+    --inset-dark: rgba(0, 0, 0, 0.6);
+    --border: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="blue"] {
+    --bg-1: #0a1a3a;
+    --bg-2: #050d20;
+    --metal-1: #1a3060;
+    --metal-2: #0f2048;
+    --metal-3: #081638;
+    --text: #d8e4f8;
+    --text-dim: #8aa0c8;
+    --accent: #4a9dff;
+    --accent-2: #2a7ddf;
+    --shadow-light: rgba(120, 180, 255, 0.1);
+    --shadow-dark: rgba(0, 0, 0, 0.7);
+    --shadow-deep: rgba(0, 0, 0, 0.9);
+    --inset-light: rgba(120, 180, 255, 0.08);
+    --inset-dark: rgba(0, 0, 0, 0.6);
+    --border: rgba(120, 180, 255, 0.15);
+  }
+
+  [data-theme="green"] {
+    --bg-1: #0a2a1a;
+    --bg-2: #051a0d;
+    --metal-1: #1a4030;
+    --metal-2: #0f3020;
+    --metal-3: #082018;
+    --text: #d8f0e0;
+    --text-dim: #8ac0a0;
+    --accent: #4adf8a;
+    --accent-2: #2abf6a;
+    --shadow-light: rgba(120, 255, 180, 0.1);
+    --shadow-dark: rgba(0, 0, 0, 0.7);
+    --shadow-deep: rgba(0, 0, 0, 0.9);
+    --inset-light: rgba(120, 255, 180, 0.08);
+    --inset-dark: rgba(0, 0, 0, 0.6);
+    --border: rgba(120, 255, 180, 0.15);
+  }
+
+  /* ============ БАЗОВІ СТИЛІ ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(145deg, var(--bg-1), var(--bg-2));
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ============ ЗАГОЛОВОК ============ */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, var(--text), var(--text-dim));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 1px 0 var(--shadow-light);
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 1rem;
+  }
+
+  /* ============ ПЕРЕМИКАЧ ТЕМ ============ */
+  .theme-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .theme-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s ease;
+    /* Metal embossed effect */
+    box-shadow:
+      inset 0 1px 2px var(--inset-light),
+      inset 0 -1px 2px var(--inset-dark),
+      0 2px 4px var(--shadow-dark),
+      0 1px 0 var(--shadow-light);
+  }
+
+  .theme-btn:hover { transform: translateY(-2px) scale(1.05); }
+  .theme-btn.active {
+    box-shadow:
+      inset 0 2px 4px var(--shadow-deep),
+      inset 0 -1px 2px var(--inset-light),
+      0 0 0 2px var(--accent);
+  }
+
+  .theme-btn[data-set-theme="light"]  { background: linear-gradient(145deg, #e8ebef, #a8acb4); }
+  .theme-btn[data-set-theme="dark"]   { background: linear-gradient(145deg, #2a2d34, #0d0f12); }
+  .theme-btn[data-set-theme="blue"]   { background: linear-gradient(145deg, #1a3060, #050d20); }
+  .theme-btn[data-set-theme="green"]  { background: linear-gradient(145deg, #1a4030, #051a0d); }
+
+  /* ============ METAL CARD (Embossed) ============ */
+  .metal-card {
+    background: linear-gradient(145deg, var(--metal-1), var(--metal-2));
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    border: 1px solid var(--border);
+    /* Головний embossed ефект */
+    box-shadow:
+      /* Верхнє світло */
+      inset 0 1px 0 var(--inset-light),
+      /* Внутрішня тінь знизу */
+      inset 0 -2px 4px var(--inset-dark),
+      /* Зовнішня тінь */
+      0 10px 30px var(--shadow-dark),
+      0 2px 6px var(--shadow-dark);
+  }
+
+  .metal-card h2 {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-shadow: 0 1px 0 var(--shadow-light);
+  }
+
+  /* ============ ФОРМА ============ */
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    text-shadow: 0 1px 0 var(--shadow-light);
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap input,
+  .input-wrap textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: linear-gradient(145deg, var(--metal-2), var(--metal-3));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    /* Вдавлений (inset) ефект */
+    box-shadow:
+      inset 0 2px 4px var(--shadow-deep),
+      inset 0 -1px 0 var(--inset-light),
+      0 1px 0 var(--shadow-light);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .input-wrap input:focus,
+  .input-wrap textarea:focus {
+    box-shadow:
+      inset 0 2px 6px var(--shadow-deep),
+      inset 0 -1px 0 var(--inset-light),
+      0 0 0 2px var(--accent);
+  }
+
+  .input-wrap textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  /* ============ КНОПКИ ============ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(145deg, var(--accent), var(--accent-2));
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -2px 4px rgba(0,0,0,0.25),
+      0 4px 10px var(--shadow-dark),
+      0 1px 0 var(--shadow-light);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,0.4),
+      0 1px 2px var(--shadow-dark);
+  }
+
+  .btn-secondary {
+    background: linear-gradient(145deg, var(--metal-1), var(--metal-3));
+    color: var(--text);
+    text-shadow: 0 1px 0 var(--shadow-light);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ============ РЕЗУЛЬТАТ ============ */
+  .result-box {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(145deg, var(--metal-2), var(--metal-3));
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow:
+      inset 0 2px 4px var(--shadow-deep),
+      inset 0 -1px 0 var(--inset-light);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+    color: var(--text);
+    min-height: 48px;
+  }
+
+  .result-box:empty::before {
+    content: "Тут з'явиться результат...";
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* ============ СІТКА ФІЧ ============ */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  .feature-card {
+    background: linear-gradient(145deg, var(--metal-1), var(--metal-2));
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow:
+      inset 0 1px 0 var(--inset-light),
+      inset 0 -2px 4px var(--inset-dark),
+      0 6px 16px var(--shadow-dark),
+      0 1px 0 var(--shadow-light);
+    transition: transform 0.2s ease;
+  }
+
+  .feature-card:hover { transform: translateY(-3px); }
+
+  .feature-icon {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .feature-card h3 {
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+    color: var(--text);
+    text-shadow: 0 1px 0 var(--shadow-light);
+  }
+
+  .feature-card p {
+    color: var(--text-dim);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  /* ============ КОД БЛОК ============ */
+  pre.code-block {
+    background: linear-gradient(145deg, var(--metal-2), var(--metal-3));
+    color: var(--text);
+    padding: 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    border: 1px solid var(--border);
+    box-shadow:
+      inset 0 2px 4px var(--shadow-deep),
+      inset 0 -1px 0 var(--inset-light);
+  }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(145deg, var(--metal-1), var(--metal-2));
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 10px;
+    box-shadow:
+      inset 0 1px 0 var(--inset-light),
+      0 8px 24px var(--shadow-deep);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 600;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    .metal-card { padding: 18px; }
+    .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ЗАГОЛОВОК -->
+  <header class="header">
+    <h1>🔐 Secure API Key Encryptor</h1>
+    <p>Захистіть свої API-ключі шифруванням військового рівня для клієнтських застосунків</p>
+  </header>
+
+  <!-- ПЕРЕМИКАЧ ТЕМ -->
+  <nav class="theme-switcher" aria-label="Вибір теми">
+    <button class="theme-btn active" data-set-theme="light" title="Світла тема" aria-label="Світла тема"></button>
+    <button class="theme-btn" data-set-theme="dark" title="Темна тема" aria-label="Темна тема"></button>
+    <button class="theme-btn" data-set-theme="blue" title="Темно-синя тема" aria-label="Темно-синя тема"></button>
+    <button class="theme-btn" data-set-theme="green" title="Темно-зелена тема" aria-label="Темно-зелена тема"></button>
+  </nav>
+
+  <!-- ФОРМА ШИФРУВАННЯ -->
+  <section class="metal-card" aria-labelledby="config-title">
+    <h2 id="config-title">🔑 Конфігурація API-ключа</h2>
+
+    <div class="form-group">
+      <label for="apiKey">Оригінальний API-ключ</label>
+      <div class="input-wrap">
+        <input type="text" id="apiKey" placeholder="sk_live_abc123..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="secretKey">Секретний ключ шифрування</label>
+      <div class="input-wrap">
+        <input type="text" id="secretKey" placeholder="Ваш секретний ключ..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="encryptBtn">🛡️ Зашифрувати API-ключ</button>
+      <button class="btn btn-secondary" id="decryptBtn">🔍 Тестувати дешифрування</button>
+    </div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <section class="metal-card" aria-labelledby="result-title">
+    <h2 id="result-title">📦 Зашифрований результат</h2>
+    <div class="result-box" id="encryptedResult"></div>
+    <div class="btn-row" style="margin-top: 14px;">
+      <button class="btn btn-secondary" id="copyEncryptedBtn">📋 Скопіювати зашифрований ключ</button>
+    </div>
+  </section>
+
+  <!-- КОД РЕАЛІЗАЦІЇ -->
+  <section class="metal-card" aria-labelledby="code-title">
+    <h2 id="code-title">💻 Код реалізації</h2>
+    <p style="color: var(--text-dim); margin-bottom: 12px;">Готовий до використання код для вашого застосунку:</p>
+    <pre class="code-block" id="codeBlock">// Функції шифрування / дешифрування XOR
+function xorEncrypt(text, key) {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(
+      text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+    );
+  }
+  return btoa(result); // Base64 для безпечного зберігання
+}
+
+function xorDecrypt(encoded, key) {
+  const text = atob(encoded);
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(
+      text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+    );
+  }
+  return result;
+}</pre>
+    <div class="btn-row" style="margin-top: 14px;">
+      <button class="btn btn-secondary" id="copyCodeBtn">📋 Скопіювати код</button>
+    </div>
+  </section>
+
+  <!-- ФІЧІ -->
+  <section class="metal-card" aria-labelledby="features-title">
+    <h2 id="features-title">✨ Можливості</h2>
+    <div class="features-grid">
+      <article class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <h3>XOR-шифрування</h3>
+        <p>Побітове XOR-шифрування військового рівня.</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon">📱</span>
+        <h3>PWA Safe</h3>
+        <p>Ідеально підходить для Progressive Web Apps.</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <h3>Швидко</h3>
+        <p>Шифрування та дешифрування в реальному часі.</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon">🛡️</span>
+        <h3>Безпечно</h3>
+        <p>Base64-кодування для безпечного зберігання.</p>
+      </article>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast">Скопійовано!</div>
+
+<script>
+  /* ============ ЛОГІКА ШИФРУВАННЯ ============ */
+  function xorEncrypt(text, key) {
+    if (!text || !key) return '';
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+      result += String.fromCharCode(
+        text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+      );
+    }
+    return btoa(unescape(encodeURIComponent(result)));
+  }
+
+  function xorDecrypt(encoded, key) {
+    if (!encoded || !key) return '';
+    try {
+      const text = decodeURIComponent(escape(atob(encoded)));
+      let result = '';
+      for (let i = 0; i < text.length; i++) {
+        result += String.fromCharCode(
+          text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+        );
+      }
+      return result;
+    } catch (e) {
+      return '❌ Помилка дешифрування';
+    }
+  }
+
+  /* ============ UI ЛОГІКА ============ */
+  const $ = id => document.getElementById(id);
+  const apiKeyInput = $('apiKey');
+  const secretKeyInput = $('secretKey');
+  const encryptedResult = $('encryptedResult');
+  const toast = $('toast');
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  $('encryptBtn').addEventListener('click', () => {
+    const enc = xorEncrypt(apiKeyInput.value, secretKeyInput.value);
+    encryptedResult.textContent = enc || '⚠️ Введіть ключі для шифрування';
+  });
+
+  $('decryptBtn').addEventListener('click', () => {
+    const input = prompt('Введіть зашифрований рядок для тесту:');
+    if (input === null) return;
+    const dec = xorDecrypt(input, secretKeyInput.value);
+    encryptedResult.textContent = `🔓 Дешифровано: ${dec}`;
+  });
+
+  $('copyEncryptedBtn').addEventListener('click', () => {
+    if (!encryptedResult.textContent) return;
+    navigator.clipboard.writeText(encryptedResult.textContent);
+    showToast('✅ Зашифрований ключ скопійовано!');
+  });
+
+  $('copyCodeBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText($('codeBlock').textContent);
+    showToast('✅ Код скопійовано!');
+  });
+
+  /* ============ ПЕРЕМИКАЧ ТЕМ ============ */
+  const themeButtons = document.querySelectorAll('.theme-btn');
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.dataset.setTheme;
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    });
+  });
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeButtons.forEach(b => {
+      b.classList.toggle('active', b.dataset.setTheme === theme);
+    });
+  }
+</script>
+
+</body>
+</html>

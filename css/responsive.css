@@ -1,0 +1,532 @@
+/* ================================================================
+   JS PROMPT — css/responsive.css   v2.3.2
+   Full adaptive layout for all screen sizes and orientations.
+
+   Breakpoints:
+     XS  ≤ 380px   — small phones portrait
+     SM  ≤ 600px   — phones landscape / large phones
+     MD  ≤ 900px   — tablets portrait/landscape
+     LG  ≤ 1400px  — standard desktop  (base styles in index.css)
+     XL  > 1400px  — wide monitors / large desktops
+   ================================================================ */
+
+/* ══════════════════════════════════════════════════════════════
+   XL — wide monitors > 1400px
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 1401px) {
+
+  /* Layout */
+  header        { padding: 16px 56px; }
+  main          { padding: 28px 56px 60px; max-width: 1700px; }
+  .footer-inner { max-width: 1700px; padding: 0 56px; }
+
+  /* Logo */
+  .logo-name    { font-size: 22px; }
+  .logo-icon    { width: 44px; height: 44px; }
+
+  /* Tabs */
+  .tab          { padding: 14px 30px; font-size: 15px; }
+
+  /* Grid */
+  .grid-2       { gap: 28px; }
+
+  /* Cards */
+  .card         { padding: 30px; }
+
+  /* Forms */
+  textarea      { min-height: 260px; font-size: 14px; }
+  textarea.editor { min-height: 480px; }
+
+  /* Output */
+  .output-box   { min-height: 280px; max-height: 640px; font-size: 14px; }
+
+  /* Buttons */
+  .btn          { padding: 12px 24px; font-size: 15px; }
+
+  /* Stats */
+  .stat .value  { font-size: 24px; }
+
+  /* Drop zone */
+  .drop-zone    { padding: 48px 32px; }
+  .drop-zone .icon { font-size: 52px; }
+
+  /* Modal */
+  .modal-box    { max-width: 640px; }
+
+  /* Auth button in header */
+  #authBtn      { font-size: 14px; padding: 8px 18px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MD — tablet 601–900px
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+
+  /* Header */
+  header        { padding: 10px 16px; gap: 10px; }
+  .logo-name    { font-size: 17px; }
+  .logo-icon    { width: 34px; height: 34px; }
+  .header-right { gap: 8px; }
+
+  /* Main */
+  main          { padding: 14px 16px 44px; gap: 14px; }
+
+  /* Tabs - allow wrapping and adjust sizes */
+  .tabs {
+    gap: 6px;
+    padding: 6px;
+    border-radius: 12px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    min-width: 80px;
+    font-size: 12px;
+    padding: 10px 14px;
+    flex: 0 1 auto;
+    white-space: nowrap;
+  }
+
+  /* Grid — single column */
+  .grid-2       { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Forms */
+  textarea      { min-height: 160px; }
+  textarea.editor { min-height: 300px; }
+
+  /* Output */
+  .output-box   { min-height: 180px; max-height: 400px; }
+
+  /* Engine row */
+  .engine-selector-row { flex-wrap: wrap; gap: 8px; }
+
+  /* Stats */
+  .stats        { flex-wrap: wrap; }
+  .stat         { min-width: 100px; }
+
+  /* Drop zone */
+  .drop-zone    { padding: 28px 20px; }
+
+  /* Modal */
+  .modal-box    { max-width: 92vw; }
+
+  /* Footer */
+  .footer-inner { gap: 12px; flex-wrap: wrap; }
+
+  /* API key banner */
+  .api-key-banner { flex-wrap: wrap; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SM — phones  ≤ 600px
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* ── Header ── */
+  header {
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .logo         { gap: 7px; flex-shrink: 0; }
+  .logo-icon    { width: 30px; height: 30px; border-radius: 8px; }
+  .logo-name    { font-size: 15px; letter-spacing: 0.01em; }
+  .header-right { gap: 6px; flex-shrink: 0; }
+
+  /* Status — hide text, keep dot */
+  .status span  { display: none; }
+  .status-dot   { width: 8px; height: 8px; }
+  .status       { gap: 0; }
+
+  /* Install button — smaller */
+  #btnInstall   { padding: 6px 10px; font-size: 12px; }
+
+  /* Auth button — allow text wrap */
+  #authBtn      { padding: 6px 10px; font-size: 12px; gap: 4px; max-width: 120px; 
+                   white-space: normal; word-break: break-word; min-height: 34px; }
+
+  /* ── Main ── */
+  main          { padding: 10px 10px 40px; gap: 10px; }
+
+  /* ── Tabs — horizontal scroll with proper sizing ── */
+  .tabs {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    justify-content: flex-start;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    min-width: 70px;
+    padding: 9px 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+    flex-grow: 0;
+    border-radius: 8px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 140px;
+  }
+  /* Allow tabs to shrink more on very narrow screens */
+  @media (max-width: 440px) {
+    .tab {
+      min-width: 60px;
+      padding: 8px 8px;
+      font-size: 10px;
+      max-width: 110px;
+    }
+  }
+  @media (max-width: 380px) {
+    .tab {
+      min-width: 50px;
+      padding: 7px 6px;
+      font-size: 9.5px;
+      max-width: 90px;
+    }
+  }
+
+  /* ── Cards ── */
+  .card         { padding: 16px 14px; border-radius: 12px; }
+  .card h2      { font-size: 16px; }
+  .card .subtitle { font-size: 12px; }
+
+  /* ── Grid ── */
+  .grid-2       { grid-template-columns: 1fr; gap: 12px; }
+
+  /* ── Labels ── */
+  label         { font-size: 12px; }
+
+  /* ── Form elements ── */
+  textarea,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select {
+    font-size: 16px; /* prevent iOS Safari auto-zoom */
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  textarea      { min-height: 120px; font-size: 13px; }
+  textarea.editor { min-height: 220px; }
+  select        { font-size: 14px; }
+
+  /* ── Buttons — allow text wrap and full width on small screens ── */
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 8px;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    min-height: 40px;
+  }
+  .btn-row {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-row .btn {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+    justify-content: center;
+  }
+  /* On very small screens, make buttons full width */
+  @media (max-width: 400px) {
+    .btn-row .btn { flex: 1 1 100%; min-width: 0; }
+  }
+
+  /* ── Engine tabs ── */
+  .engine-selector-row  { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .engine-label         { font-size: 11px; }
+  .engine-tabs          { flex-wrap: wrap; gap: 4px; padding: 3px; }
+  .engine-tab           { padding: 6px 10px; font-size: 11px; white-space: normal; word-break: break-word; }
+  .engine-tab-icon      { font-size: 12px; }
+
+  /* ── Output ── */
+  .output-label-row     { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .output-view-tabs     { align-self: flex-start; }
+  .output-view-tab      { padding: 4px 8px; font-size: 10px; white-space: nowrap; }
+  .output-box           {
+    min-height: 120px;
+    max-height: 280px;
+    font-size: 12px;
+    padding: 12px 12px;
+    border-radius: 8px;
+  }
+  .output-rendered      { font-size: 13px; }
+  .output-rendered h1   { font-size: 15px; }
+  .output-rendered h2   { font-size: 13px; }
+  .output-rendered h3   { font-size: 12px; }
+  .output-rendered code { font-size: 11px; }
+
+  /* ── Stats ── */
+  .stats        { gap: 8px; }
+  .stat         { padding: 8px 10px; min-width: 80px; border-radius: 8px; }
+  .stat .value  { font-size: 18px; }
+  .stat .label  { font-size: 10px; }
+
+  /* ── Drop zone ── */
+  .drop-zone    { padding: 20px 14px; border-radius: 10px; }
+  .drop-zone .icon { font-size: 32px; margin-bottom: 8px; }
+  .drop-zone p  { font-size: 13px; }
+
+  /* ── File list ── */
+  .file-list    { max-height: 180px; }
+  .file-item    { padding: 8px 10px; font-size: 12px; border-radius: 6px; flex-wrap: wrap; gap: 6px; }
+  .file-item .name { font-size: 12px; }
+  .file-item .meta { font-size: 10px; }
+  .file-item button { padding: 4px 8px; font-size: 11px; white-space: normal; word-break: break-word; }
+
+  /* ── Error items ── */
+  .error-item   { padding: 10px 12px; font-size: 12px; }
+  .err-sugg     { padding: 1px 6px; font-size: 11px; }
+
+  /* ── Badge ── */
+  .badge        { font-size: 10px; padding: 1px 6px; }
+
+  /* ── Voice ── */
+  .voice-input-wrapper textarea { padding-right: 40px; }
+  .btn-mic      { width: 30px; height: 30px; top: 6px; right: 6px; }
+  .btn-mic img  { width: 16px; height: 16px; }
+
+  /* ── API key banner ── */
+  .api-key-banner       { flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; }
+  .api-key-banner-icon  { display: none; }
+  .api-key-row          { flex-wrap: wrap; gap: 6px; }
+  .api-key-input        { font-size: 13px; padding: 7px 10px; }
+  .api-key-save-btn,
+  .api-key-toggle-btn   { padding: 7px 12px; font-size: 12px; white-space: normal; word-break: break-word; }
+
+  /* ── Toast — full width bottom ── */
+  .toast {
+    bottom: 0; right: 0; left: 0;
+    border-radius: 10px 10px 0 0;
+    max-width: 100%;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  /* ── Modal — bottom sheet ── */
+  .modal-overlay        { align-items: flex-end; padding: 0; }
+  .modal-box {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    max-height: 90vh;
+  }
+  .modal-header         { padding: 14px 16px 12px; }
+  .modal-title          { font-size: 15px; }
+  .modal-body           { padding: 14px 16px 18px; font-size: 13px; }
+  .modal-close          { font-size: 18px; min-width: 32px; min-height: 32px; }
+
+  /* ── App dialog ── */
+  .app-dialog-box       { margin: 10px; max-width: calc(100vw - 20px); border-radius: 14px; }
+  .app-dialog-body      { padding: 14px 16px 8px; }
+  .app-dialog-msg       { font-size: 14px; }
+  .app-dialog-footer    { padding: 8px 16px 14px; gap: 8px; }
+  .app-dialog-footer .btn { white-space: normal; word-break: break-word; min-height: 40px; }
+
+  /* ── About dialog ── */
+  .about-version        { font-size: 16px; }
+  .about-tagline        { font-size: 12px; }
+  .about-labeling li    { flex-wrap: wrap; gap: 8px; }
+
+  /* ── Footer — stacked ── */
+  .footer-inner {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .footer-copy          { font-size: 11px; flex: none; order: 3; }
+  .footer-links         { flex-wrap: wrap; justify-content: center; gap: 8px; order: 1; }
+  .footer-link          { font-size: 12px; }
+  .footer-lang          { order: 2; }
+  .footer-lang-label    { font-size: 11px; }
+  .footer-balance       { order: 4; font-size: 11px; }
+  .lang-btn             { padding: 4px 10px; font-size: 11px; white-space: nowrap; }
+
+  /* ── Markdown editor ── */
+  #mdPreview            { font-size: 13px; }
+
+  /* ── Translate banner ── */
+  .translate-banner     { font-size: 11px; padding: 5px 10px; }
+
+  /* ── Loader ── */
+  .loader               { width: 14px; height: 14px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   XS — very small phones  ≤ 380px
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 380px) {
+
+  /* Header */
+  header        { padding: 6px 10px; gap: 6px; }
+  .logo-icon    { width: 26px; height: 26px; }
+  .logo-name    { font-size: 13px; }
+  #authBtn      { padding: 5px 8px; font-size: 11px; max-width: 90px; }
+  #authBtn img  { width: 16px; height: 16px; }
+
+  /* Main */
+  main          { padding: 8px 8px 36px; gap: 8px; }
+
+  /* Tabs - even smaller */
+  .tab {
+    min-width: 50px;
+    padding: 7px 6px;
+    font-size: 9.5px;
+    max-width: 90px;
+  }
+
+  /* Card */
+  .card         { padding: 12px 10px; }
+  .card h2      { font-size: 14px; }
+
+  /* Forms */
+  textarea      { min-height: 100px; font-size: 12px; }
+  textarea.editor { min-height: 180px; }
+
+  /* Buttons — full width on tiny screens */
+  .btn          { padding: 9px 12px; font-size: 12px; min-height: 36px; }
+  .btn-row .btn { flex: 1 1 100%; }
+
+  /* Stats */
+  .stat .value  { font-size: 16px; }
+  .stat .label  { font-size: 9px; }
+
+  /* Output */
+  .output-box   { min-height: 100px; max-height: 220px; font-size: 11px; padding: 10px; }
+
+  /* Footer */
+  .footer-inner { gap: 8px; padding: 10px 8px; }
+  .footer-link  { font-size: 11px; }
+  .lang-btn     { padding: 3px 8px; font-size: 10px; }
+
+  /* Language switcher in footer */
+  .lang-switcher { flex-wrap: wrap; justify-content: center; }
+  .lang-btn { min-height: 28px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LANDSCAPE MOBILE — wide + short  (max-height: 500px)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+
+  /* Compact header */
+  header        { padding: 5px 14px; min-height: 0; }
+  .logo-icon    { width: 28px; height: 28px; }
+  .logo-name    { font-size: 14px; }
+
+  /* Main — less padding */
+  main          { padding: 8px 14px 20px; gap: 10px; }
+
+  /* Tabs - compact horizontal scroll */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 4px;
+  }
+  .tab {
+    padding: 6px 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+    min-width: 70px;
+  }
+
+  /* Two-column restored in landscape */
+  .grid-2       { grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Compact textarea */
+  textarea      { min-height: 90px; max-height: 150px; }
+  textarea.editor { min-height: 150px; max-height: 200px; }
+
+  /* Output */
+  .output-box   { min-height: 100px; max-height: 180px; }
+
+  /* Modal — centered, not bottom-sheet */
+  .modal-overlay { align-items: center; padding: 8px; }
+  .modal-box    { border-radius: 14px; max-height: 90vh; max-width: 92vw; }
+
+  /* Footer — single row */
+  .footer-inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 8px 14px;
+  }
+  .footer-copy  { font-size: 10px; flex: 1; text-align: left; order: 0; }
+  .footer-links { gap: 8px; order: 0; }
+  .footer-lang  { order: 0; }
+  .footer-balance { order: 0; }
+
+  /* Toast — small bar */
+  .toast        { bottom: 4px; right: 8px; left: auto; max-width: 320px;
+                  border-radius: 8px; font-size: 12px; padding: 10px 14px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOUCH DEVICES — larger tap targets
+   ══════════════════════════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  .tab          { min-height: 44px; }
+  .btn          { min-height: 44px; }
+  .lang-btn     { min-height: 32px; padding: 6px 12px; }
+  .engine-tab   { min-height: 36px; }
+  .output-view-tab { min-height: 30px; }
+  .modal-close  { min-width: 40px; min-height: 40px; }
+  .file-item button { min-height: 36px; padding: 6px 12px; }
+  .footer-link  { padding: 6px 4px; }
+  select        { min-height: 44px; }
+  .btn-mic      { width: 40px; height: 40px; }
+
+  /* Remove transform-based hover effects on touch */
+  .btn:hover    { transform: none; }
+  .card:hover   { transform: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HIGH-DPI / RETINA — crisp borders
+   ══════════════════════════════════════════════════════════════ */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .logo-icon { image-rendering: -webkit-optimize-contrast; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT
+   ══════════════════════════════════════════════════════════════ */
+@media print {
+  header, footer, .tabs, .btn-row, .drop-zone,
+  .engine-selector-row, .lang-switcher, .api-key-banner,
+  #btnInstall, #authBtn, .footer-balance { display: none !important; }
+
+  main          { padding: 0; max-width: 100%; }
+  .card         { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; page-break-inside: avoid; }
+  .output-box   { max-height: none; box-shadow: none; border: 1px solid #ccc; }
+  body          { background: white !important; color: black !important; }
+  .output-rendered, .output-rendered * { color: black !important; }
+  .output-rendered h1,
+  .output-rendered h2,
+  .output-rendered h3 { color: #1a1a1a !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REDUCED MOTION — respect user preference
+   ══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .status-dot   { animation: none; }
+  .btn-mic.recording { animation: none; }
+  .loader       { animation: none; border-top-color: transparent; }
+}

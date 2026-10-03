@@ -1,0 +1,109 @@
+/* notification.css — Phase 3
+ * Toast notification styles, extracted from the runtime <style> injection
+ * in notification.js. All colours use design-system.css tokens.
+ * notification.js no longer injects a <style> tag.
+ */
+
+.usb-notification {
+    position: fixed;
+    bottom: var(--space-5);
+    right: var(--space-5);
+    width: clamp(260px, 80vw, 320px);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 2147483647;
+    transform: translateX(calc(100% + var(--space-5)));
+    transition: transform var(--duration-normal) var(--ease-out);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    border-left: 3px solid var(--border-default);
+    background: var(--toast-success-bg);
+    color: var(--text-primary);
+    pointer-events: none; /* Don't block clicks while hidden */
+}
+
+.usb-notification.show {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* State variants */
+.notification-success {
+    background: var(--toast-success-bg);
+    border-left-color: var(--success-500);
+}
+
+.notification-error {
+    background: var(--toast-error-bg);
+    border-left-color: var(--danger-500);
+}
+
+.notification-warning {
+    background: var(--toast-warning-bg);
+    border-left-color: var(--warning-500);
+}
+
+/* Title */
+.usb-notification h3 {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    line-height: var(--leading-tight);
+}
+
+/* Message body */
+.usb-notification .notification-content {
+    margin: 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+    flex-grow: 1;
+    word-break: break-word;
+}
+
+/* Copy-to-clipboard button (error toasts only) */
+.copy-btn {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    padding: 0;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background-color var(--transition-base),
+        color var(--transition-base);
+}
+
+.copy-btn::after {
+    content: "⎘";
+    font-size: 14px;
+}
+
+.copy-btn.copied::after {
+    content: "✓";
+    color: var(--success-400);
+}
+
+.copy-btn:hover {
+    background: var(--navy-750);
+    color: var(--text-primary);
+}
+
+/* Safe-area bottom offset on notch devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .usb-notification {
+        bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+    }
+}

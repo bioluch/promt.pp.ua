@@ -1,0 +1,157 @@
+{
+  "name": "JS PROMPT",
+  "short_name": "JS PROMPT",
+  "description": "PWA for generating Claude prompts and converting PDF/DOCX to Markdown",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a1929",
+  "theme_color": "#132f4c",
+  "related_applications": [
+  {
+    "platform": "windows",
+    "url": "https://promt.pp.ua",
+    "id": "SCKOLIBRILLC.JSPROMPT"
+  },
+  {
+    "platform": "play",
+    "url": "https://promt.pp.ua",
+    "id": "ua.pp.promt.twa"
+  }
+],
+  "icons": [
+    {
+      "src": "png/js-promt-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "png/js-promt-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "png/js-promt-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-167x167.png",
+      "sizes": "167x167",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-120x120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "png/js-promt-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "id": "JSPROMPT2026-06-27",
+  "screenshots": [
+    {
+      "src": "screenshots/main-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (1366x768)"
+    },
+    {
+      "src": "screenshots/main-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (1280x720)"
+    },
+    {
+      "src": "screenshots/main-1024x500.png",
+      "sizes": "1024x500",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (1024x500)"
+    },
+    {
+      "src": "screenshots/main-640x480.png",
+      "sizes": "640x480",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Prompt Generator (640x480)"
+    },
+    {
+      "src": "screenshots/help-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Help &amp; Documentation (1366x768)"
+    },
+    {
+      "src": "screenshots/help-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Help &amp; Documentation (1280x720)"
+    },
+    {
+      "src": "screenshots/help-1024x500.png",
+      "sizes": "1024x500",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Help &amp; Documentation (1024x500)"
+    },
+    {
+      "src": "screenshots/help-640x480.png",
+      "sizes": "640x480",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Help &amp; Documentation (640x480)"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "utilities",
+    "education"
+  ],
+  "lang": "en"
+}

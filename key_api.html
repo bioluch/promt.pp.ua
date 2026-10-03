@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Provider AI API Key Validator</title>
+<style>
+/* === THEME VARIABLES === */
+:root, [data-theme="dark"] {
+  --bg-base: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --text-muted: #a0a0a0;
+  --accent: #007bff; --shadow-light: rgba(255, 255, 255, 0.05); --shadow-dark: rgba(0, 0, 0, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+}
+[data-theme="blue"] {
+  --bg-base: #0a192f; --bg-card: #112240; --text-main: #ccd6f6; --text-muted: #8892b0;
+  --accent: #64ffda; --shadow-light: rgba(100, 255, 218, 0.05); --shadow-dark: rgba(2, 12, 27, 0.7);
+  --border-subtle: rgba(100, 255, 218, 0.1);
+}
+[data-theme="green"] {
+  --bg-base: #0d1f17; --bg-card: #143022; --text-main: #d1e7dd; --text-muted: #8bb8a3;
+  --accent: #28a745; --shadow-light: rgba(40, 167, 69, 0.05); --shadow-dark: rgba(0, 0, 0, 0.7);
+  --border-subtle: rgba(40, 167, 69, 0.1);
+}
+[data-theme="white"] {
+  --bg-base: #e0e5ec; --bg-card: #e0e5ec; --text-main: #2d3436; --text-muted: #636e72;
+  --accent: #0984e3; --shadow-light: #ffffff; --shadow-dark: #b8c5d6;
+  --border-subtle: rgba(255, 255, 255, 0.7);
+}
+
+/* === BASE RESET & TYPOGRAPHY === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, sans-serif; background: var(--bg-base); color: var(--text-main);
+  min-height: 100vh; display: flex; flex-direction: column;
+  transition: background 0.3s ease, color 0.3s ease; line-height: 1.6;
+}
+
+/* === LAYOUT === */
+.container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; flex: 1; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+h1 { font-size: 1.8rem; font-weight: 700; }
+footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-subtle); }
+
+/* === EMBOSSED METAL UI COMPONENTS === */
+.embossed {
+  background: var(--bg-card); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light),
+              inset 1px 1px 2px var(--shadow-light), inset -1px -1px 2px var(--shadow-dark);
+}
+.inset {
+  background: var(--bg-base); border: none; border-radius: 10px; padding: 0.8rem 1rem;
+  color: var(--text-main); font-size: 1rem; width: 100%;
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+  outline: none; transition: box-shadow 0.2s;
+}
+.inset:focus {
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light), 0 0 0 2px var(--accent);
+}
+/* Custom styling for select dropdown to match neumorphism */
+select.inset { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+
+.btn {
+  background: var(--accent); color: #ffffff; border: none; border-radius: 10px;
+  padding: 0.8rem 1.5rem; font-weight: 600; cursor: pointer;
+  box-shadow: 4px 4px 8px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: translateY(2px); box-shadow: inset 2px 2px 4px var(--shadow-dark); }
+
+.theme-select {
+  background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 0.5rem; cursor: pointer;
+  box-shadow: inset 2px 2px 4px var(--shadow-dark);
+}
+
+/* === UTILITIES === */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+.endpoint-list { list-style: none; padding: 0; }
+.endpoint-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border-subtle); font-family: monospace; font-size: 0.85rem; color: var(--text-muted); word-break: break-all; }
+.endpoint-list li:last-child { border-bottom: none; }
+.result-box { min-height: 100px; font-family: monospace; white-space: pre-wrap; word-break: break-all; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>AI API Key Validator</h1>
+    <select id="themeSwitcher" class="theme-select" aria-label="Select UI Theme">
+      <option value="white">☀️ White</option>
+      <option value="dark">🌑 Dark</option>
+      <option value="blue">🌊 Dark Blue</option>
+      <option value="green">🌲 Dark Green</option>
+    </select>
+  </header>
+
+  <main>
+    <section class="embossed">
+      <p>Validate your API keys and check account status across multiple AI providers. Select your provider, enter your key, and run the diagnostic tests.</p>
+    </section>
+
+    <section class="embossed">
+      <h2 style="margin-bottom: 1rem;">Configure Test</h2>
+      
+      <label for="providerSelect" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Provider:</label>
+      <select id="providerSelect" class="inset" style="margin-bottom: 1rem;">
+        <option value="deepseek">DeepSeek</option>
+        <option value="qwen">Qwen (DashScope)</option>
+        <option value="gemini">Gemini (Google AI)</option>
+        <option value="perplexity">Perplexity</option>
+      </select>
+
+      <label for="apiKeyInput" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Enter API Key:</label>
+      <input type="password" id="apiKeyInput" class="inset" placeholder="sk-..." autocomplete="off">
+      <button id="testBtn" class="btn" style="margin-top: 1rem; width: 100%;">Run Diagnostic Tests</button>
+    </section>
+
+    <div class="grid-2">
+      <section class="embossed">
+        <h3 style="margin-bottom: 1rem;">Endpoints Being Tested:</h3>
+        <ul class="endpoint-list" id="endpointList">
+          <!-- Populated dynamically via JS -->
+        </ul>
+      </section>
+
+      <section class="embossed">
+        <h3 style="margin-bottom: 1rem;">Test Results</h3>
+        <div id="results" class="result-box inset">Awaiting test execution...</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<footer>
+  Multi-Provider AI API Key Validator • v2.0 • For testing purposes only
+</footer>
+
+<script>
+// === PROVIDER CONFIGURATIONS ===
+const providers = {
+  deepseek: {
+    name: 'DeepSeek',
+    endpoints: [
+      { name: 'Balance', url: 'https://api.deepseek.com/v1/user/balance', method: 'GET' },
+      { name: 'Chat', url: 'https://api.deepseek.com/v1/chat/completions', method: 'POST', body: { model: 'deepseek-chat', messages: [{role: 'user', content: 'hi'}] } }
+    ]
+  },
+    qwen: {
+    name: 'Qwen (DashScope - Custom Region)',
+    endpoints: [
+      { 
+        name: 'Chat Validation', 
+        url: 'https://ws-6heqmpvzoub4uz4e.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions', 
+        method: 'POST', 
+        body: { model: 'qwen-turbo', messages: [{role: 'user', content: 'hi'}] } 
+      }
+    ]
+  },
+  gemini: {
+    name: 'Gemini (Google AI)',
+    endpoints: [
+      // Note: Google AI Studio doesn't expose billing via API key. Testing Models list to validate key.
+      { name: 'Models List', url: 'https://generativelanguage.googleapis.com/v1beta/models', method: 'GET', useQueryParam: true }
+    ]
+  },
+  perplexity: {
+    name: 'Perplexity',
+    endpoints: [
+      // Note: Perplexity doesn't have a public balance API. Testing Chat instead.
+      { name: 'Chat Validation', url: 'https://api.perplexity.ai/chat/completions', method: 'POST', body: { model: 'sonar', messages: [{role: 'user', content: 'hi'}] } }
+    ]
+  }
+};
+
+// === THEME SWITCHER LOGIC ===
+const themeSwitcher = document.getElementById('themeSwitcher');
+const root = document.documentElement;
+function applyTheme(theme) { root.setAttribute('data-theme', theme); themeSwitcher.value = theme; }
+let savedTheme = 'dark';
+try { savedTheme = localStorage.getItem('app-theme') || 'dark'; } catch (e) {}
+applyTheme(savedTheme);
+themeSwitcher.addEventListener('change', (e) => {
+  applyTheme(e.target.value);
+  try { localStorage.setItem('app-theme', e.target.value); } catch (e) {}
+});
+
+// === DYNAMIC UI LOGIC ===
+const providerSelect = document.getElementById('providerSelect');
+const endpointList = document.getElementById('endpointList');
+
+function updateEndpointsUI() {
+  const provider = providers[providerSelect.value];
+  endpointList.innerHTML = provider.endpoints.map(ep => `<li><strong>${ep.name}:</strong> ${ep.url}</li>`).join('');
+}
+providerSelect.addEventListener('change', updateEndpointsUI);
+updateEndpointsUI(); // Initial render
+
+// === API TESTING LOGIC ===
+document.getElementById('testBtn').addEventListener('click', async () => {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const resultsBox = document.getElementById('results');
+  const provider = providers[providerSelect.value];
+  
+  if (!apiKey) { resultsBox.textContent = '❌ Please enter a valid API key.'; return; }
+
+  resultsBox.textContent = `⏳ Testing ${provider.name} endpoints...`;
+  let output = '';
+
+  for (const ep of provider.endpoints) {
+    try {
+      let url = ep.url;
+      let headers = { 'Content-Type': 'application/json' };
+      
+      if (ep.useQueryParam) {
+        url += `?key=${apiKey}`;
+      } else {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      // WORKAROUND: Route Perplexity and Qwen through local proxy to bypass CORS
+      if (providerSelect.value === 'perplexity') {
+          url = 'http://localhost:8001/proxy/perplexity';
+      } else if (providerSelect.value === 'qwen') {
+          url = 'http://localhost:8001/proxy/qwen';
+      }
+
+      const fetchOptions = { method: ep.method, headers };
+      if (ep.method === 'POST' && ep.body) {
+        fetchOptions.body = JSON.stringify(ep.body);
+      }
+
+      const response = await fetch(url, fetchOptions);
+      
+      if (response.status === 401) {
+        output += `❌ ${ep.name}: 401 Unauthorized.\n`;
+        output += `Reason: The API key is invalid, expired, or lacks permissions.\n\n`;
+        continue;
+      }
+
+      const data = await response.json().catch(() => ({})); 
+      
+      output += `✅ ${ep.name}: ${response.status} ${response.statusText}\n`;
+      output += `Response: ${JSON.stringify(data, null, 2).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}\n\n`;
+    } catch (err) {
+      output += `❌ ${ep.name}: Network Error.\nError: ${err.message}\n\n`;
+    }
+  }
+  resultsBox.textContent = output || 'Test completed.';
+});
+</script>
+
+</body>
+</html>

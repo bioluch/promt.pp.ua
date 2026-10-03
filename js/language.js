@@ -1,0 +1,785 @@
+/**
+ * language.js — JS PROMPT PWA
+ * Interface language system: EN (default) / UK / ES
+ * All UI translation strings and switching logic live here.
+ */
+
+(function () {
+  'use strict';
+
+  /* ── Translation dictionary ─────────────────────────────────── */
+  var TRANSLATIONS = {
+
+    /* ── Header ── */
+    'btn.install':        { en: 'Install',           uk: 'Встановити',       es: 'Instalar' },
+    'status.init':        { en: 'Initialising…',     uk: 'Ініціалізація Pyodide…', es: 'Inicializando…' },
+    'status.ready':       { en: 'Ready',             uk: 'Готово до роботи', es: 'Listo' },
+
+    /* ── Tabs ── */
+    'tab.prompt':         { en: 'Text → Prompt',     uk: 'Текст → Промт',    es: 'Texto → Prompt' },
+    'tab.convert':        { en: 'PDF/DOCX Converter',uk: 'Конвертер PDF/DOCX', es: 'Convertidor PDF/DOCX' },
+    'tab.editor':         { en: 'Markdown Editor',   uk: 'Markdown-редактор', es: 'Editor Markdown' },
+    'tab.check':          { en: 'Error Checker',     uk: 'Перевірка помилок', es: 'Verificador de errores' },
+
+    /* ── Panel 1: Prompt Generator ── */
+    'p1.title':           { en: 'Professional Claude Prompt Generator', uk: 'Генерація професійного промту для Claude', es: 'Generador Profesional de Prompts para Claude' },
+    'p1.subtitle':        { en: 'Enter any text — the system structures it into a ready-made prompt with role, context, task and output format.', uk: 'Введіть довільний текст — система структурує його в готовий промт з роллю, контекстом, завданням та форматом відповіді.', es: 'Ingrese cualquier texto — el sistema lo estructura en un prompt listo con rol, contexto, tarea y formato de salida.' },
+    'p1.label.input':     { en: 'Your text / idea / task', uk: 'Ваш текст / ідея / задача', es: 'Su texto / idea / tarea' },
+    'p1.placeholder':     { en: 'E.g. "I want AI to help write technology articles for a blog, considering SEO..."', uk: 'Наприклад: «Хочу, щоб ШІ допомагав писати статті про технології для блогу, враховував SEO...»', es: 'Por ejemplo: "Quiero que la IA ayude a escribir artículos tecnológicos para un blog, considerando el SEO..."' },
+    'p1.label.style':     { en: 'Prompt style',      uk: 'Стиль промту',     es: 'Estilo de prompt' },
+    'p1.style.detailed':  { en: 'Detailed (full structure)', uk: 'Детальний (повна структура)', es: 'Detallado (estructura completa)' },
+    'p1.style.concise':   { en: 'Concise (short)',   uk: 'Лаконічний (короткий)', es: 'Conciso (corto)' },
+    'p1.style.expert':    { en: 'Expert (deep context)', uk: 'Експертний (з глибоким контекстом)', es: 'Experto (contexto profundo)' },
+    'p1.style.creative':  { en: 'Creative (for creative tasks)', uk: 'Креативний (для творчих задач)', es: 'Creativo (para tareas creativas)' },
+    'p1.style.technical': { en: 'Technical (code/architecture)', uk: 'Технічний (для коду/архітектури)', es: 'Técnico (código/arquitectura)' },
+    'p1.label.lang':      { en: 'Output language',   uk: 'Мова відповіді',   es: 'Idioma de salida' },
+    'p1.btn.generate':    { en: 'Generate Prompt',   uk: 'Згенерувати промт', es: 'Generar Prompt' },
+    'p1.btn.clear':       { en: 'Clear',             uk: 'Очистити',         es: 'Limpiar' },
+    'p1.label.output':    { en: 'Ready prompt for Claude', uk: 'Готовий промт для Claude', es: 'Prompt listo para Claude' },
+    'p1.output.empty':    { en: 'The generated prompt in Markdown format will appear here…', uk: 'Тут з\'явиться згенерований промт у форматі Markdown…', es: 'El prompt generado en formato Markdown aparecerá aquí…' },
+    'p1.btn.copy':        { en: 'Copy',              uk: 'Копіювати',        es: 'Copiar' },
+    'p1.btn.save':        { en: 'Save .md',          uk: 'Зберегти .md',     es: 'Guardar .md' },
+    'p1.voice.title':     { en: 'Voice input (EN / UK / ES)', uk: 'Голосове введення (EN / UK / ES)', es: 'Entrada de voz (EN / UK / ES)' },
+
+    /* ── Panel 2: Converter ── */
+    'p2.title':           { en: 'PDF / DOCX → Markdown Converter', uk: 'Конвертер PDF / DOCX → Markdown', es: 'Convertidor PDF / DOCX → Markdown' },
+    'p2.subtitle':        { en: 'Upload files — they will be converted to Markdown preserving headings, lists, tables and formatting.', uk: 'Завантажте файли — вони будуть конвертовані в Markdown зі збереженням заголовків, списків, таблиць та форматування.', es: 'Suba archivos — se convertirán a Markdown preservando encabezados, listas, tablas y formato.' },
+    'p2.drop.click':      { en: '<strong>Click</strong> or drag files here', uk: '<strong>Натисніть</strong> або перетягніть файли сюди', es: '<strong>Haga clic</strong> o arrastre archivos aquí' },
+    'p2.drop.hint':       { en: 'Supported: .pdf, .docx (multiple files allowed)', uk: 'Підтримуються: .pdf, .docx (можна декілька)', es: 'Compatible: .pdf, .docx (se permiten varios archivos)' },
+    'p2.processing':      { en: 'Processing…', uk: 'Обробка…', es: 'Procesando…' },
+    'p2.converting':      { en: 'Converting…', uk: 'Конвертація…', es: 'Convirtiendo…' },
+    'p2.converted':       { en: 'Converted • {chars} chars • {kb} KB', uk: 'Конвертовано • {chars} симв. • {kb} КБ', es: 'Convertido • {chars} caracteres • {kb} KB' },
+    'p2.stage.readingPdf':     { en: 'Reading PDF…', uk: 'Читання PDF…', es: 'Leyendo PDF…' },
+    'p2.stage.loadingPdf2md':  { en: 'Loading @opendocsg/pdf2md…', uk: 'Завантаження @opendocsg/pdf2md…', es: 'Cargando @opendocsg/pdf2md…' },
+    'p2.stage.parsingStructure': { en: 'pdf2md: parsing PDF structure…', uk: 'pdf2md: аналіз структури PDF…', es: 'pdf2md: analizando estructura del PDF…' },
+    'p2.stage.extractingLayout': { en: 'pdf2md: extracting text & layout…', uk: 'pdf2md: видобування тексту та макету…', es: 'pdf2md: extrayendo texto y diseño…' },
+    'p2.stage.buildingMd':       { en: 'pdf2md: building Markdown…', uk: 'pdf2md: побудова Markdown…', es: 'pdf2md: generando Markdown…' },
+    'p2.stage.postProcessing':   { en: 'Post-processing…', uk: 'Постобробка…', es: 'Posprocesamiento…' },
+    'p2.stage.preparingBytes':   { en: 'pdfminer: preparing bytes…', uk: 'pdfminer: підготовка байтів…', es: 'pdfminer: preparando bytes…' },
+    'p2.stage.pageAnalysis':     { en: 'pdfminer: page analysis…', uk: 'pdfminer: аналіз сторінок…', es: 'pdfminer: análisis de páginas…' },
+    'p2.stage.headingDetection': { en: 'pdfminer: heading detection…', uk: 'pdfminer: розпізнавання заголовків…', es: 'pdfminer: detección de encabezados…' },
+    'p2.stage.tableDetection':   { en: 'pdfminer: table detection…', uk: 'pdfminer: розпізнавання таблиць…', es: 'pdfminer: detección de tablas…' },
+    'p2.stage.buildingMdPdfminer': { en: 'pdfminer: building Markdown…', uk: 'pdfminer: побудова Markdown…', es: 'pdfminer: generando Markdown…' },
+    'p2.stage.readingDocx':      { en: 'Reading DOCX…', uk: 'Читання DOCX…', es: 'Leyendo DOCX…' },
+    'p2.stage.preparingBytesDocx': { en: 'Preparing bytes…', uk: 'Підготовка байтів…', es: 'Preparando bytes…' },
+    'p2.stage.parsingParagraphs':  { en: 'Parsing paragraphs & styles…', uk: 'Аналіз абзаців і стилів…', es: 'Analizando párrafos y estilos…' },
+    'p2.stage.convertingTables':   { en: 'Converting tables…', uk: 'Конвертація таблиць…', es: 'Convirtiendo tablas…' },
+    'p2.stage.inlineFormatting':   { en: 'Inline formatting…', uk: 'Вбудоване форматування…', es: 'Formato en línea…' },
+    'p2.emptyResult':     { en: 'Empty result', uk: 'Порожній результат', es: 'Resultado vacío' },
+    'p2.btn.copy':        { en: 'Copy', uk: 'Копіювати', es: 'Copiar' },
+    'p2.btn.openInEditor': { en: 'Open in Editor', uk: 'Відкрити в редакторі', es: 'Abrir en el editor' },
+    'p2.error':           { en: 'Error: {msg}', uk: 'Помилка: {msg}', es: 'Error: {msg}' },
+    'p2.conversionFailed': { en: 'Conversion failed', uk: 'Помилка конвертації', es: 'Error de conversión' },
+
+    /* ── Panel 3: Editor ── */
+    'p3.title':           { en: 'Markdown Editor',   uk: 'Markdown-редактор', es: 'Editor Markdown' },
+    'p3.subtitle':        { en: 'Load .md files, edit and save them. Preview supported.', uk: 'Завантажуйте .md файли, редагуйте їх та зберігайте. Підтримується попередній перегляд.', es: 'Cargue archivos .md, edítelos y guárdelos. Vista previa compatible.' },
+    'p3.label.editor':    { en: 'Editor',            uk: 'Редактор',         es: 'Editor' },
+    'p3.placeholder':     { en: '# Heading\n\nYour Markdown text…', uk: '# Заголовок\n\nВаш текст у форматі Markdown…', es: '# Encabezado\n\nSu texto en Markdown…' },
+    'p3.btn.load':        { en: '📂 Load .md',       uk: '📂 Завантажити .md', es: '📂 Cargar .md' },
+    'p3.btn.save':        { en: 'Save .md',           uk: 'Зберегти .md',     es: 'Guardar .md' },
+    'p3.btn.local':       { en: 'Save to local storage', uk: 'У локальне сховище', es: 'Guardar localmente' },
+    'p3.label.saved':     { en: 'Saved files (localStorage)', uk: 'Збережені файли (localStorage)', es: 'Archivos guardados (localStorage)' },
+    'p3.label.preview':   { en: 'Preview',           uk: 'Попередній перегляд', es: 'Vista previa' },
+
+    /* ── Panel 4: Error Checker ── */
+    'p4.title':           { en: 'Error Checker',     uk: 'Перевірка помилок', es: 'Verificador de errores' },
+    'p4.subtitle':        { en: 'Analysis for spelling, grammar and stylistic errors with correction suggestions.', uk: 'Аналіз тексту на орфографічні, граматичні та стилістичні помилки з пропозиціями виправлень.', es: 'Análisis de errores ortográficos, gramaticales y estilísticos con sugerencias de corrección.' },
+    'p4.stat.words':      { en: 'Words',             uk: 'Слів',             es: 'Palabras' },
+    'p4.stat.sentences':  { en: 'Sentences',         uk: 'Речень',           es: 'Oraciones' },
+    'p4.stat.errors':     { en: 'Errors',            uk: 'Помилок',          es: 'Errores' },
+    'p4.stat.tokens':     { en: 'Claude Tokens',     uk: 'Токени Claude',    es: 'Tokens Claude' },
+    'p4.stat.quality':    { en: 'Quality',           uk: 'Якість',           es: 'Calidad' },
+    'p4.label.input':     { en: 'Text to check',     uk: 'Текст для перевірки', es: 'Texto para verificar' },
+    'p4.placeholder':     { en: 'Paste text to check…', uk: 'Вставте текст для перевірки…', es: 'Pegue el texto para verificar…' },
+    'p4.btn.check':       { en: 'Check',             uk: 'Перевірити',       es: 'Verificar' },
+    'p4.btn.apply':       { en: 'Apply All Fixes',   uk: 'Застосувати всі виправлення', es: 'Aplicar todas las correcciones' },
+    'p4.btn.clear':       { en: 'Clear',             uk: 'Очистити',         es: 'Limpiar' },
+    'p4.btn.saveFixed':   { en: 'Save Fixed .md',    uk: 'Зберегти виправлений .md', es: 'Guardar .md corregido' },
+    'p4.btn.copyFixed':   { en: 'Copy Fixed Text',   uk: 'Копіювати виправлений текст', es: 'Copiar texto corregido' },
+
+
+    /* ── Balance widget ── */
+    'balance.label':      { en: 'Balance',              uk: 'Баланс',                   es: 'Saldo' },
+    'balance.noKey':      { en: '—',                   uk: '—',                        es: '—' },
+    'balance.error':      { en: 'unavailable',          uk: 'недоступно',               es: 'no disponible' },
+    'balance.invalidKey': { en: 'invalid key',          uk: 'невірний ключ',            es: 'clave inválida' },
+    'balance.rateLimit':  { en: 'rate limited',         uk: 'ліміт запитів',            es: 'límite de solicitudes' },
+    'balance.ok':         { en: 'Balance',              uk: 'Баланс',                   es: 'Saldo' },
+    'balance.empty':      { en: 'Balance: 0',           uk: 'Баланс: 0',                es: 'Saldo: 0' },
+    'balance.refresh':    { en: 'Refresh balance',      uk: 'Оновити баланс',           es: 'Actualizar saldo' },
+    'balance.loading':    { en: 'Loading…',             uk: 'Завантаження…',            es: 'Cargando…' },
+
+    /* ── Footer ── */
+    'footer.about':       { en: 'About',             uk: 'Про застосунок',   es: 'Acerca de' },
+    'footer.privacy':     { en: 'Privacy Policy',    uk: 'Політика конфіденційності', es: 'Política de privacidad' },
+    'footer.lang':        { en: 'Language',          uk: 'Мова',             es: 'Idioma' },
+    'footer.copy':        { en: '© 2026 JS PROMPT. All rights reserved.', uk: '© 2026 JS PROMPT. Всі права захищені.', es: '© 2026 JS PROMPT. Todos los derechos reservados.' },
+
+    /* ── Modals ── */
+    'modal.close':        { en: 'Close',             uk: 'Закрити',          es: 'Cerrar' },
+    'about.title':        { en: 'About JS PROMPT',  uk: 'Про JS PROMPT',    es: 'Acerca de JS PROMPT' },
+    'about.body': {
+      en: '<div class="about-dialog"><p class="about-version">JS&nbsp;PROMPT<br>Version: 1.0.0</p><p class="about-tagline">Professional Claude prompt generator &amp; PDF/DOCX converter powered by Pyodide</p><ul class="about-features"><li>AI prompt generation with domain &amp; intent detection</li><li>PDF &amp; DOCX &rarr; Markdown (tables, headings, inline formatting)</li><li>Markdown editor with live preview &amp; localStorage</li><li>9-stage grammar, style, passive voice &amp; structure checker</li><li>Fully offline PWA &mdash; all processing in your browser</li><li>Voice input via Whisper (EN/UK/ES) — 100% client-side</li><li>Auto-translation to English via Helsinki-NLP</li></ul><ul class="about-labeling"><li><img src="img/labeling/Symbol_Manufacturer.png" width="36" height="36" alt="Manufacturer"><span>SC KOLIBRI LLC<br>61001 Ukraine, Kharkiv, prov. Kinnyi 8a</span></li><li><img src="img/labeling/Symbol_Date_Manufacture.png" width="36" height="36" alt="Date of manufacture"><span>2026</span></li><li class="about-symbols"><img src="img/labeling/ifu.png" width="36" height="36" alt="Instructions for use"><img src="img/labeling/waste.png" width="36" height="36" alt="Waste disposal"><img src="img/labeling/md.png" width="36" height="36" alt="Medical device"><img src="img/labeling/info_web.png" width="36" height="36" alt="Web information"><a href="https://kolibri.cloud" target="_blank" rel="noopener" class="about-link">kolibri.cloud</a></li><li><img src="img/labeling/Copyright.png" width="36" height="36" alt="Copyright"><span>Anatolii Pulavskyi</span></li></ul><p class="about-year">&copy; 2026</p></div>',
+      uk: '<div class="about-dialog"><p class="about-version">JS&nbsp;PROMPT<br>Версія: 1.0.0</p><p class="about-tagline">Професійний генератор промтів для Claude та конвертер PDF/DOCX на базі Pyodide</p><ul class="about-features"><li>AI-генерація промтів з визначенням домену та наміру</li><li>PDF та DOCX &rarr; Markdown (таблиці, заголовки, форматування)</li><li>Markdown-редактор з переглядом</li><li>9-стадійна перевірка граматики та стилю</li><li>Повністю офлайн PWA</li><li>Голосове введення (Whisper, EN/UK/ES) — лише у браузері</li><li>Автопереклад на англійську (Helsinki-NLP)</li></ul><ul class="about-labeling"><li><img src="img/labeling/Symbol_Manufacturer.png" width="36" height="36" alt="Manufacturer"><span>SC KOLIBRI LLC<br>61001 Україна, Харків, пров. Кінний 8а</span></li><li><img src="img/labeling/Symbol_Date_Manufacture.png" width="36" height="36" alt="Date of manufacture"><span>2026</span></li><li class="about-symbols"><img src="img/labeling/ifu.png" width="36" height="36" alt="Instructions for use"><img src="img/labeling/waste.png" width="36" height="36" alt="Waste disposal"><img src="img/labeling/md.png" width="36" height="36" alt="Medical device"><img src="img/labeling/info_web.png" width="36" height="36" alt="Web information"><a href="https://kolibri.cloud" target="_blank" rel="noopener" class="about-link">kolibri.cloud</a></li><li><img src="img/labeling/Copyright.png" width="36" height="36" alt="Copyright"><span>Anatolii Pulavskyi</span></li></ul><p class="about-year">&copy; 2026</p></div>',
+      es: '<div class="about-dialog"><p class="about-version">JS&nbsp;PROMPT<br>Versión: 1.0.0</p><p class="about-tagline">Generador profesional de prompts para Claude y convertidor PDF/DOCX con Pyodide</p><ul class="about-features"><li>Generación de prompts con detección de dominio e intención</li><li>PDF y DOCX &rarr; Markdown (tablas, encabezados, formato)</li><li>Editor Markdown con vista previa y localStorage</li><li>Verificador de gramática, estilo y estructura (9 etapas)</li><li>PWA completamente offline — todo en el navegador</li><li>Entrada de voz via Whisper (EN/UK/ES) — 100% lado cliente</li><li>Traducción automática al inglés via Helsinki-NLP</li></ul><ul class="about-labeling"><li><img src="img/labeling/Symbol_Manufacturer.png" width="36" height="36" alt="Fabricante"><span>SC KOLIBRI LLC<br>61001 Ucrania, Járkov, prov. Kinnyi 8a</span></li><li><img src="img/labeling/Symbol_Date_Manufacture.png" width="36" height="36" alt="Fecha de fabricación"><span>2026</span></li><li class="about-symbols"><img src="img/labeling/ifu.png" width="36" height="36" alt="Instrucciones de uso"><img src="img/labeling/waste.png" width="36" height="36" alt="Eliminación de residuos"><img src="img/labeling/md.png" width="36" height="36" alt="Dispositivo médico"><img src="img/labeling/info_web.png" width="36" height="36" alt="Info web"><a href="https://kolibri.cloud" target="_blank" rel="noopener" class="about-link">kolibri.cloud</a></li><li><img src="img/labeling/Copyright.png" width="36" height="36" alt="Copyright"><span>Anatolii Pulavskyi</span></li></ul><p class="about-year">&copy; 2026</p></div>'
+    },
+    'privacy.title':      { en: 'Privacy Policy',   uk: 'Політика конфіденційності', es: 'Política de privacidad' },
+    'privacy.body': {
+      en: '<p>Our full Privacy Policy covers your rights under GDPR and US state laws, cookies, international data transfers, and contact details.</p><p style="margin-top:16px;"><a href="pp.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:linear-gradient(135deg,#29b6f6,#4fc3f7);color:#06111f;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">Read full Privacy Policy &rarr;</a></p>',
+      uk: '<p>Повна Політика конфіденційності доступна на окремій сторінці.</p><p style="margin-top:16px;"><a href="pp.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:linear-gradient(135deg,#29b6f6,#4fc3f7);color:#06111f;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">Читати Політику &rarr;</a></p>',
+      es: '<p>Nuestra Política de Privacidad completa cubre sus derechos bajo el GDPR, cookies, transferencias internacionales de datos y datos de contacto.</p><p style="margin-top:16px;"><a href="pp.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:linear-gradient(135deg,#29b6f6,#4fc3f7);color:#06111f;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">Leer Política completa &rarr;</a></p>'
+    },
+
+
+    /* ── Engine / API key panel ── */
+    'engine.label':         { en: 'Generation engine:',  uk: 'Движок генерації:',   es: 'Motor de generación:' },
+    'engine.local':         { en: 'Local',               uk: 'Локальний',            es: 'Local' },
+    'apikey.btn.save':      { en: 'Save',                uk: 'Зберегти',             es: 'Guardar' },
+    'apikey.btn.update':    { en: 'Update',              uk: 'Оновити',              es: 'Actualizar' },
+    'apikey.btn.hide':      { en: 'Hide',                uk: 'Сховати',              es: 'Ocultar' },
+    'apikey.btn.title':     { en: 'API Key settings',    uk: 'Налаштування API Key', es: 'Configuración de API Key' },
+    'apikey.toggle.show':   { en: 'Show / Hide',         uk: 'Показати / Сховати',   es: 'Mostrar / Ocultar' },
+
+    /* ── Output view tabs ── */
+    'output.preview':       { en: 'Preview',             uk: 'Перегляд',             es: 'Vista previa' },
+    'output.raw':           { en: 'Raw',                 uk: 'Текст',                es: 'Texto' },
+
+    /* ── Error Checker headings ── */
+    'p4.heading.highlighted': { en: 'Highlighted text',  uk: 'Текст з підсвічуванням', es: 'Texto resaltado' },
+    'p4.heading.errors':    { en: 'Errors found',        uk: 'Знайдені помилки',     es: 'Errores encontrados' },
+
+    /* ── Toast messages (new) ── */
+    'toast.promptGenerated':  { en: 'Prompt generated!', uk: 'Промт згенеровано!',   es: 'Prompt generado!' },
+    'toast.apiKeySaved':      { en: 'API Key saved',     uk: 'API Key збережено',    es: 'API Key guardado' },
+    'toast.localUnavailable': { en: 'Local model unavailable — translating via API…', uk: 'Локальна модель недоступна — перекладаю через API…', es: 'Modelo local no disponible — traduciendo vía API…' },
+    'toast.translatedApi':    { en: 'Text translated (API)',  uk: 'Текст перекладено (API)',  es: 'Texto traducido (API)' },
+    'toast.translateFailed':  { en: 'Translation failed — using original text', uk: 'Переклад не вдався — використовується оригінальний текст', es: 'Falla en la traducción — se usa el texto original' },
+    'toast.envKeyLoaded':     { en: 'API Key loaded from server',  uk: 'API Key завантажено з сервера', es: 'API Key cargado desde el servidor' },
+
+    /* ── Status bar ── */
+    'status.pyodide':       { en: 'Loading Pyodide…',   uk: 'Завантаження Pyodide…', es: 'Cargando Pyodide…' },
+    'status.packages':      { en: 'Installing packages…', uk: 'Встановлення пакетів…', es: 'Instalando paquetes…' },
+    'status.error':         { en: 'Initialisation error', uk: 'Помилка ініціалізації', es: 'Error de inicialización' },
+
+
+    /* ── API key error messages ── */
+    'apikey.err.noKey':     { en: 'Enter DeepSeek API Key',        uk: 'Введіть DeepSeek API Key',          es: 'Ingrese la API Key de DeepSeek' },
+    'apikey.err.invalid':   { en: 'Invalid API Key — check and update', uk: 'Невірний API Key — перевірте та оновіть', es: 'API Key inválida — verifique y actualice' },
+    'apikey.err.quota':     { en: 'DeepSeek quota exceeded — top up balance', uk: 'Вичерпано ліміт DeepSeek — поповніть баланс', es: 'Cuota de DeepSeek agotada — recargue su saldo' },
+    'apikey.err.rateLimit': { en: 'Too many requests — wait a minute', uk: 'Забагато запитів — зачекайте хвилину', es: 'Demasiadas solicitudes — espere un minuto' },
+
+    /* ── Scheduler job error messages ── */
+    'job.err.lowBalance':   { en: '💳 Insufficient credit balance. Top up at console.anthropic.com → Plans & Billing.', uk: '💳 Недостатньо коштів на балансі. Поповніть на console.anthropic.com → Plans & Billing.', es: '💳 Saldo insuficiente. Recargue en console.anthropic.com → Plans & Billing.' },
+    'job.err.invalidKey':   { en: '🔑 Invalid API key. Please check your key in settings (Ctrl+Shift+K).', uk: '🔑 Невірний API ключ. Перевірте ключ у налаштуваннях (Ctrl+Shift+K).', es: '🔑 Clave API inválida. Verifique la clave en configuración (Ctrl+Shift+K).' },
+    'job.err.overloaded':   { en: '⏳ AI service is overloaded. The job will retry automatically.', uk: '⏳ Сервіс ШІ перевантажений. Завдання повториться автоматично.', es: '⏳ El servicio de IA está sobrecargado. El trabajo se reintentará automáticamente.' },
+    'job.err.noKey':        { en: '🔑 API key not configured. Add it in settings (Ctrl+Shift+K).', uk: '🔑 API ключ не налаштовано. Додайте його в налаштуваннях (Ctrl+Shift+K).', es: '🔑 Clave API no configurada. Agréguela en configuración (Ctrl+Shift+K).' },
+
+    /* ── Editor file list ── */
+    'p3.btn.delete':        { en: 'Delete',   uk: 'Видалити',   es: 'Eliminar' },
+
+
+    'toast.installed':    { en: 'JS PROMPT installed!',        uk: 'JS PROMPT встановлено!',         es: 'JS PROMPT instalado!' },
+    'toast.installedPwa': { en: 'JS PROMPT installed as PWA!', uk: 'JS PROMPT встановлено як PWA!',  es: 'JS PROMPT instalado como PWA!' },
+
+    /* ── Install modal ── */
+    'install.title':      { en: 'Install App',
+                            uk: 'Встановити додаток',
+                            es: 'Instalar aplicación' },
+    'install.subtitle':   { en: 'Add JS PROMPT to your desktop for quick access — works offline, no browser needed.',
+                            uk: 'Додайте JS PROMPT на робочий стіл для швидкого доступу — працює офлайн, без браузера.',
+                            es: 'Agregue JS PROMPT a su escritorio para acceso rápido — funciona sin conexión, sin navegador.' },
+    'install.feature1':   { en: 'Instant launch from desktop or taskbar',
+                            uk: 'Миттєвий запуск з робочого столу або панелі завдань',
+                            es: 'Inicio instantáneo desde escritorio o barra de tareas' },
+    'install.feature2':   { en: 'Full offline mode — no internet required',
+                            uk: 'Повний офлайн-режим — інтернет не потрібен',
+                            es: 'Modo sin conexión completo — sin internet' },
+    'install.feature3':   { en: 'No browser UI — clean focused workspace',
+                            uk: 'Без інтерфейсу браузера — чистий робочий простір',
+                            es: 'Sin interfaz de navegador — espacio de trabajo limpio' },
+    'install.btn.install':{ en: 'Install',
+                            uk: 'Встановити',
+                            es: 'Instalar' },
+    'install.btn.cancel': { en: 'Not now',
+                            uk: 'Не зараз',
+                            es: 'Ahora no' },
+    'install.domain':     { en: 'promt.pp.ua',
+                            uk: 'promt.pp.ua',
+                            es: 'promt.pp.ua' },
+
+
+    /* ── Help menu ── */
+    'help.title':           { en: 'Help & Documentation',   uk: 'Довідка та документація', es: 'Ayuda y documentación' },
+    'footer.help':          { en: 'Help',                   uk: 'Довідка',                 es: 'Ayuda' },
+
+    /* ── Status messages ── */
+    'status.loadingEnv':    { en: 'Loading environment…',   uk: 'Завантаження середовища…', es: 'Cargando entorno…' },
+    'status.loadingPyodide':{ en: 'Loading Pyodide…',       uk: 'Завантаження Pyodide…',    es: 'Cargando Pyodide…' },
+    'status.installingPkgs':{ en: 'Installing packages…',   uk: 'Встановлення пакетів…',    es: 'Instalando paquetes…' },
+    'status.installingAdv': { en: 'Installing pdfminer.six, python-docx…', uk: 'Встановлення pdfminer.six, python-docx…', es: 'Instalando pdfminer.six, python-docx…' },
+    'status.initCore':      { en: 'Initialising Python core…', uk: 'Ініціалізація Python-ядра…', es: 'Inicializando núcleo Python…' },
+    'status.systemReady':   { en: 'System loaded successfully!', uk: 'Систему завантажено успішно!', es: '¡Sistema cargado correctamente!' },
+    'status.initError':     { en: 'Initialisation error',   uk: 'Помилка ініціалізації',    es: 'Error de inicialización' },
+    'status.translating':   { en: 'Translating…',           uk: 'Переклад…',                es: 'Traduciendo…' },
+    'status.transCompleteGen': { en: 'Translation complete. Generating prompt…', uk: 'Переклад завершено. Генерація промту…', es: 'Traducción completa. Generando prompt…' },
+    'status.localUnavTrans':{ en: 'Local model unavailable. Translating via Claude API…', uk: 'Локальна модель недоступна. Перекладаю через Claude API…', es: 'Modelo local no disponible. Traduciendo con Claude API…' },
+    'status.generating':    { en: 'Generating prompt…',     uk: 'Генерація промту…',        es: 'Generando prompt…' },
+    'status.buildingResults':{ en: 'Building results…',     uk: 'Формування результатів…',  es: 'Creando resultados…' },
+    'status.applyingFixes': { en: 'Applying fixes…',        uk: 'Застосування виправлень…', es: 'Aplicando correcciones…' },
+    'status.processing':    { en: 'Processing…',            uk: 'Обробка…',                 es: 'Procesando…' },
+    'status.waitPyodide':   { en: 'Wait for Pyodide to load', uk: 'Зачекайте завантаження Pyodide', es: 'Espere a que cargue Pyodide' },
+
+    /* ── Spinner / hourglass steps ── */
+    'spinner.detecting':    { en: 'Detecting repetitions…', uk: 'Виявлення повторень…',     es: 'Detectando repeticiones…' },
+    'spinner.spaces':       { en: 'Spaces and indents…',    uk: 'Пробіли та відступи…',     es: 'Espacios y sangría…' },
+    'spinner.punctuation':  { en: 'Punctuation and quotes…',uk: 'Пунктуація та лапки…',     es: 'Puntuación y comillas…' },
+    'spinner.vocabulary':   { en: 'Vocabulary check…',      uk: 'Словниковий контроль…',    es: 'Control de vocabulario…' },
+    'spinner.spelling':     { en: 'Spell check (EN)…',      uk: 'Орфографічна перевірка (EN)…', es: 'Revisión ortográfica (EN)…' },
+    'spinner.grammar':      { en: 'Grammar check…',         uk: 'Граматика та русизми…',    es: 'Gramática y rusismos…' },
+    'spinner.style':        { en: 'Style and clichés…',     uk: 'Стиль та канцеляризми…',   es: 'Estilo y clichés…' },
+    'spinner.passive':      { en: 'Passive voice…',         uk: 'Пасивний стан…',           es: 'Voz pasiva…' },
+    'spinner.structure':    { en: 'Prompt structure…',      uk: 'Структура промту…',        es: 'Estructura del prompt…' },
+
+    /* ── Toast messages: extra ── */
+    'toast.systemReady':    { en: 'System loaded successfully!', uk: 'Систему завантажено успішно!', es: '¡Sistema cargado correctamente!' },
+    'toast.pyodideWait':    { en: 'Please wait for Pyodide to load', uk: 'Зачекайте завантаження Pyodide', es: 'Espere a que cargue Pyodide' },
+    'toast.pyodideNotReady':{ en: 'Pyodide not ready',      uk: 'Pyodide не готовий',       es: 'Pyodide no está listo' },
+    'toast.emptyFile':      { en: 'Empty file',             uk: 'Порожній файл',            es: 'Archivo vacío' },
+    'toast.unsupportedFmt': { en: 'Unsupported format',     uk: 'Непідтримуваний формат',   es: 'Formato no compatible' },
+    'toast.fileLoaded':     { en: 'File loaded:',           uk: 'Файл завантажено:',        es: 'Archivo cargado:' },
+    'toast.fileSaved':      { en: 'File saved!',            uk: 'Файл збережено!',          es: '¡Archivo guardado!' },
+    'toast.savedLocal':     { en: 'Saved to local storage', uk: 'Збережено в локальне сховище', es: 'Guardado en almacenamiento local' },
+    'toast.loaded':         { en: 'Loaded:',                uk: 'Завантажено:',             es: 'Cargado:' },
+    'toast.deleted':        { en: 'Deleted',                uk: 'Видалено',                 es: 'Eliminado' },
+    'toast.openedEditor':   { en: 'Opened in editor',       uk: 'Відкрито в редакторі',     es: 'Abierto en el editor' },
+    'toast.copiedFallback': { en: 'Copied (fallback)',      uk: 'Скопійовано (fallback)',   es: 'Copiado (alternativa)' },
+    'toast.noSave':         { en: 'Nothing to save',        uk: 'Немає що зберігати',       es: 'Nada que guardar' },
+    'toast.noCopy':         { en: 'Nothing to copy',        uk: 'Немає що копіювати',       es: 'Nada que copiar' },
+    'toast.noFixedSave':    { en: 'No corrected text to save', uk: 'Немає виправленого тексту для збереження', es: 'No hay texto corregido para guardar' },
+    'toast.noFixedCopy':    { en: 'No corrected text to copy', uk: 'Немає виправленого тексту для копіювання', es: 'No hay texto corregido para copiar' },
+    'toast.fixedSaved':     { en: 'Corrected file saved:',  uk: 'Виправлений файл збережено:', es: 'Archivo corregido guardado:' },
+    'toast.fixedCopied':    { en: 'Corrected text copied',  uk: 'Виправлений текст скопійовано в буфер обміну', es: 'Texto corregido copiado' },
+    'toast.fixApplied':     { en: 'Fix applied',            uk: 'Виправлення застосовано',  es: 'Corrección aplicada' },
+    'toast.errorGeneric':   { en: 'Error:',                 uk: 'Помилка:',                 es: 'Error:' },
+    'toast.pdf2mdError':    { en: 'pdf2md error — switching to pdfminer fallback', uk: 'pdf2md помилка — перехід на pdfminer', es: 'Error pdf2md — cambiando a pdfminer' },
+    'toast.converted':      { en: 'Converted',              uk: 'Конвертовано',             es: 'Convertido' },
+    'toast.translInputEn':  { en: 'Translating input to English…', uk: 'Переклад тексту на англійську…', es: 'Traduciendo al inglés…' },
+    'toast.noErrors':       { en: 'No errors found! Excellent work.', uk: 'Помилок не знайдено! Чудова робота.', es: '¡Sin errores! Excelente trabajo.' },
+
+    /* ── Dialog buttons ── */
+    'dialog.confirm':      { en: 'Confirmation', uk: 'Підтвердження', es: 'Confirmación' },
+    'dialog.cancel':        { en: 'Cancel',  uk: 'Скасувати', es: 'Cancelar' },
+    'dialog.delete':        { en: 'Delete',  uk: 'Видалити',  es: 'Eliminar' },
+    'dialog.fileNameLabel': { en: 'File name:', uk: 'Назва файлу:', es: 'Nombre del archivo:' },
+    'dialog.confirmDelete': { en: 'Delete',  uk: 'Видалити',  es: 'Eliminar' },
+
+    /* ── Error type labels (checker) ── */
+    'err.repeat':    { en: 'Repeat',       uk: 'Повтор',        es: 'Repetición' },
+    'err.space':     { en: 'Space',        uk: 'Пробіл',        es: 'Espacio' },
+    'err.punct':     { en: 'Punctuation',  uk: 'Пунктуація',    es: 'Puntuación' },
+    'err.capital':   { en: 'Case',         uk: 'Регістр',       es: 'Mayúsculas' },
+    'err.spelling':  { en: 'Spelling',     uk: 'Орфографія',    es: 'Ortografía' },
+    'err.grammar':   { en: 'Grammar',      uk: 'Граматика',     es: 'Gramática' },
+    'err.style':     { en: 'Style',        uk: 'Стиль',         es: 'Estilo' },
+    'err.passive':   { en: 'Passive voice',uk: 'Пасивний стан', es: 'Voz pasiva' },
+    'err.structure': { en: 'Structure',    uk: 'Структура',     es: 'Estructura' },
+
+    /* ── Error Checker: dynamic error messages from python_core.js ── */
+    'err.msg.repeat':         { en: 'Repeated word \u00ab{word}\u00bb', uk: 'Повтор слова \u00ab{word}\u00bb', es: 'Palabra repetida \u00ab{word}\u00bb' },
+    'err.msg.extraSpaces':    { en: 'Extra spaces', uk: 'Зайві пробіли', es: 'Espacios adicionales' },
+    'err.msg.spaceBeforePunct': { en: 'Space before punctuation mark', uk: 'Пробіл перед знаком пунктуації', es: 'Espacio antes del signo de puntuación' },
+    'err.msg.doublePunct':    { en: 'Double punctuation', uk: 'Подвійна пунктуація', es: 'Puntuación doble' },
+    'err.msg.lowercaseStart': { en: 'Sentence starts with a lowercase letter', uk: 'Речення починається з малої літери', es: 'La oración comienza con minúscula' },
+    'err.msg.capsLock':       { en: 'CAPS LOCK might be on', uk: 'Можливо, CAPS LOCK увімкнений', es: 'Es posible que BLOQ MAYÚS esté activado' },
+    'err.msg.grammarRu':      { en: 'Grammar issue or calque \u2192 \u00ab{suggestion}\u00bb', uk: 'Граматична помилка або русизм \u2192 \u00ab{suggestion}\u00bb', es: 'Error gramatical o calco \u2192 \u00ab{suggestion}\u00bb' },
+    'err.msg.cliche':         { en: 'Cliché or bureaucratic phrase: \u00ab{word}\u00bb', uk: 'Канцеляризм або кліше: \u00ab{word}\u00bb', es: 'Cliché o frase burocrática: \u00ab{word}\u00bb' },
+    'err.msg.passive':        { en: 'Passive voice \u2014 consider active', uk: 'Пасивний стан — розгляньте активний', es: 'Voz pasiva \u2014 considere la voz activa' },
+    'err.msg.noRole':         { en: 'Missing role or context description', uk: 'Відсутній опис ролі або контексту', es: 'Falta la descripción del rol o contexto' },
+    'err.msg.noTask':         { en: 'Missing a clear task', uk: 'Відсутнє чітке завдання', es: 'Falta una tarea clara' },
+    'err.msg.noOutput':       { en: 'Missing description of the expected output', uk: 'Відсутній опис очікуваного результату', es: 'Falta la descripción del resultado esperado' },
+    'err.sugg.noRole':        { en: 'Add: "You are a\u2026" or "Act as\u2026"', uk: 'Додайте: "You are a\u2026" або "Ти \u2014 ..."', es: 'Agregue: "Eres un\u2026" o "Actúa como\u2026"' },
+    'err.sugg.noTask':        { en: 'Add a specific task description', uk: 'Додайте конкретний опис задачі', es: 'Agregue una descripción específica de la tarea' },
+    'err.sugg.noOutput':      { en: 'Add: "Respond in the format\u2026"', uk: 'Додайте: "Відповідь у форматі\u2026"', es: 'Agregue: "Responda en el formato\u2026"' },
+    'err.suggRemove':         { en: '(remove)', uk: '(видалити)', es: '(eliminar)' },
+    'err.suggSimplify':       { en: '(simplify)', uk: '(спростити)', es: '(simplificar)' },
+    'err.suggActiveVoice':    { en: '(active voice)', uk: '(активний стан)', es: '(voz activa)' },
+
+    /* ── Quality labels (checker) ── */
+    'quality.excellent': { en: 'Excellent',           uk: 'Відмінно',              es: 'Excelente' },
+    'quality.flawless':  { en: 'Flawless',            uk: 'Бездоганно',            es: 'Impecable' },
+    'quality.good':      { en: 'Good',                uk: 'Добре',                 es: 'Bueno' },
+    'quality.satisf':    { en: 'Satisfactory',        uk: 'Задовільно',            es: 'Satisfactorio' },
+    'quality.needsWork': { en: 'Needs improvement',   uk: 'Потребує доопрацювання', es: 'Necesita mejoras' },
+
+    /* ── Checker result text ── */
+    'checker.empty':     { en: 'Empty',    uk: 'Порожньо',  es: 'Vacío' },
+    'checker.langUk':    { en: 'Ukrainian',uk: 'Українська', es: 'Ucraniano' },
+    'checker.langEn':    { en: 'English',  uk: 'Англійська', es: 'Inglés' },
+    'checker.checking':  { en: 'Checking…',uk: 'Перевірка…', es: 'Verificando…' },
+    'checker.check':     { en: 'Check',    uk: 'Перевірити', es: 'Verificar' },
+    'checker.lang':      { en: 'Language:',uk: 'Мова:',      es: 'Idioma:' },
+    'checker.noSavedFiles': { en: 'No saved files', uk: 'Немає збережених файлів', es: 'No hay archivos guardados' },
+    'checker.position':  { en: 'position {n}', uk: 'позиція {n}', es: 'posición {n}' },
+    'checker.found':     { en: 'Found:', uk: 'Знайдено:', es: 'Encontrado:' },
+
+    /* ── Generating button state ── */
+    'btn.generating':    { en: 'Generating…', uk: 'Генерація…', es: 'Generando…' },
+
+
+    /* ── Translation source labels ── */
+    'toast.translatedDeepSeek': {
+      en: 'Text translated via DeepSeek',
+      uk: 'Текст перекладено через DeepSeek',
+      es: 'Texto traducido con DeepSeek'
+    },
+    'toast.translatedLocal': {
+      en: 'Text translated (local model)',
+      uk: 'Текст перекладено (локальна модель)',
+      es: 'Texto traducido (modelo local)'
+    },
+    'status.transDeepSeek': {
+      en: 'Translating via DeepSeek…',
+      uk: 'Переклад через DeepSeek…',
+      es: 'Traduciendo con DeepSeek…'
+    },
+
+
+    /* ── DeepSeek status ── */
+    'status.deepseekAnalyzing': {
+      en: 'DeepSeek: analyzing domain',
+      uk: 'DeepSeek: аналіз домену',
+      es: 'DeepSeek: analizando dominio'
+    },
+
+    /* ── Save file dialog ── */
+    'dialog.saveFile':      { en: 'Save file',      uk: 'Зберегти файл',      es: 'Guardar archivo' },
+    'dialog.fileName':      { en: 'File name',      uk: 'Назва файлу',        es: 'Nombre del archivo' },
+    'dialog.saveBtn':       { en: 'Save',            uk: 'Зберегти',           es: 'Guardar' },
+    'dialog.cancelBtn':     { en: 'Cancel',          uk: 'Скасувати',          es: 'Cancelar' },
+    'dialog.fileExt':       { en: '.md file',        uk: 'файл .md',           es: 'archivo .md' },
+
+
+    /* ── Save to localStorage dialog ── */
+    'dialog.saveLocalTitle': {
+      en: 'Save to local storage',
+      uk: 'Зберегти у локальне сховище',
+      es: 'Guardar en almacenamiento local'
+    },
+    'dialog.saveLocalHint': {
+      en: 'Saved in browser, persists across sessions',
+      uk: 'Зберігається в браузері між сесіями',
+      es: 'Guardado en el navegador entre sesiones'
+    },
+
+
+    /* ── API Key modal ── */
+    'apikey.modal.title':   { en: 'DeepSeek API Key',           uk: 'API Key DeepSeek',            es: 'Clave API DeepSeek' },
+    'apikey.modal.new':     { en: 'Add API Key',                uk: 'Додати API Key',              es: 'Agregar clave API' },
+    'apikey.modal.update':  { en: 'Update API Key',             uk: 'Оновити API Key',             es: 'Actualizar clave API' },
+    'apikey.modal.hint':    { en: 'Get your key at platform.deepseek.com → API Keys', uk: 'Отримайте ключ на platform.deepseek.com → API Keys', es: 'Obtenga su clave en platform.deepseek.com → API Keys' },
+    'apikey.modal.label':   { en: 'API Key (starts with sk-)',  uk: 'API Key (починається з sk-)', es: 'Clave API (comienza con sk-)' },
+    'apikey.modal.current': { en: 'Current',                    uk: 'Поточний',                    es: 'Actual' },
+    'apikey.modal.noKey':   { en: 'No key set',                 uk: 'Ключ не встановлено',         es: 'Sin clave configurada' },
+    'apikey.modal.saved':   { en: 'Key saved in localStorage',  uk: 'Ключ збережено в localStorage', es: 'Clave guardada en localStorage' },
+
+    /* ── Toast messages ── */
+    'toast.copied':       { en: 'Copied!',           uk: 'Скопійовано!',     es: '¡Copiado!' },
+    'toast.saved':        { en: 'File saved!',       uk: 'Файл збережено!',  es: '¡Archivo guardado!' },
+    'toast.noText':       { en: 'Enter text first',  uk: 'Введіть текст',    es: 'Ingrese texto primero' },
+    'toast.noErrors':     { en: 'No errors to fix',  uk: 'Немає помилок для виправлення', es: 'No hay errores para corregir' },
+    'toast.applied':      { en: 'All fixes applied!',uk: 'Всі виправлення застосовано!', es: '¡Todas las correcciones aplicadas!' },
+    'toast.langChanged':  { en: 'Language changed to English', uk: 'Мову змінено на українську', es: 'Idioma cambiado a español' },
+    'toast.translating':  { en: 'Translating input to English…', uk: 'Переклад тексту на англійську…', es: 'Traduciendo al inglés…' },
+    'toast.translated':   { en: 'Input translated to English for prompt generation.', uk: 'Текст перекладено на англійську для генерації промту.', es: 'Texto traducido al inglés para generar el prompt.' },
+
+    /* ── Domain labels (shared: Library, Stats, Scheduler) ── */
+    'domain.intelligence_analysis': { en: 'Intelligence Analysis', uk: 'Аналітика розвідки', es: 'Análisis de inteligencia' },
+    'domain.osint':                 { en: 'OSINT', uk: 'OSINT', es: 'OSINT' },
+    'domain.strategic_risk':        { en: 'Strategic Risks', uk: 'Стратегічні ризики', es: 'Riesgos estratégicos' },
+    'domain.medical_diagnostics':   { en: 'Medicine', uk: 'Медицина', es: 'Medicina' },
+    'domain.cybersecurity':         { en: 'Cybersecurity', uk: 'Кібербезпека', es: 'Ciberseguridad' },
+    'domain.financial_analysis':    { en: 'Financial Analysis', uk: 'Фінансовий аналіз', es: 'Análisis financiero' },
+    'domain.legal_analysis':        { en: 'Law', uk: 'Право', es: 'Derecho' },
+    'domain.programming':           { en: 'Programming', uk: 'Програмування', es: 'Programación' },
+    'domain.data_science':          { en: 'Data Science', uk: 'Наука про дані', es: 'Ciencia de datos' },
+    'domain.business_strategy':     { en: 'Business Strategy', uk: 'Бізнес-стратегія', es: 'Estrategia empresarial' },
+    'domain.product_management':    { en: 'Product Management', uk: 'Управління продуктом', es: 'Gestión de producto' },
+    'domain.scientific_research':   { en: 'Scientific Research', uk: 'Наукові дослідження', es: 'Investigación científica' },
+    'domain.general':               { en: 'General', uk: 'Загальне', es: 'General' },
+
+    /* ── Auth: user dropdown ── */
+    'auth.signIn':         { en: 'Sign In', uk: 'Увійти', es: 'Iniciar sesión' },
+    'auth.myPrompts':      { en: 'My Prompts', uk: 'Мої промти', es: 'Mis prompts' },
+    'auth.statistics':     { en: 'Statistics', uk: 'Статистика', es: 'Estadísticas' },
+    'auth.scheduler':      { en: '⏱ Scheduler', uk: '⏱ Планувальник', es: '⏱ Programador' },
+    'auth.adminPanel':     { en: '🛡 Admin Panel', uk: '🛡 Адмін-панель', es: '🛡 Panel de administración' },
+    'auth.signOut':        { en: '↩ Sign Out', uk: '↩ Вийти', es: '↩ Cerrar sesión' },
+    'auth.user':           { en: 'User', uk: 'Користувач', es: 'Usuario' },
+
+    /* ── Auth: login/register modal ── */
+    'auth.modal.title':     { en: '🔑 JS PROMPT', uk: '🔑 JS PROMPT', es: '🔑 JS PROMPT' },
+    'auth.tab.login':       { en: 'Sign In', uk: 'Увійти', es: 'Iniciar sesión' },
+    'auth.tab.register':    { en: 'Register', uk: 'Реєстрація', es: 'Registrarse' },
+    'auth.placeholder.email':    { en: 'Email', uk: 'Email', es: 'Correo' },
+    'auth.placeholder.password': { en: 'Password', uk: 'Пароль', es: 'Contraseña' },
+    'auth.btn.login':       { en: 'Sign In', uk: 'Увійти', es: 'Iniciar sesión' },
+    'auth.btn.loggingIn':   { en: 'Signing in…', uk: 'Вхід…', es: 'Iniciando sesión…' },
+    'auth.forgotPassword':  { en: 'Forgot password?', uk: 'Забули пароль?', es: '¿Olvidó su contraseña?' },
+    'auth.forgot.hint':     { en: 'Enter your email — we\u2019ll send a password reset link.', uk: 'Введіть email — ми надішлемо посилання для скидання пароля.', es: 'Ingrese su correo — le enviaremos un enlace para restablecer la contraseña.' },
+    'auth.forgot.send':     { en: 'Send Link', uk: 'Надіслати посилання', es: 'Enviar enlace' },
+    'auth.forgot.sending':  { en: 'Sending…', uk: 'Надсилання…', es: 'Enviando…' },
+    'auth.backToLogin':     { en: '← Back to sign in', uk: '← Назад до входу', es: '← Volver a iniciar sesión' },
+    'auth.placeholder.name':      { en: 'Name (optional)', uk: 'Ім\u2019я (необов\u2019язково)', es: 'Nombre (opcional)' },
+    'auth.placeholder.passwordMin': { en: 'Password (min. 8 characters)', uk: 'Пароль (мін. 8 символів)', es: 'Contraseña (mín. 8 caracteres)' },
+    'auth.placeholder.confirmPassword': { en: 'Confirm password', uk: 'Підтвердіть пароль', es: 'Confirmar contraseña' },
+    'auth.btn.register':       { en: 'Register', uk: 'Зареєструватись', es: 'Registrarse' },
+    'auth.btn.registering':    { en: 'Registering…', uk: 'Реєстрація…', es: 'Registrando…' },
+    'auth.err.emailPassRequired':  { en: 'Enter email and password.', uk: 'Введіть email і пароль.', es: 'Ingrese correo y contraseña.' },
+    'auth.err.emailRequired':      { en: 'Enter your email.', uk: 'Введіть email.', es: 'Ingrese su correo.' },
+    'auth.err.passwordMin':        { en: 'Password must be at least 8 characters.', uk: 'Пароль мінімум 8 символів.', es: 'La contraseña debe tener al menos 8 caracteres.' },
+    'auth.err.passwordMismatch':   { en: 'Passwords do not match.', uk: 'Паролі не збігаються.', es: 'Las contraseñas no coinciden.' },
+    'auth.ok.loginSuccess':        { en: '✓ Signed in successfully!', uk: '✓ Успішний вхід!', es: '✓ ¡Sesión iniciada con éxito!' },
+    'auth.ok.resetLinkSent':       { en: '✓ If an account exists, a password reset link has been sent.', uk: '✓ Якщо акаунт існує, на пошту надіслано посилання для скидання пароля.', es: '✓ Si existe una cuenta, se ha enviado un enlace para restablecer la contraseña.' },
+    'auth.ok.registerSuccess':     { en: '✓ Registration complete! Check your email {email} to confirm your account.', uk: '✓ Реєстрацію завершено! Перевірте email {email} і підтвердіть акаунт.', es: '✓ ¡Registro completo! Revise su correo {email} para confirmar su cuenta.' },
+
+    /* ── Auth: reset password modal ── */
+    'auth.reset.title':      { en: '🔑 New Password', uk: '🔑 Новий пароль', es: '🔑 Nueva contraseña' },
+    'auth.reset.hint':       { en: 'Enter a new password for your account.', uk: 'Введіть новий пароль для вашого акаунту.', es: 'Ingrese una nueva contraseña para su cuenta.' },
+    'auth.reset.btn':        { en: 'Set Password', uk: 'Встановити пароль', es: 'Establecer contraseña' },
+    'auth.reset.saving':     { en: 'Saving…', uk: 'Збереження…', es: 'Guardando…' },
+    'auth.reset.success':    { en: '✓ Password changed! Sign in with your new password.', uk: '✓ Пароль змінено! Тепер увійдіть з новим паролем.', es: '✓ ¡Contraseña cambiada! Inicie sesión con su nueva contraseña.' },
+
+    /* ── Save to Account dialog ── */
+    'save.nothingToSave':   { en: 'Nothing to save', uk: 'Немає що зберігати', es: 'Nada que guardar' },
+    'save.title':           { en: 'Save Prompt', uk: 'Збереження промту', es: 'Guardar prompt' },
+    'save.promptName':      { en: 'Prompt name', uk: 'Назва промту', es: 'Nombre del prompt' },
+    'save.promptNamePlaceholder': { en: 'Enter a descriptive name…', uk: 'Введіть зрозумілу назву…', es: 'Ingrese un nombre descriptivo…' },
+    'save.domain':          { en: 'Domain', uk: 'Домен', es: 'Dominio' },
+    'save.btn.save':        { en: 'Save', uk: 'Зберегти', es: 'Guardar' },
+    'save.btn.cancel':      { en: 'Cancel', uk: 'Скасувати', es: 'Cancelar' },
+    'save.btn.saving':      { en: '…Saving', uk: '…Збереження', es: '…Guardando' },
+    'save.btn.saveToAccount': { en: '💾 Save to Account', uk: '💾 Зберегти в акаунт', es: '💾 Guardar en la cuenta' },
+    'save.ok':               { en: '✓ Saved to your account!', uk: '✓ Збережено в акаунт!', es: '✓ ¡Guardado en su cuenta!' },
+    'save.failed':           { en: 'Save failed: {error}', uk: 'Помилка збереження: {error}', es: 'Error al guardar: {error}' },
+
+    /* ── My Account panel (Library / Stats / Scheduler) ── */
+    'db.title':             { en: 'My Account', uk: 'Мій акаунт', es: 'Mi cuenta' },
+    'db.tab.library':       { en: 'Prompt Library', uk: 'Бібліотека промтів', es: 'Biblioteca de prompts' },
+    'db.tab.stats':         { en: 'Statistics', uk: 'Статистика', es: 'Estadísticas' },
+    'db.tab.schedule':      { en: '⏱ Scheduler', uk: '⏱ Планувальник', es: '⏱ Programador' },
+
+    /* ── Library tab ── */
+    'lib.search.placeholder': { en: 'Search prompts…', uk: 'Пошук промтів…', es: 'Buscar prompts…' },
+    'lib.loading':           { en: 'Loading…', uk: 'Завантаження…', es: 'Cargando…' },
+    'lib.refresh.title':    { en: 'Refresh', uk: 'Оновити список', es: 'Actualizar' },
+    'lib.refreshed':        { en: '✓ List refreshed', uk: '✓ Список оновлено', es: '✓ Lista actualizada' },
+    'lib.allDomains':       { en: 'All Domains', uk: 'Усі домени', es: 'Todos los dominios' },
+    'lib.empty':            { en: 'No prompts found{q}.', uk: 'Промтів не знайдено{q}.', es: 'No se encontraron prompts{q}.' },
+    'lib.copyPrompt':       { en: '📋 Copy Prompt', uk: '📋 Копіювати промт', es: '📋 Copiar prompt' },
+    'lib.copySource':       { en: '📝 Copy Source', uk: '📝 Копіювати джерело', es: '📝 Copiar fuente' },
+    'lib.load':             { en: '↗ Load', uk: '↗ Завантажити', es: '↗ Cargar' },
+    'lib.delete':           { en: '🗑 Delete', uk: '🗑 Видалити', es: '🗑 Eliminar' },
+    'lib.words':            { en: 'words', uk: 'слів', es: 'palabras' },
+    'lib.tokens':           { en: 'tokens', uk: 'токенів', es: 'tokens' },
+    'lib.copyPromptOk':     { en: '✓ Prompt copied to clipboard', uk: '✓ Промт скопійовано в буфер обміну', es: '✓ Prompt copiado al portapapeles' },
+    'lib.copyFailed':       { en: 'Copy failed', uk: 'Не вдалося скопіювати', es: 'Error al copiar' },
+    'lib.copySourceOk':     { en: '✓ Source text copied to clipboard', uk: '✓ Вихідний текст скопійовано в буфер обміну', es: '✓ Texto fuente copiado al portapapeles' },
+    'lib.noSourceText':     { en: 'This prompt has no saved source text', uk: 'У цього промту немає збереженого вихідного тексту', es: 'Este prompt no tiene texto fuente guardado' },
+    'lib.loadOk':           { en: '✓ Source text loaded', uk: '✓ Вихідний текст завантажено', es: '✓ Texto fuente cargado' },
+    'lib.loadFailed':       { en: 'Load failed', uk: 'Не вдалося завантажити', es: 'Error al cargar' },
+    'lib.deleteTitle':      { en: 'Delete prompt?', uk: 'Видалити промт?', es: '¿Eliminar prompt?' },
+    'lib.deleteBody':       { en: 'This action cannot be undone.', uk: 'Цю дію не можна скасувати.', es: 'Esta acción no se puede deshacer.' },
+    'lib.deleteBtn':        { en: 'Delete', uk: 'Видалити', es: 'Eliminar' },
+    'lib.cancelBtn':        { en: 'Cancel', uk: 'Скасувати', es: 'Cancelar' },
+    'lib.deletedOk':        { en: '✓ Prompt deleted', uk: '✓ Промт видалено', es: '✓ Prompt eliminado' },
+
+    /* ── Stats tab ── */
+    'stats.totalPrompts':   { en: 'Total Prompts', uk: 'Усього промтів', es: 'Total de prompts' },
+    'stats.totalTokens':    { en: 'Total Tokens', uk: 'Усього токенів', es: 'Total de tokens' },
+    'stats.avgTokens':      { en: 'Avg Tokens', uk: 'Сер. токенів', es: 'Tokens promedio' },
+    'stats.domainsUsed':    { en: 'Domains Used', uk: 'Використано доменів', es: 'Dominios usados' },
+    'stats.byDomain':       { en: 'Prompts by Domain', uk: 'Промти за доменом', es: 'Prompts por dominio' },
+    'stats.noPrompts':      { en: 'No prompts saved yet.', uk: 'Ще немає збережених промтів.', es: 'Aún no hay prompts guardados.' },
+    'stats.activity30':     { en: 'Activity \u2014 Last 30 Days', uk: 'Активність за останні 30 днів', es: 'Actividad \u2014 últimos 30 días' },
+
+    /* ── Scheduler tab ── */
+    'sched.untitled':        { en: 'Untitled', uk: 'Без назви', es: 'Sin título' },
+    'sched.next':             { en: 'Next', uk: 'Наступний', es: 'Próximo' },
+    'sched.status':           { en: 'Status', uk: 'Статус', es: 'Estado' },
+    'sched.runs':             { en: 'Runs', uk: 'Виконань', es: 'Ejecuciones' },
+    'sched.results':          { en: '📋 Results', uk: '📋 Результати', es: '📋 Resultados' },
+    'sched.cancel':           { en: '✕ Cancel', uk: '✕ Скасувати', es: '✕ Cancelar' },
+    'sched.delete':           { en: '🗑 Delete', uk: '🗑 Видалити', es: '🗑 Eliminar' },
+    'sched.noJobs':           { en: 'No scheduled jobs yet.', uk: 'Ще немає запланованих задач.', es: 'Aún no hay tareas programadas.' },
+    'sched.createTitle':      { en: 'Create Scheduled Job', uk: 'Створити заплановану задачу', es: 'Crear tarea programada' },
+    'sched.promptToExecute':  { en: 'Prompt to execute', uk: 'Промт для виконання', es: 'Prompt a ejecutar' },
+    'sched.selectPrompt':     { en: 'Select a saved prompt…', uk: 'Оберіть збережений промт…', es: 'Seleccione un prompt guardado…' },
+    'sched.targetAi':         { en: 'Target AI', uk: 'Цільовий AI', es: 'IA objetivo' },
+    'sched.scheduleType':     { en: 'Schedule type', uk: 'Тип розкладу', es: 'Tipo de programación' },
+    'sched.type.once':        { en: 'Once', uk: 'Один раз', es: 'Una vez' },
+    'sched.type.weekly':      { en: 'Weekly', uk: 'Щотижня', es: 'Semanal' },
+    'sched.type.monthly':     { en: 'Monthly', uk: 'Щомісяця', es: 'Mensual' },
+    'sched.firstRun':         { en: 'First run date/time', uk: 'Дата/час першого запуску', es: 'Fecha/hora de la primera ejecución' },
+    'sched.maxTokens':        { en: 'Max Tokens', uk: 'Макс. токенів', es: 'Tokens máximos' },
+    'sched.default':          { en: '(default: {n})', uk: '(за замовчуванням: {n})', es: '(predeterminado: {n})' },
+    'sched.scheduleJobBtn':   { en: 'Schedule Job', uk: 'Запланувати задачу', es: 'Programar tarea' },
+    'sched.scheduledJobs':    { en: 'Scheduled Jobs', uk: 'Заплановані задачі', es: 'Tareas programadas' },
+    'sched.selectPromptFirst': { en: 'Select a prompt first.', uk: 'Спочатку оберіть промт.', es: 'Primero seleccione un prompt.' },
+    'sched.setDateTime':      { en: 'Set a date and time.', uk: 'Встановіть дату й час.', es: 'Establezca una fecha y hora.' },
+    'sched.scheduledOk':      { en: '✓ Job scheduled', uk: '✓ Задачу заплановано', es: '✓ Tarea programada' },
+    'sched.noResultsYet':     { en: 'No results yet', uk: 'Результатів ще немає', es: 'Aún no hay resultados' },
+    'sched.jobResults':       { en: '📋 Job Results ({n})', uk: '📋 Результати задачі ({n})', es: '📋 Resultados de la tarea ({n})' },
+    'sched.copy':             { en: '📋 Copy', uk: '📋 Копіювати', es: '📋 Copiar' },
+    'sched.downloadMd':       { en: 'Download as Markdown', uk: 'Завантажити як Markdown', es: 'Descargar como Markdown' },
+    'sched.downloadTxt':      { en: 'Download as plain text', uk: 'Завантажити як звичайний текст', es: 'Descargar como texto plano' },
+    'sched.downloadDocx':     { en: 'Download as Word document', uk: 'Завантажити як документ Word', es: 'Descargar como documento Word' },
+    'sched.noContent':        { en: '(no content)', uk: '(немає вмісту)', es: '(sin contenido)' },
+    'sched.resultCopiedOk':   { en: '✓ Result copied to clipboard', uk: '✓ Результат скопійовано в буфер обміну', es: '✓ Resultado copiado al portapapeles' },
+    'sched.fileDownloadedOk': { en: '✓ File downloaded', uk: '✓ Файл завантажено', es: '✓ Archivo descargado' },
+    'sched.docxFailed':       { en: '✗ Failed to create .docx: {error}', uk: '✗ Помилка створення .docx: {error}', es: '✗ Error al crear .docx: {error}' },
+    'sched.deleteJobTitle':   { en: 'Delete this job completely?', uk: 'Видалити задачу повністю?', es: '¿Eliminar esta tarea por completo?' },
+    'sched.deleteJobBody':    { en: 'This also removes all of its run results.', uk: 'Разом з усіма результатами виконання.', es: 'Esto también elimina todos sus resultados de ejecución.' },
+    'sched.deleteJobYes':     { en: 'Delete', uk: 'Видалити', es: 'Eliminar' },
+    'sched.deleteJobNo':      { en: 'No', uk: 'Ні', es: 'No' },
+    'sched.deletedOk':        { en: '✓ Job deleted', uk: '✓ Задачу видалено', es: '✓ Tarea eliminada' },
+    'sched.refresh.title':    { en: 'Refresh job list', uk: 'Оновити список задач', es: 'Actualizar lista de tareas' },
+    'sched.refreshed':        { en: '✓ Job list updated', uk: '✓ Список задач оновлено', es: '✓ Lista de tareas actualizada' },
+    'sched.deleteCompleted.title':       { en: 'Delete all completed jobs', uk: 'Видалити всі завершені задачі', es: 'Eliminar todas las tareas completadas' },
+    'sched.deleteCompleted.btn':         { en: 'Delete completed', uk: 'Видалити завершені', es: 'Eliminar completadas' },
+    'sched.deleteCompleted.confirmTitle':{ en: 'Delete all completed jobs?', uk: 'Видалити всі завершені задачі?', es: '¿Eliminar todas las tareas completadas?' },
+    'sched.deleteCompleted.confirmBody': { en: 'This will permanently delete {n} completed job(s) and all their results. Active and pending jobs are NOT affected.', uk: 'Буде назавжди видалено {n} завершену(-их) задачу(-і) разом з усіма результатами. Активні та задачі в очікуванні НЕ видаляються.', es: 'Se eliminarán permanentemente {n} tarea(s) completada(s) y todos sus resultados. Las tareas activas y pendientes NO se ven afectadas.' },
+    'sched.deleteCompleted.confirmYes':  { en: 'Delete all', uk: 'Видалити всі', es: 'Eliminar todas' },
+    'sched.deleteCompleted.doneToast':   { en: '✓ {n} job(s) deleted', uk: '✓ Видалено {n} задачу(-і)', es: '✓ {n} tarea(s) eliminada(s)' },
+    'sched.cancelTitle':      { en: 'Cancel this job?', uk: 'Скасувати задачу?', es: '¿Cancelar esta tarea?' },
+    'sched.cancelYes':        { en: 'Cancel Job', uk: 'Скасувати', es: 'Cancelar tarea' },
+    'sched.cancelNo':         { en: 'No', uk: 'Ні', es: 'No' },
+    'sched.canceledOk':       { en: '✓ Job canceled', uk: '✓ Задачу скасовано', es: '✓ Tarea cancelada' },
+
+    /* ── Mini admin panel (opened from the app header, not /admin.html) ── */
+    'miniAdmin.title':       { en: '🛡 Admin Panel', uk: '🛡 Адмін-панель', es: '🛡 Panel de administración' },
+    'miniAdmin.totalUsers':  { en: 'Total Users', uk: 'Усього користувачів', es: 'Total de usuarios' },
+    'miniAdmin.activeUsers': { en: 'Active Users', uk: 'Активні користувачі', es: 'Usuarios activos' },
+    'miniAdmin.totalPrompts':{ en: 'Total Prompts', uk: 'Усього промтів', es: 'Total de prompts' },
+    'miniAdmin.pendingJobs': { en: 'Pending Jobs', uk: 'Задачі в очікуванні', es: 'Tareas pendientes' },
+    'miniAdmin.users':       { en: 'Users', uk: 'Користувачі', es: 'Usuarios' },
+    'miniAdmin.col.email':   { en: 'Email', uk: 'Email', es: 'Correo' },
+    'miniAdmin.col.role':    { en: 'Role', uk: 'Роль', es: 'Rol' },
+    'miniAdmin.col.prompts': { en: 'Prompts', uk: 'Промти', es: 'Prompts' },
+    'miniAdmin.col.logins':  { en: 'Logins', uk: 'Входи', es: 'Inicios de sesión' },
+    'miniAdmin.col.lastLogin': { en: 'Last Login', uk: 'Останній вхід', es: 'Último inicio de sesión' },
+    'miniAdmin.col.active':  { en: 'Active', uk: 'Активний', es: 'Activo' },
+
+    /* ── Push notifications ── */
+    'push.enable':           { en: '🔔 Enable notifications', uk: '🔔 Увімкнути сповіщення', es: '🔔 Activar notificaciones' },
+  };
+
+  /* ── State ─────────────────────────────────────────────────── */
+  // Detect browser locale: prefer es if Spanish, uk if Ukrainian, else en
+  function _detectBrowserLang() {
+    var saved = localStorage.getItem('ui_lang');
+    if (saved && (saved === 'en' || saved === 'uk' || saved === 'es')) return saved;
+    var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    if (nav.startsWith('uk')) return 'uk';
+    if (nav.startsWith('es')) return 'es';
+    return 'en';
+  }
+
+  var _lang = _detectBrowserLang();
+
+  /* ── Core API ───────────────────────────────────────────────── */
+
+  /** t(key, vars) — translate a key to current language, with optional {placeholder} substitution */
+  function t(key, vars) {
+    var entry = TRANSLATIONS[key];
+    var str = entry ? (entry[_lang] || entry['en'] || key) : key;
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        str = str.split('{' + k + '}').join(vars[k]);
+      });
+    }
+    return str;
+  }
+
+  /** getLang() — return current language code */
+  function getLang() { return _lang; }
+
+  /** setLang(code) — switch language and re-render UI */
+  function setLang(code) {
+    if (code !== 'en' && code !== 'uk' && code !== 'es') return;
+    _lang = code;
+    localStorage.setItem('ui_lang', code);
+    document.documentElement.lang = code;
+    _applyAll();
+    _updateLangButtons();
+    /* Notify open help iframe about language change */
+    var _hf = document.getElementById('helpIframe');
+    if (_hf && _hf.contentWindow) {
+      try { _hf.contentWindow.postMessage({ type: 'setLang', lang: code }, '*'); } catch(e) {}
+    }
+  }
+
+  /* ── DOM application ────────────────────────────────────────── */
+  function _applyAll() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+    // Update mic button title if present
+    var micBtn = document.getElementById('btnMic');
+    if (micBtn) micBtn.title = t('p1.voice.title');
+  }
+
+  function _updateLangButtons() {
+    document.querySelectorAll('.lang-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.lang === _lang);
+    });
+  }
+
+  /* ── Modal helpers ──────────────────────────────────────────── */
+  function _closeModal() {
+    var m = document.getElementById('appModal');
+    if (m) m.remove();
+  }
+
+  function openModal(titleKey, bodyKey) {
+    _closeModal();
+    var overlay = document.createElement('div');
+    overlay.id = 'appModal';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-header">' +
+          '<span class="modal-title">' + t(titleKey) + '</span>' +
+          '<button class="modal-close" aria-label="close">&times;</button>' +
+        '</div>' +
+        '<div class="modal-body">' + t(bodyKey) + '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    /* Push current language into the help iframe once it loads */
+    var _helpIframe = overlay.querySelector('#helpIframe');
+    if (_helpIframe) {
+      _helpIframe.addEventListener('load', function() {
+        try {
+          _helpIframe.contentWindow.postMessage({ type: 'setLang', lang: _lang }, '*');
+        } catch(e) {}
+      });
+    }
+
+    overlay.querySelector('.modal-close').addEventListener('click', _closeModal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) _closeModal();
+    });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { _closeModal(); document.removeEventListener('keydown', esc); }
+    });
+  }
+
+  /* ── Help Modal ─────────────────────────────────────────────── */
+  function openHelpModal() {
+    _closeModal();
+    var overlay = document.createElement('div');
+    overlay.id = 'appModal';
+    overlay.className = 'modal-overlay';
+    /* Build help modal with JS for reliable style override */
+    var helpBox = document.createElement('div');
+    helpBox.className = 'modal-box';
+    /* Override index.css max-width:560px with !important via cssText */
+    helpBox.style.cssText = [
+      'width: min(92vw, 1100px)',
+      'max-width: 1100px',
+      'max-height: 92vh',
+      'overflow: hidden',
+      'display: flex',
+      'flex-direction: column'
+    ].join(';');
+
+    var helpHeader = document.createElement('div');
+    helpHeader.className = 'modal-header';
+    helpHeader.innerHTML =
+      '<span class="modal-title">' + t('help.title') + '</span>' +
+      '<button class="modal-close" aria-label="close">&times;</button>';
+
+    var helpBody = document.createElement('div');
+    helpBody.className = 'modal-body';
+    helpBody.style.cssText = 'padding:0;flex:1;overflow:hidden;display:flex;';
+
+    var helpIframe = document.createElement('iframe');
+    helpIframe.id    = 'helpIframe';
+    helpIframe.src   = 'prompt_help.html?lang=' + _lang;
+    helpIframe.title = 'JS PROMPT Help';
+    helpIframe.setAttribute('loading', 'lazy');
+    helpIframe.style.cssText = [
+      'width: 100%',
+      'height: 80vh',
+      'border: none',
+      'border-radius: 0 0 18px 18px',
+      'display: block'
+    ].join(';');
+
+    helpBody.appendChild(helpIframe);
+    helpBox.appendChild(helpHeader);
+    helpBox.appendChild(helpBody);
+    overlay.appendChild(helpBox);
+    document.body.appendChild(overlay);
+
+    /* Send language to iframe once it loads */
+    helpIframe.addEventListener('load', function() {
+      try { helpIframe.contentWindow.postMessage({ type: 'setLang', lang: _lang }, '*'); } catch(e) {}
+    });
+
+    overlay.querySelector('.modal-close').addEventListener('click', _closeModal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) _closeModal();
+    });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { _closeModal(); document.removeEventListener('keydown', esc); }
+    });
+  }
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  function init() {
+    document.documentElement.lang = _lang;
+
+    /* Wire language buttons */
+    document.querySelectorAll('.lang-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { setLang(btn.dataset.lang); });
+    });
+
+    /* Wire footer links */
+    var aboutLink = document.getElementById('footerAbout');
+    if (aboutLink) aboutLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      openModal('about.title', 'about.body');
+    });
+
+    var privacyLink = document.getElementById('footerPrivacy');
+    if (privacyLink) privacyLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      openModal('privacy.title', 'privacy.body');
+    });
+
+    /* Wire Help link */
+    var helpLink = document.getElementById('footerHelp');
+    if (helpLink) helpLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      openHelpModal();
+    });
+
+    _applyAll();
+    _updateLangButtons();
+  }
+
+  /* ── Export ─────────────────────────────────────────────────── */
+  window.Lang = { t: t, getLang: getLang, setLang: setLang, init: init, openHelp: openHelpModal };
+
+})();

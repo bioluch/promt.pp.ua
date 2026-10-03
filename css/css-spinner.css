@@ -1,0 +1,99 @@
+/* css-spinner.css — JS PROMPT PWA
+ * Pure CSS loading indicator.
+ * NOTE: CSS vars are defined here directly so the spinner works
+ * even if loaded before index.css (avoids invisible/frozen spinner).
+ */
+
+/* ── Spinner-local fallback vars (override by :root in index.css) ── */
+.hourglass-container {
+    --_scrim:      rgba(6, 17, 31, 0.82);
+    --_border:     rgba(79, 195, 247, 0.25);
+    --_accent:     #4fc3f7;
+    --_success:    #66bb6a;
+    --_text-color: #90a4ae;
+    --_gap:        20px;
+    --_pad:        16px;
+
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;              /* shown by showHourglassSpinner() */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5, var(--_gap));
+    background: var(--scrim-heavy, var(--_scrim));
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    pointer-events: all;
+}
+
+/* Hide the unused canvas (kept in DOM for backward compat) */
+.hourglass-canvas {
+    display: none !important;
+}
+
+/* ── Outer ring spinner ── */
+.hourglass-container::before {
+    content: '';
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 4px solid var(--border-default, var(--_border));
+    border-top-color:  var(--accent-500, var(--_accent));
+    border-right-color: var(--accent-500, var(--_accent));
+    animation: ds-spin 0.85s linear infinite;
+    will-change: transform;
+}
+
+/* ── Inner counter-spin ring ── */
+.hourglass-container::after {
+    content: '';
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-bottom-color: var(--success-400, var(--_success));
+    border-left-color:   var(--success-400, var(--_success));
+    animation: ds-spin 1.35s linear infinite reverse;
+    will-change: transform;
+}
+
+/* ── Text label ── */
+.hourglass-text {
+    color: var(--text-secondary, var(--_text-color));
+    font-family: var(--font-play, 'Play', system-ui, sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    max-width: 260px;
+    padding: 0 var(--space-4, var(--_pad));
+    animation: hourglass-text-pulse 2s ease-in-out infinite;
+    margin-top: 8px;
+}
+
+/* ── Keyframes (REQUIRED — was missing in original!) ── */
+@keyframes ds-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes hourglass-text-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+    .hourglass-container::before,
+    .hourglass-container::after {
+        animation: none;
+        border-color: var(--accent-500, var(--_accent));
+    }
+    .hourglass-text {
+        animation: none;
+    }
+}

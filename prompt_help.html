@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS PROMPT — Help</title>
+<link rel="stylesheet" href="css/prompt_help.css">
+<style>
+/* ══════════════════════════════════════════════════════
+   IFRAME LAYOUT — overrides prompt_help.css for use
+   inside the Help modal (960px wide, 80vh tall)
+══════════════════════════════════════════════════════ */
+
+/* Make html+body fill the full iframe width */
+html, body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  background: var(--bg-0, #06111f);
+}
+
+/* Hide sidebar — modal is not wide enough for two-column layout */
+.sidebar { display: none !important; }
+
+/* Content fills full width */
+.layout {
+  display: block !important;
+  min-height: auto !important;
+}
+.content {
+  flex: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 16px 28px 60px !important;
+  box-sizing: border-box !important;
+}
+
+/* Compact hero */
+.hero {
+  padding: 20px 22px !important;
+  margin-bottom: 20px !important;
+}
+h1 { font-size: 21px !important; }
+h2 { margin-top: 30px !important; font-size: 17px !important; }
+
+/* Read progress bar */
+.read-progress {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: linear-gradient(90deg,#29b6f6,#4fc3f7);
+  z-index: 1000; transition: width 0.1s;
+}
+
+/* ── Language selector ──────────────────────────────── */
+.help-lang-bar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px 4px;
+  justify-content: flex-end;
+}
+.help-lang-btn {
+  padding: 3px 11px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(79,195,247,0.07);
+  border: 1px solid rgba(79,195,247,0.18);
+  color: var(--text-dim, #90a4ae);
+  transition: all 0.15s;
+}
+.help-lang-btn.active,
+.help-lang-btn:hover {
+  background: rgba(79,195,247,0.18);
+  border-color: var(--accent, #4fc3f7);
+  color: var(--accent-2, #81d4fa);
+}
+
+/* ── Language sections ─────────────────────────────── */
+[data-lang] { display: none; }
+[data-lang].visible { display: block; }
+.sidebar [data-lang] { display: none; }
+.sidebar [data-lang].visible { display: block; }
+
+/* ── Responsive: narrow screens ────────────────────── */
+@media (max-width: 600px) {
+  .tips-grid { grid-template-columns: 1fr !important; }
+  .content { padding: 12px 14px 40px !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="read-progress" id="readProgress"></div>
+
+<!-- ── Language bar (shown when opened standalone, hidden when lang is set by parent) ── -->
+<div class="help-lang-bar" id="helpLangBar">
+  <button class="help-lang-btn" onclick="setHelpLang('en')">EN</button>
+  <button class="help-lang-btn" onclick="setHelpLang('uk')">UK</button>
+  <button class="help-lang-btn" onclick="setHelpLang('es')">ES</button>
+</div>
+
+<div class="layout">
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR — EN
+════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div>
+      <div class="sidebar-logo-text">JS PROMPT</div>
+      <div class="sidebar-logo-badge">HELP</div>
+    </div>
+  </div>
+
+  <nav data-lang="en" class="visible">
+    <div class="nav-section">Overview</div>
+    <a href="#overview-en">What is JS PROMPT?</a>
+    <a href="#architecture-en">Architecture</a>
+    <div class="nav-section">Features</div>
+    <a href="#prompt-gen-en">Prompt Generator</a>
+    <a href="#converter-en">PDF/DOCX Converter</a>
+    <a href="#editor-en">Markdown Editor</a>
+    <a href="#checker-en">Error Checker</a>
+    <a href="#voice-en">Voice Input</a>
+    <a href="#my-account-en">My Account Panel</a>
+    <a href="#library-en">Prompt Library</a>
+    <a href="#scheduler-en">Scheduler</a>
+    <div class="nav-section">Configuration</div>
+    <a href="#deepseek-en">API Keys & Providers</a>
+    <a href="#languages-en">Languages</a>
+    <a href="#install-en">Install as PWA</a>
+    <div class="nav-section">Reference</div>
+    <a href="#domains-en">Supported Domains</a>
+    <a href="#shortcuts-en">Keyboard Shortcuts</a>
+    <a href="#tips-en">Input Tips</a>
+    <a href="#faq-en">FAQ</a>
+  </nav>
+
+  <nav data-lang="uk">
+    <div class="nav-section">Огляд</div>
+    <a href="#overview-uk">Що таке JS PROMPT?</a>
+    <a href="#architecture-uk">Архітектура</a>
+    <div class="nav-section">Функції</div>
+    <a href="#prompt-gen-uk">Генератор промтів</a>
+    <a href="#converter-uk">Конвертер PDF/DOCX</a>
+    <a href="#editor-uk">Markdown-редактор</a>
+    <a href="#checker-uk">Перевірка помилок</a>
+    <a href="#voice-uk">Голосовий ввід</a>
+    <a href="#my-account-uk">Панель My Account</a>
+    <a href="#library-uk">Бібліотека промтів</a>
+    <a href="#scheduler-uk">Планувальник</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="#deepseek-uk">API-ключі та провайдери</a>
+    <a href="#languages-uk">Мови</a>
+    <a href="#install-uk">Встановити як PWA</a>
+    <div class="nav-section">Довідник</div>
+    <a href="#domains-uk">Підтримувані домени</a>
+    <a href="#shortcuts-uk">Гарячі клавіші</a>
+    <a href="#tips-uk">Поради для вводу</a>
+    <a href="#faq-uk">FAQ</a>
+  </nav>
+
+  <nav data-lang="es">
+    <div class="nav-section">Descripción</div>
+    <a href="#overview-es">Qué es JS PROMPT?</a>
+    <a href="#architecture-es">Arquitectura</a>
+    <div class="nav-section">Funciones</div>
+    <a href="#prompt-gen-es">Generador de prompts</a>
+    <a href="#converter-es">Conversor PDF/DOCX</a>
+    <a href="#editor-es">Editor Markdown</a>
+    <a href="#checker-es">Verificador de errores</a>
+    <a href="#voice-es">Entrada de voz</a>
+    <a href="#my-account-es">Panel Mi cuenta</a>
+    <a href="#library-es">Biblioteca de prompts</a>
+    <a href="#scheduler-es">Programador</a>
+    <div class="nav-section">Configuración</div>
+    <a href="#deepseek-es">Claves API y proveedores</a>
+    <a href="#languages-es">Idiomas</a>
+    <a href="#install-es">Instalar como PWA</a>
+    <div class="nav-section">Referencia</div>
+    <a href="#domains-es">Dominios soportados</a>
+    <a href="#shortcuts-es">Atajos de teclado</a>
+    <a href="#tips-es">Consejos de entrada</a>
+    <a href="#faq-es">FAQ</a>
+  </nav>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════ -->
+<main class="content">
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  ENGLISH  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="en" class="visible">
+
+<section id="overview-en">
+  <div class="hero">
+    <div class="hero-version">Version 1.0 · PWA · Offline-capable</div>
+    <h1>JS PROMPT Help & Documentation</h1>
+    <p>JS PROMPT is a professional Progressive Web Application that transforms ideas and task descriptions into structured, high-quality prompts for Claude AI — entirely in your browser, with no data sent to external servers.</p>
+    <div class="feature-pills">
+      <span class="pill">AI Prompt Generator</span>
+      <span class="pill">PDF/DOCX to Markdown</span>
+      <span class="pill">Markdown Editor</span>
+      <span class="pill">9-Stage Error Checker</span>
+      <span class="pill">Voice Input (Whisper)</span>
+      <span class="pill">100% Offline PWA</span>
+      <span class="pill">EN / UK / ES</span>
+      <span class="pill">DeepSeek API</span>
+    </div>
+  </div>
+</section>
+
+<section id="architecture-en">
+  <h2>Architecture</h2>
+  <p>JS PROMPT runs fully client-side. All heavy computation executes in your browser via <strong>Pyodide</strong> — Python compiled to WebAssembly. No data leaves your device when using the local engine.</p>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">promt.pp.ua — Architecture</div></div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;">
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="color:var(--accent);font-weight:700;margin-bottom:6px;">Browser (local)</div><div style="color:var(--text-dim);">Pyodide WASM<br>Python NLP core<br>Service Worker</div></div>
+        <div style="background:rgba(102,187,106,0.08);border:1px solid rgba(102,187,106,0.2);border-radius:10px;padding:14px;"><div style="color:var(--ok);font-weight:700;margin-bottom:6px;">DeepSeek API (optional)</div><div style="color:var(--text-dim);">Prompt generation<br>Translation<br>Requires API key</div></div>
+        <div style="background:rgba(255,167,38,0.08);border:1px solid rgba(255,167,38,0.2);border-radius:10px;padding:14px;"><div style="color:var(--warn);font-weight:700;margin-bottom:6px;">3-Phase Init</div><div style="color:var(--text-dim);">Phase 1: Pyodide<br>Phase 2: PDF/DOCX<br>Phase 3: Spell check</div></div>
+      </div>
+      <div class="callout callout-info" style="margin-top:14px;"><strong>Privacy first:</strong> your text never leaves the browser when using the local engine.</div>
+    </div>
+  </div>
+</section>
+
+<section id="prompt-gen-en">
+  <h2>Prompt Generator</h2>
+  <p>The core feature: turn any raw idea into a professional Claude prompt with role definition, context, task, requirements, Probability Yardstick and output format.</p>
+  <h3>Step-by-step</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Enter your text</h4><p>Type or paste any description. Can be brief or detailed. Use voice input (microphone button) for speech-to-text.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Choose Prompt Style</h4><p><strong>Detailed</strong> — full structure (10+ sections). <strong>Concise</strong> — compressed. <strong>Expert</strong> — maximum depth. <strong>Creative</strong> — open-ended. <strong>Technical</strong> — code/architecture.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Set Output Language</h4><p>Choose the language for the generated prompt: <strong>English, Ukrainian</strong> or <strong>Spanish</strong>. Input auto-translated to English if needed.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Select Engine</h4><p><strong>Local</strong> — Pyodide Python engine, no API key needed. <strong>DeepSeek</strong> — cloud model, higher quality, requires API key.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Generate & Use</h4><p>Click <strong>Generate Prompt</strong>. Copy to clipboard, save as <code>.md</code>, or open in Editor. The prompt is ready to paste into Claude.</p></div></div>
+  </div>
+  <div class="demo-block">
+    <h4>Interactive demo — try the generator</h4>
+    <textarea class="demo-input" id="demoInput-en" placeholder='Describe your task… e.g. "Analyse the competitive landscape for a SaaS analytics tool"'></textarea>
+    <div class="demo-controls">
+      <select class="sim-select" id="demoStyle-en" style="max-width:180px;"><option value="detailed">Detailed</option><option value="concise">Concise</option><option value="expert">Expert</option><option value="technical">Technical</option></select>
+      <button class="sim-btn sim-btn-primary" onclick="runDemo('en')">Preview structure</button>
+      <button class="sim-btn sim-btn-ghost" onclick="clearDemo('en')">Clear</button>
+    </div>
+    <div class="demo-output" id="demoOutput-en"></div>
+  </div>
+  <h3>Translation priority chain</h3>
+  <p>If your input is in Ukrainian or Spanish, the system translates it to English before generating the prompt using this priority:</p>
+  <table class="domain-table"><thead><tr><th>Priority</th><th>Method</th><th>Condition</th></tr></thead><tbody>
+    <tr><td>1</td><td>DeepSeek API</td><td>API key is set — highest quality</td></tr>
+    <tr><td>2</td><td>Helsinki-NLP (local WASM)</td><td>No key needed — runs in browser</td></tr>
+    <tr><td>3</td><td>Claude API</td><td>Fallback if local model fails</td></tr>
+    <tr><td>4</td><td>Original text</td><td>Last resort — user is warned</td></tr>
+  </tbody></table>
+</section>
+
+<section id="converter-en">
+  <h2>PDF / DOCX Converter</h2>
+  <p>Convert PDF and DOCX files to clean Markdown — preserving headings, lists, tables, inline formatting. Runs offline via Pyodide + pdfminer.six + python-docx.</p>
+  <div class="callout callout-warn"><strong>First use:</strong> Phase 2 packages (pypdf, pdfminer.six, python-docx, Pillow ~12 MB) are downloaded on first conversion. Watch the spinner. After the first session, packages are cached offline.</div>
+  <h3>PDF conversion pipeline</h3>
+  <p>PDF files use a two-engine approach: <strong>pdf2md</strong> (primary, @opendocsg) for quality output, with <strong>pdfminer.six</strong> as automatic fallback. DOCX uses python-docx with full paragraph and table support.</p>
+  <h3>Output options</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+    <span class="badge badge-blue">Copy to clipboard</span>
+    <span class="badge badge-blue">Save as .md</span>
+    <span class="badge badge-green">Open in Editor</span>
+  </div>
+</section>
+
+<section id="editor-en">
+  <h2>Markdown Editor</h2>
+  <p>Built-in editor with live preview, localStorage file management, and file download.</p>
+  <div class="accordion">
+    <div class="accordion-item open"><div class="accordion-header" onclick="toggleAccordion(this)">Loading files <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Click <strong>Load .md</strong> to open a file picker, or files auto-load from the Converter via "Open in Editor".</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Saving to localStorage <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Click <strong>Save to local storage</strong>. Enter a name in the styled dialog. Files persist across sessions and appear in the Saved files list below the editor.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Live Preview <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Toggle the <strong>Preview</strong> tab for rendered Markdown. Tables, headings, code blocks, and inline formatting are supported.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Saved files management <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Saved files list shows name, date and two buttons: load (folder icon) and delete (bin icon). Deletion shows a confirmation dialog.</div></div>
+  </div>
+</section>
+
+<section id="checker-en">
+  <h2>Error Checker</h2>
+  <p>A 9-stage Python-powered analysis pipeline that checks your text for spelling, grammar, style, passive voice, repetitions and prompt structure quality. Supports <strong>Ukrainian</strong> and <strong>English</strong> text.</p>
+
+  <!-- SIMULATED INTERFACE -->
+  <div class="mockup-shell">
+    <div class="mockup-bar">
+      <div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <div class="mockup-url">promt.pp.ua — Error Checker panel</div>
+    </div>
+    <div class="mockup-body">
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Words</div>
+          <div style="font-size:20px;font-weight:800;color:var(--text);">247</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Sentences</div>
+          <div style="font-size:20px;font-weight:800;color:var(--text);">18</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid rgba(255,107,107,0.3);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Errors</div>
+          <div style="font-size:20px;font-weight:800;color:var(--error);">5</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid rgba(79,195,247,0.25);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Claude Tokens</div>
+          <div style="font-size:20px;font-weight:800;color:var(--accent);">1,842</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid rgba(102,187,106,0.25);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Quality</div>
+          <div style="font-size:16px;font-weight:800;color:var(--accent-2);">Good</div>
+        </div>
+      </div>
+      <!-- Simulated textarea -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.8;margin-bottom:10px;min-height:70px;color:var(--text-dim);">
+        You are a senior <span style="background:rgba(255,167,38,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Repeat — word used twice nearby">analyst</span>. As a senior <span style="background:rgba(255,107,107,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Spelling — misspelled word">analystt</span> you should provide <span style="background:rgba(206,147,216,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Style — cliché phrase">detailed and comprehensive</span> insights.
+      </div>
+      <!-- Buttons -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="sim-btn sim-btn-primary" style="font-size:12px;">Check</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Apply All Fixes</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <h3>How to use — step by step</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Paste your text</h4>
+        <p>Click the <strong>Error Checker</strong> tab. Paste your prompt or any text into the input area. There is no length limit, but optimal results are for texts of 50–2000 words.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Click "Check"</h4>
+        <p>The system runs all 9 analysis stages via Pyodide (Python in browser). A progress spinner shows the current stage name and percentage. On first use, <code>pyspellchecker</code> (~0.5 MB) is downloaded once and cached.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Read the statistics bar</h4>
+        <p>The 5 stats cards update after checking:</p>
+        <ul>
+          <li><strong>Words</strong> — total word count of your text</li>
+          <li><strong>Sentences</strong> — sentence count</li>
+          <li><strong>Errors</strong> — number of issues found (red if &gt;0)</li>
+          <li><strong>Claude Tokens</strong> — estimated tokens when sending to Claude API</li>
+          <li><strong>Quality</strong> — overall quality score (see below)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Examine highlighted text</h4>
+        <p>Below the stats, a <strong>Highlighted text</strong> card shows your text with errors underlined. <strong>Hover over any highlight</strong> to see a tooltip with the error description. Error colours indicate type:</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">
+          <span style="background:rgba(255,107,107,0.2);color:var(--error);padding:3px 10px;border-radius:6px;font-size:12px;">Spelling / Grammar</span>
+          <span style="background:rgba(255,167,38,0.2);color:var(--warn);padding:3px 10px;border-radius:6px;font-size:12px;">Repetition / Punctuation</span>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent-2);padding:3px 10px;border-radius:6px;font-size:12px;">Case</span>
+          <span style="background:rgba(206,147,216,0.2);color:#ce93d8;padding:3px 10px;border-radius:6px;font-size:12px;">Style / Clichés</span>
+          <span style="background:rgba(255,183,77,0.2);color:#ffb74d;padding:3px 10px;border-radius:6px;font-size:12px;">Passive voice</span>
+          <span style="background:rgba(79,195,247,0.1);color:var(--accent);padding:3px 10px;border-radius:6px;font-size:12px;">Structure</span>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Fix errors — three ways</h4>
+        <p><strong>Option A — Click a suggestion</strong>: in the error list, each error shows the problem word and blue clickable suggestions. Click a suggestion to apply it immediately. The stats update automatically.</p>
+        <p><strong>Option B — Apply All Fixes</strong>: click the <strong>Apply All Fixes</strong> button to accept all suggestions at once.</p>
+        <p><strong>Option C — Manual edit</strong>: edit the text directly in the input area, then click <strong>Check</strong> again.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Save or copy the corrected text</h4>
+        <p>After applying fixes, two buttons appear: <strong>Save Fixed .md</strong> — opens the styled save dialog; <strong>Copy Fixed Text</strong> — copies to clipboard.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOKEN COUNTER -->
+  <h3>Understanding Claude Tokens</h3>
+  <div class="callout callout-info">
+    <strong>What are tokens?</strong> Claude API processes text in tokens — roughly 1 token ≈ 4 characters or ¾ of a word in English (Ukrainian text uses more tokens per word). The <strong>Claude Tokens</strong> counter shows an estimate of how many tokens your prompt will consume when sent to Claude.
+  </div>
+  <table class="domain-table" style="margin-top:10px;">
+    <thead><tr><th>Token range</th><th>Approximate cost</th><th>Recommendation</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 1,000</td><td style="color:var(--ok);">Very low</td><td>Ideal for simple tasks</td></tr>
+      <tr><td>1,000 – 4,000</td><td style="color:var(--accent-2);">Low</td><td>Standard prompt — good balance</td></tr>
+      <tr><td>4,000 – 8,000</td><td style="color:var(--warn);">Moderate</td><td>Consider condensing</td></tr>
+      <tr><td>&gt; 8,000</td><td style="color:var(--error);">High</td><td>Split into smaller prompts</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 9 STAGES -->
+  <h3>9 Analysis stages</h3>
+  <table class="domain-table">
+    <thead><tr><th>#</th><th>Stage</th><th>What it checks</th><th>Example fix</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span style="color:var(--warn);font-weight:600;">Repetitions</span></td><td>Same word used twice within ~5 words</td><td>"senior analyst … senior analyst" → flag second occurrence</td></tr>
+      <tr><td>2</td><td><span style="color:var(--text-dim);font-weight:600;">Spaces</span></td><td>Double spaces, trailing spaces, wrong indentation</td><td>"hello&nbsp;&nbsp;world" → "hello world"</td></tr>
+      <tr><td>3</td><td><span style="color:var(--warn);font-weight:600;">Punctuation</span></td><td>Missing commas, unclosed quotes/brackets</td><td>"However the system" → "However, the system"</td></tr>
+      <tr><td>4</td><td><span style="color:var(--text-dim);font-weight:600;">Vocabulary</span></td><td>Weak or vague words that dilute meaning</td><td>"very important" → "critical"</td></tr>
+      <tr><td>5</td><td><span style="color:var(--error);font-weight:600;">Spelling (EN)</span></td><td>Misspelled English words via pyspellchecker</td><td>"analystt" → "analyst"</td></tr>
+      <tr><td>6</td><td><span style="color:var(--error);font-weight:600;">Grammar</span></td><td>Grammar errors; russianisms in Ukrainian text</td><td>"по відношенню до" → "щодо"</td></tr>
+      <tr><td>7</td><td><span style="color:#ce93d8;font-weight:600;">Style</span></td><td>Clichés, bureaucratic phrasing, filler phrases</td><td>"detailed and comprehensive" → "thorough"</td></tr>
+      <tr><td>8</td><td><span style="color:#ffb74d;font-weight:600;">Passive voice</span></td><td>Overuse of passive constructions</td><td>"was analysed by the team" → "the team analysed"</td></tr>
+      <tr><td>9</td><td><span style="color:var(--accent);font-weight:600;">Structure</span></td><td>Prompt structure completeness (role, task, format)</td><td>Warns if role definition or output format is missing</td></tr>
+    </tbody>
+  </table>
+
+  <!-- QUALITY SCORE -->
+  <h3>Quality score</h3>
+  <p>Calculated as <code>errors ÷ words</code>:</p>
+  <table class="domain-table">
+    <thead><tr><th>Score</th><th>Ratio</th><th>Colour</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Flawless</strong></td><td>0 errors</td><td style="color:var(--ok);">Green</td></tr>
+      <tr><td><strong>Excellent</strong></td><td>&le; 2%</td><td style="color:var(--ok);">Green</td></tr>
+      <tr><td><strong>Good</strong></td><td>&le; 5%</td><td style="color:var(--accent-2);">Blue</td></tr>
+      <tr><td><strong>Satisfactory</strong></td><td>&le; 10%</td><td style="color:var(--warn);">Orange</td></tr>
+      <tr><td><strong>Needs improvement</strong></td><td>&gt; 10%</td><td style="color:var(--error);">Red</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn" style="margin-top:14px;">
+    <strong>First use:</strong> <code>pyspellchecker</code> (~0.5 MB) is downloaded on the first Check click and cached offline by the Service Worker. Spelling check works offline on subsequent visits.
+  </div>
+
+  <!-- ERROR LIST DEMO -->
+  <h3>Error list — how to read it</h3>
+  <div class="demo-block">
+    <h4>Simulated error list</h4>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="background:var(--error);color:#000;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;">Spelling</span>
+          <strong style="color:var(--text);">Possible misspelling</strong>
+          <span style="font-size:11px;color:var(--text-dim);">• position 42</span>
+        </div>
+        <div style="font-size:13px;">Found: <code style="color:var(--error);">analystt</code> →
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent-2);padding:2px 8px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid rgba(79,195,247,0.3);">analyst</span>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent-2);padding:2px 8px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid rgba(79,195,247,0.3);">analysts</span>
+        </div>
+      </div>
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="background:#ce93d8;color:#000;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;">Style</span>
+          <strong style="color:var(--text);">Cliché phrase — replace with a precise word</strong>
+        </div>
+        <div style="font-size:13px;">Found: <code style="color:#ce93d8;">detailed and comprehensive</code> →
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent-2);padding:2px 8px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid rgba(79,195,247,0.3);">thorough</span>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent-2);padding:2px 8px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid rgba(79,195,247,0.3);">in-depth</span>
+        </div>
+      </div>
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="background:var(--warn);color:#000;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;">Repeat</span>
+          <strong style="color:var(--text);">Word repeated within 5 words</strong>
+          <span style="font-size:11px;color:var(--text-dim);">• position 8</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-dim);"><em>Rephrase to avoid repetition</em></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:10px;">Click any <strong style="color:var(--accent-2);">blue suggestion</strong> to apply it instantly. Stats and highlights update automatically.</p>
+  </div>
+</section>
+
+<section id="voice-en">
+  <h2>Voice Input</h2>
+  <p>Click the microphone button in the Prompt Generator to transcribe speech in <strong>English, Ukrainian</strong> or <strong>Spanish</strong>. Transcription runs locally via the Whisper model — no audio leaves your device.</p>
+  <div class="callout callout-info"><strong>Auto-translation:</strong> if you speak Ukrainian or Spanish, the system automatically translates your input to English before prompt generation using the priority chain above.</div>
+  <div class="callout callout-warn"><strong>First use:</strong> the Whisper ML model (~40 MB) downloads once and is cached by the Service Worker for offline use.</div>
+</section>
+
+<section id="my-account-en">
+  <h2>My Account Panel</h2>
+  <p>Available to signed-in users. Click your name/email in the top-right header to open the user dropdown, then choose one of three entry points: <strong>My Prompts</strong>, <strong>Statistics</strong>, or <strong>⏱ Scheduler</strong>. All three open inside the same <em>My Account</em> modal window with tabs at the top.</p>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — panel overview</div></div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;text-align:center;">
+        <div style="background:rgba(79,195,247,0.10);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="color:var(--accent);font-weight:700;margin-bottom:4px;"> Prompt Library</div><div style="color:var(--text-dim);">Browse, search, copy,<br>load, delete saved prompts</div></div>
+        <div style="background:rgba(102,187,106,0.08);border:1px solid rgba(102,187,106,0.2);border-radius:10px;padding:12px;"><div style="color:var(--ok);font-weight:700;margin-bottom:4px;"> Statistics</div><div style="color:var(--text-dim);">Usage counters, tokens,<br>domain breakdown, activity</div></div>
+        <div style="background:rgba(255,167,38,0.08);border:1px solid rgba(255,167,38,0.2);border-radius:10px;padding:12px;"><div style="color:var(--warn);font-weight:700;margin-bottom:4px;">⏱ Scheduler</div><div style="color:var(--text-dim);">Create automated jobs,<br>view results, manage status</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="library-en">
+  <h2>Prompt Library</h2>
+  <p>Your personal library of every prompt you have saved to your account via the <strong>💾 Save to Account</strong> button. Accessed via My Account → Prompt Library tab.</p>
+  <h3>Window layout</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — Prompt Library</div></div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;">
+        <div style="flex:1;background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text-dim);">🔍 Search prompts…</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:18px;cursor:pointer;color:var(--accent);">↺</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text-dim);">All Domains ▾</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:var(--text);">Create admin panel</strong>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent);padding:1px 8px;border-radius:5px;font-size:11px;">Programming</span>
+        </div>
+        <div style="color:#607080;font-size:11px;font-style:italic;border-left:2px solid rgba(79,195,247,0.3);padding-left:6px;margin:4px 0;">📝 JS, HTML, PYODIDE, CSS…</div>
+        <div style="color:var(--text-dim);margin:4px 0;">You are a Senior Software Engineer / Tech Lead with 15+…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Copy Prompt</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📝 Copy Source</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">↗ Load</span>
+          <span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Delete</span>
+          <span style="color:var(--text-dim);font-size:11px;margin-left:auto;">6/30/2026 · 900 words · 1,874 tokens · Flawless</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h3>UI elements</h3>
+  <table class="domain-table"><thead><tr><th>Element</th><th>Description</th></tr></thead><tbody>
+    <tr><td>🔍 <strong>Search box</strong></td><td>Full-text search across prompt titles and content. Updates the list as you type.</td></tr>
+    <tr><td>↺ <strong>Refresh button</strong></td><td>Reloads the prompt list from the server — useful if you saved a prompt in another tab.</td></tr>
+    <tr><td><strong>All Domains</strong> dropdown</td><td>Filter by domain (Programming, Medical, Financial, etc.). Shows only prompts in the selected domain.</td></tr>
+    <tr><td><strong>Prompt card</strong></td><td>Each saved prompt is a card showing: Title, Domain badge, Source text preview (italic, with blue left border), Prompt content preview, and action buttons.</td></tr>
+    <tr><td>📋 <strong>Copy Prompt</strong></td><td>Copies the full generated prompt text to the clipboard.</td></tr>
+    <tr><td>📝 <strong>Copy Source</strong></td><td>Copies the original source text (your idea/task) to the clipboard. Only shown if a source text was saved.</td></tr>
+    <tr><td>↗ <strong>Load</strong></td><td>Loads the source text into the "Your text / idea / task" input field on the main page, ready to regenerate. The My Account panel closes automatically.</td></tr>
+    <tr><td>🗑 <strong>Delete</strong></td><td>Permanently deletes the prompt after a confirmation dialog. Cannot be undone.</td></tr>
+    <tr><td><strong>Metadata line</strong></td><td>Date saved · word count · token count · quality score (e.g. "Flawless").</td></tr>
+  </tbody></table>
+  <h3>Searching prompts</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Type in the search box</h4><p>The list filters instantly as you type. Searches both titles and prompt content.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Filter by domain</h4><p>Use the "All Domains" dropdown to narrow results to a specific domain (e.g. only "Programming" prompts).</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Combine both filters</h4><p>Enter a keyword <em>and</em> choose a domain at the same time to refine further.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Clear</h4><p>Delete the search text and reset the domain to "All Domains" to see the full list again (up to 50 most recent).</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Saving a prompt:</strong> After generating a prompt, click <strong>💾 Save to Account</strong> on the main page. A dialog asks for a custom name and domain. The source text and generated prompt are both saved.</div>
+</section>
+
+<section id="scheduler-en">
+  <h2>Scheduler</h2>
+  <p>The Scheduler lets you automate prompt execution on a schedule — running your saved prompts through a cloud AI (Gemini, DeepSeek, or Claude) at a specified time, and optionally repeating weekly or monthly. Access via My Account → ⏱ Scheduler tab.</p>
+  <h3>Window layout</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — Scheduler</div></div>
+    <div class="mockup-body">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Create Scheduled Job</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Prompt to execute: <span style="color:var(--accent);">Select a saved prompt…</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Target AI: Gemini</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Schedule: Once</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">First run: 2026-07-01 09:00</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Max Tokens: 8192</div>
+        </div>
+        <div style="background:var(--accent);color:#000;border-radius:8px;padding:8px 14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;">Schedule Job</div>
+      </div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Scheduled Jobs</div>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;"><strong style="color:var(--text);">Create admin panel</strong><span style="color:#29b6f6;">gemini</span></div>
+        <div style="color:var(--text-dim);margin:4px 0;">Programming · Once · Next: — · Status: <span style="color:#66bb6a;">done</span> · Runs: 1</div>
+        <div style="display:flex;gap:6px;"><span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Results</span><span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Delete</span></div>
+      </div>
+    </div>
+  </div>
+  <h3>Create Scheduled Job — form fields</h3>
+  <table class="domain-table"><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
+    <tr><td><strong>Prompt to execute</strong></td><td>Select from your saved prompts. Dropdown shows domain + title for each.</td></tr>
+    <tr><td><strong>Target AI</strong></td><td>Choose the AI model: <strong>Gemini</strong> (default, 8192 tokens), <strong>DeepSeek</strong> (8000 tokens), or <strong>Claude</strong> (8000 tokens). The provider must be configured in the Admin Panel → AI Providers.</td></tr>
+    <tr><td><strong>Schedule type</strong></td><td><strong>Once</strong> — runs exactly one time at the specified date/time. <strong>Weekly</strong> — repeats every 7 days from the first run. <strong>Monthly</strong> — repeats on the same day each month.</td></tr>
+    <tr><td><strong>First run date/time</strong></td><td>Date and time (in your local timezone) when the job should first execute.</td></tr>
+    <tr><td><strong>Max Tokens</strong></td><td>Maximum tokens the AI may use per run. Default shown in parentheses per provider. Leave empty to use the default.</td></tr>
+  </tbody></table>
+  <h3>How to create a Scheduled Job</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Save a prompt first</h4><p>Go to the Prompt Generator, generate a prompt, and click <strong>💾 Save to Account</strong>. Only saved prompts appear in the Scheduler dropdown.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Select the prompt</h4><p>Open the Scheduler tab, find the <em>Prompt to execute</em> dropdown, choose your prompt (listed as "Domain — Title").</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Choose Target AI and schedule</h4><p>Pick the AI provider, set schedule type (Once / Weekly / Monthly), set the first run date/time, and optionally adjust Max Tokens.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Click "Schedule Job"</h4><p>A confirmation toast appears. The job is listed below in the Scheduled Jobs section with status <span style="color:var(--accent);">pending</span>.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Wait for execution</h4><p>The server-side Scheduler checks for due jobs periodically. When the run time arrives, it sends the prompt to the AI, stores the response, and updates the status.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>View results</h4><p>Click <strong>📋 Results</strong> on any job to see all past run outputs. Each result shows: timestamp, status, token count, duration, and the full AI response. Download as <code>.md</code>, <code>.txt</code>, or <code>.docx</code>, or copy to clipboard.</p></div></div>
+  </div>
+  <h3>Job Status reference</h3>
+  <table class="domain-table"><thead><tr><th>Status</th><th>Color</th><th>Meaning</th></tr></thead><tbody>
+    <tr><td><strong>pending</strong></td><td style="color:var(--accent);">blue</td><td>Waiting for the scheduled time. Has not run yet. The <strong>✕ Cancel</strong> button is visible — click it to stop before execution.</td></tr>
+    <tr><td><strong>running</strong></td><td style="color:var(--accent);">blue</td><td>Currently executing (the AI API call is in progress). Do not cancel.</td></tr>
+    <tr><td><strong>done</strong></td><td style="color:var(--ok);">green</td><td>Last run completed successfully. Result is available via the 📋 Results button. For weekly/monthly jobs, the next run is already scheduled.</td></tr>
+    <tr><td><strong>failed</strong></td><td style="color:var(--error);">red</td><td>Last run encountered an error (API unavailable, token limit exceeded, provider misconfigured, etc.). Error details are in the Results panel.</td></tr>
+    <tr><td><strong>canceled</strong></td><td style="color:var(--text-dim);">grey</td><td>Manually canceled before execution via the ✕ Cancel button. No result was produced. The job remains visible but will not run again.</td></tr>
+  </tbody></table>
+  <div class="callout callout-info"><strong>Weekly/Monthly jobs:</strong> after a successful <em>done</em> run, the job automatically reschedules its <em>next_run_at</em> and reverts to <em>pending</em> status.</div>
+  <div class="callout callout-warn"><strong>Scheduled Jobs need an active server:</strong> execution happens server-side — the job runs even when your browser is closed. However, if the server is restarted during a run, the job may need to be re-created.</div>
+  <h3>Job actions</h3>
+  <table class="domain-table"><thead><tr><th>Button</th><th>Available when</th><th>Action</th></tr></thead><tbody>
+    <tr><td>📋 <strong>Results</strong></td><td>Always</td><td>Opens the Results panel with all past run outputs for this job. Copy, download as .md/.txt/.docx.</td></tr>
+    <tr><td>✕ <strong>Cancel</strong></td><td>Status is <em>pending</em> only</td><td>Cancels the job before it runs. Status changes to <em>canceled</em>. Cannot be undone.</td></tr>
+    <tr><td>🗑 <strong>Delete</strong></td><td>Always</td><td>Permanently deletes the job and all its run results. Requires a confirmation dialog.</td></tr>
+  </tbody></table>
+</section>
+
+<section id="deepseek-en">
+  <h2>API Keys &amp; AI Providers</h2>
+  <p>JS PROMPT supports multiple AI providers for prompt generation and Scheduled Jobs. The active provider for <em>Prompt Generator</em> is selected per session; providers for the <em>Scheduler</em> are configured platform-wide by the administrator.</p>
+  <h3>Adding AI providers (Admin only)</h3>
+  <p>Administrators configure providers in <strong>Admin Panel → AI Providers</strong>. Each provider needs: a unique key, display label, endpoint URL (OpenAI-compatible <code>/v1/chat/completions</code>), model name, and optional auth header/prefix.</p>
+  <div class="callout callout-info"><strong>Built-in providers</strong> (DeepSeek, Gemini, Claude) are pre-configured. Custom OpenAI-compatible endpoints can be added as additional providers.</div>
+  <h3>Entering your DeepSeek API Key</h3>
+  <p>The <strong>DeepSeek</strong> engine (for Prompt Generator) requires your personal API key from <strong>platform.deepseek.com</strong>.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Get your key</h4><p>Visit <strong>platform.deepseek.com</strong> → API Keys → Create. The key starts with <code>sk-</code>.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Open the key dialog</h4><p>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. This reveals a hidden API Key button in the header and immediately opens the key entry dialog.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Paste and save</h4><p>Paste your key into the input field and click <strong>Save</strong>. The key is stored in your browser's <code>localStorage</code> only — it is never sent to our servers and never shown after saving (the field shows a placeholder instead).</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Select DeepSeek engine</h4><p>In the Generation Engine selector on the main page, switch to <strong>DeepSeek</strong>. Your account balance appears in the app footer with a manual refresh button.</p></div></div>
+  </div>
+  <div class="callout callout-ok"><strong>Server-side key:</strong> on production (promt.pp.ua), the platform key is set in a server-side <code>.env</code> file — the key never appears in client code. Your personal key overrides it for your session.</div>
+  <h3>What Ctrl+Shift+K opens</h3>
+  <table class="domain-table"><thead><tr><th>UI element in the dialog</th><th>Description</th></tr></thead><tbody>
+    <tr><td><strong>API Key input</strong></td><td>Paste your <code>sk-...</code> key here. The field is masked.</td></tr>
+    <tr><td><strong>Save button</strong></td><td>Saves to <code>localStorage</code> and closes the dialog. The key persists across page refreshes.</td></tr>
+    <tr><td><strong>Clear button</strong></td><td>Removes the stored key so the local engine will be used again.</td></tr>
+    <tr><td><strong>Balance display</strong></td><td>Shows your remaining DeepSeek credit after saving.</td></tr>
+  </tbody></table>
+  <h3>DeepSeek features</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+    <span class="badge badge-blue">Prompt generation (deepseek-chat)</span>
+    <span class="badge badge-blue">Translation UK/ES → EN</span>
+    <span class="badge badge-green">Account balance display</span>
+  </div>
+</section>
+
+<section id="languages-en">
+  <h2>Language Settings</h2>
+  <table class="domain-table"><thead><tr><th>Setting</th><th>Where</th><th>What it affects</th></tr></thead><tbody>
+    <tr><td>UI Language</td><td>Footer — EN / UK / ES buttons</td><td>All labels, buttons, messages, help content</td></tr>
+    <tr><td>Output Language</td><td>Prompt Generator dropdown</td><td>Language of the generated prompt</td></tr>
+    <tr><td>Voice language</td><td>Auto-detected from speech</td><td>Whisper transcription model</td></tr>
+  </tbody></table>
+  <p>Language choice is saved in <code>localStorage</code> and restored on next visit. The Help page language follows the UI language automatically.</p>
+</section>
+
+<section id="install-en">
+  <h2>Install as PWA</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Desktop</div><h4>Chrome / Edge</h4><p>Click the <strong>Install</strong> button in the app header or the browser install icon in the address bar.</p></div>
+    <div class="tip-card"><div class="tip-icon">Android</div><h4>Android Chrome</h4><p>Tap browser menu → Install app, or accept the banner shown automatically.</p></div>
+    <div class="tip-card"><div class="tip-icon">iOS</div><h4>iOS Safari</h4><p>Tap Share → Add to Home Screen. App opens in standalone mode.</p></div>
+    <div class="tip-card"><div class="tip-icon">Offline</div><h4>Offline Mode</h4><p>All resources are cached by the Service Worker. Works without internet after first load (except DeepSeek API calls).</p></div>
+  </div>
+</section>
+
+<section id="domains-en">
+  <h2>Supported Domains</h2>
+  <p>The system auto-detects your domain and assigns the appropriate expert role (15–20+ years experience).</p>
+  <table class="domain-table"><thead><tr><th>Domain</th><th>Expert Role</th><th>Trigger keywords</th></tr></thead><tbody>
+    <tr><td><span class="badge badge-blue">Intelligence Analysis</span></td><td>Senior Intelligence Analyst</td><td>OSINT, geopolitics, threat, military, scenario</td></tr>
+    <tr><td><span class="badge badge-blue">OSINT</span></td><td>OSINT Investigations Specialist</td><td>open source, geolocation, verification, social media</td></tr>
+    <tr><td><span class="badge badge-blue">Strategic Risk</span></td><td>Strategic Risk Expert</td><td>risk matrix, scenario planning, crisis management</td></tr>
+    <tr><td><span class="badge badge-green">Medical</span></td><td>Clinician-Diagnostician MD/PhD</td><td>diagnosis, symptoms, treatment, clinical, EBM</td></tr>
+    <tr><td><span class="badge badge-green">Cybersecurity</span></td><td>Penetration Tester / OSCP</td><td>pentest, vulnerability, CVSS, malware, exploit</td></tr>
+    <tr><td><span class="badge badge-green">Financial Analysis</span></td><td>Senior Financial Analyst CFA</td><td>investment, DCF, portfolio, trading, valuation</td></tr>
+    <tr><td><span class="badge badge-green">Legal</span></td><td>Senior Legal Consultant</td><td>contract, law, court, regulation, GDPR, compliance</td></tr>
+    <tr><td><span class="badge badge-blue">Programming</span></td><td>Senior Software Engineer</td><td>code, Python, JavaScript, API, algorithm, debug</td></tr>
+    <tr><td><span class="badge badge-blue">Data Science</span></td><td>Lead Data Scientist</td><td>machine learning, model, dataset, NLP, neural</td></tr>
+    <tr><td><span class="badge badge-blue">Business Strategy</span></td><td>Senior Business Strategist MBA</td><td>startup, go-to-market, SWOT, OKR, competitive</td></tr>
+    <tr><td><span class="badge badge-blue">Product Management</span></td><td>Senior Product Manager</td><td>roadmap, backlog, sprint, user story, MVP</td></tr>
+    <tr><td><span class="badge badge-blue">Scientific Research</span></td><td>Research Scientist PhD</td><td>hypothesis, experiment, peer review, methodology</td></tr>
+    <tr><td style="color:var(--text-dim);">General</td><td>Universal Expert Consultant</td><td>Any topic not matching above</td></tr>
+  </tbody></table>
+</section>
+
+<section id="shortcuts-en">
+  <h2>Keyboard Shortcuts</h2>
+  <table class="domain-table"><thead><tr><th>Action</th><th>Shortcut</th></tr></thead><tbody>
+    <tr><td>Generate prompt</td><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td></tr>
+    <tr><td>Copy output</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></td></tr>
+    <tr><td>Save as .md</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td></tr>
+    <tr><td>Close modal / dialog</td><td><kbd>Esc</kbd></td></tr>
+    <tr><td>Confirm dialog</td><td><kbd>Enter</kbd></td></tr>
+    <tr><td style="color:var(--accent-2);font-weight:600;">Open API Key dialog (hidden)</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></td></tr>
+  </tbody></table>
+  <div class="callout callout-info" style="margin-top:12px;">
+    <strong>Ctrl+Shift+K</strong> — reveals the hidden API Key button in the app header and <em>immediately</em> opens the key entry dialog. The API Key button automatically disappears again after the dialog is closed.
+    <br><br>
+    <strong>Inside the dialog:</strong> paste your DeepSeek key (starts with <code>sk-</code>), click <strong>Save</strong>. The key is stored in <code>localStorage</code> only — never transmitted. If a server-side key is already configured (production mode), the input shows only a placeholder and your personal key overrides it for your current session. Press <kbd>Esc</kbd> or click outside to close without saving.
+  </div>
+</section>
+
+<section id="tips-en">
+  <h2>Input Tips</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Target</div><h4>Be specific</h4><p>Instead of "write about AI", try "compare transformer vs LSTM for real-time speech recognition in embedded systems".</p></div>
+    <div class="tip-card"><div class="tip-icon">Context</div><h4>Include context</h4><p>Mention audience, purpose, constraints or domain. The classifier uses this to assign the right expert role.</p></div>
+    <div class="tip-card"><div class="tip-icon">Length</div><h4>Optimal length</h4><p>20–200 words gives the best results. Too short — generic prompt. Too long — key intent may dilute.</p></div>
+    <div class="tip-card"><div class="tip-icon">Keywords</div><h4>Domain keywords</h4><p>Include terms from your field (CVSS, DCF, differential diagnosis) to trigger the right expert template.</p></div>
+    <div class="tip-card"><div class="tip-icon">Language</div><h4>Any input language</h4><p>Type in Ukrainian or Spanish — the system auto-translates to English before generating the prompt.</p></div>
+    <div class="tip-card"><div class="tip-icon">Style</div><h4>Match style to task</h4><p>Use <strong>Expert</strong> for research, <strong>Technical</strong> for code, <strong>Creative</strong> for open-ended, <strong>Concise</strong> for quick prompts.</p></div>
+  </div>
+</section>
+
+<section id="faq-en">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Why does it take long to load on first visit? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Pyodide (~8 MB) downloads on first load and is cached by the Service Worker. PDF/DOCX packages (~12 MB) download only when you first use the Converter. All subsequent sessions are instant.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Do I need a DeepSeek API key? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">No. The local Python engine generates prompts without any key. DeepSeek is optional and provides higher quality for complex domains.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Is my text sent to any server? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Local engine: no — all processing in your browser. DeepSeek engine: your text is sent to api.deepseek.com only. No data goes to our servers.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">What file formats does the converter support? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body"><strong>.pdf</strong> — pdf2md (primary) and pdfminer.six (fallback).<br><strong>.docx</strong> — python-docx.<br>Output is always clean Markdown (.md).</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">How does the Probability Yardstick work? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">For analytical domains (intelligence, risk, financial, medical, legal), generated prompts include a standardised Probability Yardstick — a scale from "Almost certainly (&gt;95%)" to "Almost certainly not (&lt;5%)". Every probability claim must reference this scale and cite its source.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">How do I reset the app? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">DevTools → Application → Storage → Clear site data. This removes localStorage (saved files, API key, language) and Service Worker cache.</div></div>
+  </div>
+</section>
+</div><!-- /en -->
+
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  UKRAINIAN  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="uk">
+
+<section id="overview-uk">
+  <div class="hero">
+    <div class="hero-version">Версія 1.0 · PWA · Офлайн-режим</div>
+    <h1>JS PROMPT — Довідка</h1>
+    <p>JS PROMPT — це професійний Progressive Web Application, що перетворює ідеї та описи завдань на структуровані, якісні промти для Claude AI — повністю у вашому браузері, без передачі даних на зовнішні сервери.</p>
+    <div class="feature-pills">
+      <span class="pill">Генератор промтів AI</span>
+      <span class="pill">PDF/DOCX у Markdown</span>
+      <span class="pill">Markdown-редактор</span>
+      <span class="pill">9-ступінчаста перевірка</span>
+      <span class="pill">Голосовий ввід (Whisper)</span>
+      <span class="pill">100% офлайн PWA</span>
+      <span class="pill">EN / UK / ES</span>
+      <span class="pill">DeepSeek API</span>
+    </div>
+  </div>
+</section>
+
+<section id="architecture-uk">
+  <h2>Архітектура</h2>
+  <p>JS PROMPT працює повністю на стороні клієнта. Весь складний розрахунок виконується у браузері через <strong>Pyodide</strong> — Python, скомпільований у WebAssembly.</p>
+  <div class="callout callout-info"><strong>Конфіденційність перш за все:</strong> ваш текст ніколи не покидає браузер при використанні локального рушія.</div>
+  <h3>3-фазна ініціалізація</h3>
+  <table class="domain-table"><thead><tr><th>Фаза</th><th>Коли</th><th>Що завантажується</th><th>Час</th></tr></thead><tbody>
+    <tr><td><strong>Фаза 1</strong></td><td>Старт сторінки</td><td>Pyodide WASM + micropip + PYTHON_CORE</td><td>~5–8 с</td></tr>
+    <tr><td><strong>Фаза 2</strong></td><td>Перший конвертер</td><td>pypdf + pdfminer.six + python-docx + Pillow</td><td>~10–20 с</td></tr>
+    <tr><td><strong>Фаза 3</strong></td><td>Перша перевірка</td><td>pyspellchecker</td><td>~2–3 с</td></tr>
+  </tbody></table>
+</section>
+
+<section id="prompt-gen-uk">
+  <h2>Генератор промтів</h2>
+  <p>Основна функція: перетворює будь-яку сиру ідею на професійний промт для Claude з визначенням ролі, контекстом, завданням, вимогами та форматом виводу.</p>
+  <h3>Покрокова інструкція</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Введіть текст</h4><p>Введіть або вставте будь-який опис. Може бути коротким або детальним. Використовуйте голосовий ввід (кнопка мікрофона).</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Оберіть стиль промту</h4><p><strong>Детальний</strong> — повна структура (10+ секцій). <strong>Стислий</strong> — стиснутий. <strong>Експертний</strong> — максимальна глибина. <strong>Творчий</strong> — відкриті завдання. <strong>Технічний</strong> — код/архітектура.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Мова виводу</h4><p>Оберіть мову для згенерованого промту: <strong>Англійська, Українська</strong> або <strong>Іспанська</strong>.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Оберіть рушій</h4><p><strong>Локальний</strong> — Pyodide Python-рушій, ключ не потрібен. <strong>DeepSeek</strong> — хмарна модель, вища якість, потребує API-ключ.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Генерація та використання</h4><p>Натисніть <strong>Згенерувати промт</strong>. Скопіюйте, збережіть як <code>.md</code> або відкрийте в редакторі.</p></div></div>
+  </div>
+  <div class="demo-block">
+    <h4>Інтерактивне демо</h4>
+    <textarea class="demo-input" id="demoInput-uk" placeholder='Опишіть завдання… наприклад "Проаналізуй конкурентне середовище для SaaS аналітики"'></textarea>
+    <div class="demo-controls">
+      <select class="sim-select" id="demoStyle-uk" style="max-width:200px;"><option value="detailed">Детальний</option><option value="concise">Стислий</option><option value="expert">Експертний</option><option value="technical">Технічний</option></select>
+      <button class="sim-btn sim-btn-primary" onclick="runDemo('uk')">Переглянути структуру</button>
+      <button class="sim-btn sim-btn-ghost" onclick="clearDemo('uk')">Очистити</button>
+    </div>
+    <div class="demo-output" id="demoOutput-uk"></div>
+  </div>
+  <h3>Ланцюг пріоритетів перекладу</h3>
+  <table class="domain-table"><thead><tr><th>Пріоритет</th><th>Метод</th><th>Умова</th></tr></thead><tbody>
+    <tr><td>1</td><td>DeepSeek API</td><td>Є API-ключ — найвища якість</td></tr>
+    <tr><td>2</td><td>Helsinki-NLP (локальний WASM)</td><td>Ключ не потрібен</td></tr>
+    <tr><td>3</td><td>Claude API</td><td>Fallback при збої локальної моделі</td></tr>
+    <tr><td>4</td><td>Оригінальний текст</td><td>Крайній варіант — користувача попереджають</td></tr>
+  </tbody></table>
+</section>
+
+<section id="converter-uk">
+  <h2>Конвертер PDF / DOCX</h2>
+  <p>Конвертуйте PDF і DOCX-файли у чистий Markdown — зі збереженням заголовків, списків, таблиць та форматування. Працює офлайн через Pyodide.</p>
+  <div class="callout callout-warn"><strong>Перший раз:</strong> пакети Фази 2 (pypdf, pdfminer.six, python-docx, Pillow ~12 МБ) завантажуються при першій конвертації. Після першої сесії кешуються офлайн.</div>
+  <h3>Опції після конвертації</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+    <span class="badge badge-blue">Скопіювати</span>
+    <span class="badge badge-blue">Зберегти .md</span>
+    <span class="badge badge-green">Відкрити в редакторі</span>
+  </div>
+</section>
+
+<section id="editor-uk">
+  <h2>Markdown-редактор</h2>
+  <p>Вбудований редактор з живим попереднім переглядом та управлінням файлами в localStorage.</p>
+  <div class="accordion">
+    <div class="accordion-item open"><div class="accordion-header" onclick="toggleAccordion(this)">Завантаження файлів <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Натисніть <strong>Завантажити .md</strong> або файли автоматично завантажуються з Конвертера через "Відкрити в редакторі".</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Збереження в localStorage <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Натисніть <strong>Зберегти в локальне сховище</strong>. Введіть ім'я у стильному діалозі. Файли зберігаються між сесіями і з'являються у списку нижче редактора.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Живий перегляд <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Перейдіть на вкладку <strong>Перегляд</strong> для відображення відформатованого Markdown.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Управління збереженими файлами <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Список збережених файлів показує назву, дату та дві кнопки: завантажити та видалити. Видалення потребує підтвердження.</div></div>
+  </div>
+</section>
+
+<section id="checker-uk">
+  <h2>Перевірка помилок</h2>
+  <p>9-ступінчастий аналіз на базі Python (Pyodide) для виявлення орфографічних, граматичних та стилістичних помилок. Підтримує <strong>українську</strong> та <strong>англійську</strong> мови.</p>
+
+  <!-- СИМУЛЬОВАНИЙ ІНТЕРФЕЙС -->
+  <div class="mockup-shell">
+    <div class="mockup-bar">
+      <div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <div class="mockup-url">promt.pp.ua — Перевірка помилок</div>
+    </div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Слова</div><div style="font-size:20px;font-weight:800;color:var(--text);">247</div></div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Речення</div><div style="font-size:20px;font-weight:800;color:var(--text);">18</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(255,107,107,0.3);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Помилки</div><div style="font-size:20px;font-weight:800;color:var(--error);">5</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(79,195,247,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Claude Токени</div><div style="font-size:20px;font-weight:800;color:var(--accent);">1&nbsp;842</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(102,187,106,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Якість</div><div style="font-size:16px;font-weight:800;color:var(--accent-2);">Добре</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.8;margin-bottom:10px;color:var(--text-dim);">
+        Ви є старшим <span style="background:rgba(255,167,38,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Повторення — слово зустрічається двічі поряд">аналітиком</span>. Як старший <span style="background:rgba(255,107,107,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Орфографія — помилка у написанні">аналіттик</span> ви маєте надавати <span style="background:rgba(206,147,216,0.25);border-radius:3px;padding:1px 3px;color:var(--text);" title="Стиль — кліше">детальні та вичерпні</span> висновки.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="sim-btn sim-btn-primary" style="font-size:12px;">Перевірити</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Застосувати всі виправлення</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Очистити</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Покрокова інструкція</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Вставте текст</h4><p>Перейдіть на вкладку <strong>Error Checker</strong>. Вставте промт або будь-який текст у поле вводу. Оптимальний розмір — 50–2000 слів.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Натисніть "Перевірити"</h4><p>Система виконує всі 9 етапів аналізу через Pyodide. Спінер прогресу показує поточний етап і відсоток виконання. При першому запуску завантажується <code>pyspellchecker</code> (~0.5 МБ).</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Читайте статистику</h4><p>5 карток статистики оновлюються після перевірки: <strong>Слова</strong>, <strong>Речення</strong>, <strong>Помилки</strong> (червоний якщо &gt;0), <strong>Claude Токени</strong> (оцінка кількості токенів при відправці до API), <strong>Якість</strong> (оцінка від "Бездоганно" до "Потребує доопрацювання").</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Перегляньте підсвічений текст</h4><p>Нижче карток — ваш текст з підсвіченими помилками. <strong>Наведіть курсор на будь-яке підсвічування</strong> — з'явиться підказка з описом помилки. Кольори відповідають типу помилки.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Виправте помилки — три способи</h4><p><strong>А — клік на пропозицію</strong>: у списку помилок клікніть синю пропозицію для миттєвого виправлення.</p><p><strong>Б — Застосувати всі виправлення</strong>: прийняти всі пропозиції одразу.</p><p><strong>В — Ручне редагування</strong>: відредагуйте текст і натисніть "Перевірити" знову.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Збережіть або скопіюйте виправлений текст</h4><p>Після виправлень з'являються кнопки: <strong>Зберегти виправлений .md</strong> та <strong>Копіювати виправлений текст</strong>.</p></div></div>
+  </div>
+
+  <h3>Кількість токенів Claude</h3>
+  <div class="callout callout-info">
+    <strong>Що таке токени?</strong> Claude API обробляє текст токенами — приблизно 1 токен ≈ 4 символи або ¾ слова (для українського тексту токенів на слово більше). Лічильник <strong>Claude Tokens</strong> показує оцінку кількості токенів, які споживе ваш промт.
+  </div>
+  <table class="domain-table" style="margin-top:10px;">
+    <thead><tr><th>Кількість токенів</th><th>Орієнтовна вартість</th><th>Рекомендація</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 1 000</td><td style="color:var(--ok);">Дуже низька</td><td>Ідеально для простих завдань</td></tr>
+      <tr><td>1 000 – 4 000</td><td style="color:var(--accent-2);">Низька</td><td>Стандартний промт — хороший баланс</td></tr>
+      <tr><td>4 000 – 8 000</td><td style="color:var(--warn);">Помірна</td><td>Розгляньте стиснення</td></tr>
+      <tr><td>&gt; 8 000</td><td style="color:var(--error);">Висока</td><td>Розбийте на менші промти</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9 Етапів аналізу</h3>
+  <table class="domain-table">
+    <thead><tr><th>#</th><th>Етап</th><th>Що перевіряється</th><th>Приклад виправлення</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span style="color:var(--warn);font-weight:600;">Повторення</span></td><td>Те саме слово двічі в межах ~5 слів</td><td>"старший аналітик … старший аналітик" → позначення другого</td></tr>
+      <tr><td>2</td><td><span style="color:var(--text-dim);font-weight:600;">Пробіли</span></td><td>Подвійні пробіли, хвостові пробіли</td><td>"привіт&nbsp;&nbsp;світ" → "привіт світ"</td></tr>
+      <tr><td>3</td><td><span style="color:var(--warn);font-weight:600;">Пунктуація</span></td><td>Відсутні коми, незакриті лапки/дужки</td><td>"Однак система" → "Однак, система"</td></tr>
+      <tr><td>4</td><td><span style="color:var(--text-dim);font-weight:600;">Словниковий контроль</span></td><td>Слабкі або розпливчасті слова</td><td>"дуже важливий" → "критичний"</td></tr>
+      <tr><td>5</td><td><span style="color:var(--error);font-weight:600;">Орфографія (EN)</span></td><td>Помилки в англійських словах</td><td>"analystt" → "analyst"</td></tr>
+      <tr><td>6</td><td><span style="color:var(--error);font-weight:600;">Граматика</span></td><td>Граматичні помилки, русизми</td><td>"по відношенню до" → "щодо"</td></tr>
+      <tr><td>7</td><td><span style="color:#ce93d8;font-weight:600;">Стиль</span></td><td>Кліше, канцеляризми, слова-паразити</td><td>"детальні та вичерпні" → "ґрунтовні"</td></tr>
+      <tr><td>8</td><td><span style="color:#ffb74d;font-weight:600;">Пасивний стан</span></td><td>Надмірне використання пасивних конструкцій</td><td>"було проаналізовано командою" → "команда проаналізувала"</td></tr>
+      <tr><td>9</td><td><span style="color:var(--accent);font-weight:600;">Структура</span></td><td>Повнота структури промту (роль, завдання, формат)</td><td>Попередження якщо відсутнє визначення ролі або формату</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Шкала якості</h3>
+  <table class="domain-table">
+    <thead><tr><th>Оцінка</th><th>Співвідношення</th><th>Колір</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Бездоганно</strong></td><td>0 помилок</td><td style="color:var(--ok);">Зелений</td></tr>
+      <tr><td><strong>Відмінно</strong></td><td>&le; 2%</td><td style="color:var(--ok);">Зелений</td></tr>
+      <tr><td><strong>Добре</strong></td><td>&le; 5%</td><td style="color:var(--accent-2);">Синій</td></tr>
+      <tr><td><strong>Задовільно</strong></td><td>&le; 10%</td><td style="color:var(--warn);">Помаранчевий</td></tr>
+      <tr><td><strong>Потребує доопрацювання</strong></td><td>&gt; 10%</td><td style="color:var(--error);">Червоний</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn" style="margin-top:14px;">
+    <strong>Перший запуск:</strong> <code>pyspellchecker</code> (~0.5 МБ) завантажується один раз при першому натисканні "Перевірити" і кешується Service Worker для офлайн-роботи.
+  </div>
+</section>
+
+<section id="voice-uk">
+  <h2>Голосовий ввід</h2>
+  <p>Натисніть кнопку мікрофона у Генераторі промтів для транскрипції мовлення <strong>англійською, українською</strong> або <strong>іспанською</strong> мовою. Транскрипція виконується локально через модель Whisper.</p>
+  <div class="callout callout-warn"><strong>Перший раз:</strong> модель Whisper (~40 МБ) завантажується одноразово та кешується Service Worker для офлайн-використання.</div>
+</section>
+
+<section id="my-account-uk">
+  <h2>Панель My Account</h2>
+  <p>Доступна для авторизованих користувачів. Натисніть своє ім'я/email у правому верхньому хедері, щоб відкрити дропдаун, і оберіть один з трьох пунктів: <strong>Мої промти</strong>, <strong>Статистика</strong> або <strong>⏱ Планувальник</strong>. Всі три відкриваються всередині одного вікна <em>My Account</em> з вкладками зверху.</p>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — огляд панелі</div></div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;text-align:center;">
+        <div style="background:rgba(79,195,247,0.10);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="color:var(--accent);font-weight:700;margin-bottom:4px;">📋 Бібліотека промтів</div><div style="color:var(--text-dim);">Перегляд, пошук, копіювання,<br>завантаження, видалення промтів</div></div>
+        <div style="background:rgba(102,187,106,0.08);border:1px solid rgba(102,187,106,0.2);border-radius:10px;padding:12px;"><div style="color:var(--ok);font-weight:700;margin-bottom:4px;">📊 Статистика</div><div style="color:var(--text-dim);">Лічильники використання, токени,<br>розподіл за доменами, активність</div></div>
+        <div style="background:rgba(255,167,38,0.08);border:1px solid rgba(255,167,38,0.2);border-radius:10px;padding:12px;"><div style="color:var(--warn);font-weight:700;margin-bottom:4px;">⏱ Планувальник</div><div style="color:var(--text-dim);">Автоматичні задачі, перегляд<br>результатів, керування статусами</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="library-uk">
+  <h2>Бібліотека промтів (Prompt Library)</h2>
+  <p>Ваша особиста бібліотека всіх промтів, збережених на акаунт за допомогою кнопки <strong>💾 Зберегти в акаунт</strong>. Доступна через My Account → вкладка Бібліотека промтів.</p>
+  <h3>Вигляд вікна</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — Бібліотека промтів</div></div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;">
+        <div style="flex:1;background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text-dim);">🔍 Пошук промтів…</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:18px;cursor:pointer;color:var(--accent);">↺</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text-dim);">Усі домени ▾</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:var(--text);">Створити адмін-панель</strong>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent);padding:1px 8px;border-radius:5px;font-size:11px;">Програмування</span>
+        </div>
+        <div style="color:#607080;font-size:11px;font-style:italic;border-left:2px solid rgba(79,195,247,0.3);padding-left:6px;margin:4px 0;">📝 JS, HTML, PYODIDE, CSS…</div>
+        <div style="color:var(--text-dim);margin:4px 0;">You are a Senior Software Engineer / Tech Lead with 15+…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Копіювати промт</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📝 Копіювати джерело</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">↗ Завантажити</span>
+          <span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Видалити</span>
+          <span style="color:var(--text-dim);font-size:11px;margin-left:auto;">30.06.2026 · 900 слів · 1874 токенів · Flawless</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h3>Елементи інтерфейсу</h3>
+  <table class="domain-table"><thead><tr><th>Елемент</th><th>Опис</th></tr></thead><tbody>
+    <tr><td>🔍 <strong>Поле пошуку</strong></td><td>Повнотекстовий пошук за назвами та вмістом промтів. Список оновлюється під час введення.</td></tr>
+    <tr><td>↺ <strong>Кнопка оновлення</strong></td><td>Перезавантажує список промтів з сервера — корисно, якщо ви зберегли промт в іншій вкладці.</td></tr>
+    <tr><td>Спадне меню <strong>Усі домени</strong></td><td>Фільтрація за доменом (Програмування, Медицина, Фінанси тощо). Показує лише промти обраного домену.</td></tr>
+    <tr><td><strong>Картка промту</strong></td><td>Кожен збережений промт — це картка з: Назвою, бейджем домену, прев'ю вихідного тексту (курсивом, з синьою лівою рамкою), прев'ю вмісту промту та кнопками дій.</td></tr>
+    <tr><td>📋 <strong>Копіювати промт</strong></td><td>Копіює повний текст згенерованого промту в буфер обміну.</td></tr>
+    <tr><td>📝 <strong>Копіювати джерело</strong></td><td>Копіює оригінальний вихідний текст (вашу ідею/завдання) в буфер обміну. З'являється лише якщо вихідний текст був збережений.</td></tr>
+    <tr><td>↗ <strong>Завантажити</strong></td><td>Завантажує вихідний текст у поле "Ваш текст / ідея / завдання" на головній сторінці, готовий до перегенерації. Панель My Account закривається автоматично.</td></tr>
+    <tr><td>🗑 <strong>Видалити</strong></td><td>Назавжди видаляє промт після діалогу підтвердження. Дію не можна скасувати.</td></tr>
+    <tr><td><strong>Рядок метаданих</strong></td><td>Дата збереження · кількість слів · кількість токенів · оцінка якості (наприклад, "Flawless").</td></tr>
+  </tbody></table>
+  <h3>Пошук промтів</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Введіть текст у поле пошуку</h4><p>Список фільтрується миттєво. Пошук виконується за назвами і вмістом промтів одночасно.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Оберіть домен</h4><p>Скористайтесь спадним меню "Усі домени", щоб звузити результати до конкретного домену (наприклад, лише "Програмування").</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Комбінуйте фільтри</h4><p>Введіть ключове слово <em>і</em> оберіть домен одночасно для більш точного пошуку.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Скинути</h4><p>Очистіть поле пошуку та скиньте домен на "Усі домени", щоб побачити повний список (до 50 найновіших промтів).</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Збереження промту:</strong> після генерації натисніть <strong>💾 Зберегти в акаунт</strong> на головній сторінці. Діалог запропонує ввести назву та обрати домен. Вихідний текст і згенерований промт зберігаються разом.</div>
+</section>
+
+<section id="scheduler-uk">
+  <h2>Планувальник (Scheduler)</h2>
+  <p>Планувальник дозволяє автоматизувати виконання промтів за розкладом — запускати збережені промти через хмарний AI (Gemini, DeepSeek або Claude) у заданий час з можливістю щотижневого або щомісячного повторення. Доступно через My Account → вкладка ⏱ Планувальник.</p>
+  <h3>Вигляд вікна</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">My Account — Планувальник</div></div>
+    <div class="mockup-body">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Створити заплановану задачу</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Промт для виконання: <span style="color:var(--accent);">Оберіть збережений промт…</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Цільовий AI: Gemini</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Розклад: Один раз</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Перший запуск: 01.07.2026 09:00</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Макс. токенів: 8192</div>
+        </div>
+        <div style="background:var(--accent);color:#000;border-radius:8px;padding:8px 14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;">Запланувати задачу</div>
+      </div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Заплановані задачі</div>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;"><strong style="color:var(--text);">Створити адмін-панель</strong><span style="color:#29b6f6;">gemini</span></div>
+        <div style="color:var(--text-dim);margin:4px 0;">Програмування · Один раз · Наступний: — · Статус: <span style="color:#66bb6a;">done</span> · Виконань: 1</div>
+        <div style="display:flex;gap:6px;"><span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Результати</span><span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Видалити</span></div>
+      </div>
+    </div>
+  </div>
+  <h3>Поля форми "Створити задачу"</h3>
+  <table class="domain-table"><thead><tr><th>Поле</th><th>Опис</th></tr></thead><tbody>
+    <tr><td><strong>Промт для виконання</strong></td><td>Оберіть із ваших збережених промтів. Спадний список показує домен + назву для кожного.</td></tr>
+    <tr><td><strong>Цільовий AI</strong></td><td>Оберіть AI-модель: <strong>Gemini</strong> (за замовчуванням, 8192 токени), <strong>DeepSeek</strong> (8000 токенів) або <strong>Claude</strong> (8000 токенів). Провайдер повинен бути налаштований в Адмін-панелі → AI-провайдери.</td></tr>
+    <tr><td><strong>Тип розкладу</strong></td><td><strong>Один раз</strong> — виконується рівно один раз у вказаний час. <strong>Щотижня</strong> — повторюється кожні 7 днів від першого запуску. <strong>Щомісяця</strong> — повторюється щомісяця в той самий день.</td></tr>
+    <tr><td><strong>Дата/час першого запуску</strong></td><td>Дата і час (у вашому локальному часовому поясі) першого виконання задачі.</td></tr>
+    <tr><td><strong>Макс. токенів</strong></td><td>Максимальна кількість токенів, яку AI може використати за один запуск. Замовчування залежить від провайдера. Залиште порожнім для використання замовчування.</td></tr>
+  </tbody></table>
+  <h3>Порядок створення задачі</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Спочатку збережіть промт</h4><p>Перейдіть до Генератора промтів, згенеруйте промт і натисніть <strong>💾 Зберегти в акаунт</strong>. Лише збережені промти з'являються в спадному списку Планувальника.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Оберіть промт</h4><p>Відкрийте вкладку Планувальник, знайдіть спадне меню <em>Промт для виконання</em>, оберіть свій промт (відображається як "Домен — Назва").</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Виберіть AI та розклад</h4><p>Оберіть AI-провайдер, встановіть тип розкладу (Один раз / Щотижня / Щомісяця), вкажіть дату/час першого запуску і за потреби скоригуйте Макс. токенів.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Натисніть "Запланувати задачу"</h4><p>З'явиться підтверджувальне повідомлення. Задача відображається в розділі нижче зі статусом <span style="color:var(--accent);">pending</span>.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Зачекайте на виконання</h4><p>Серверний Планувальник регулярно перевіряє заплановані задачі. Коли час запуску настане, він надішле промт до AI, збереже відповідь і оновить статус.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Перегляньте результати</h4><p>Натисніть <strong>📋 Результати</strong> на будь-якій задачі, щоб переглянути всі минулі результати виконання: час, статус, кількість токенів, тривалість та повну відповідь AI. Завантажте як <code>.md</code>, <code>.txt</code> або <code>.docx</code>, або скопіюйте в буфер обміну.</p></div></div>
+  </div>
+  <h3>Довідник статусів задач</h3>
+  <table class="domain-table"><thead><tr><th>Статус</th><th>Колір</th><th>Значення</th></tr></thead><tbody>
+    <tr><td><strong>pending</strong></td><td style="color:var(--accent);">синій</td><td>Очікує запланованого часу. Ще не виконувалась. Кнопка <strong>✕ Скасувати</strong> доступна — натисніть її, щоб зупинити до виконання.</td></tr>
+    <tr><td><strong>running</strong></td><td style="color:var(--accent);">синій</td><td>Виконується зараз (API-запит до AI в процесі). Не скасовуйте.</td></tr>
+    <tr><td><strong>done</strong></td><td style="color:var(--ok);">зелений</td><td>Останнє виконання завершилось успішно. Результат доступний через кнопку 📋 Результати. Для щотижневих/щомісячних задач наступний запуск вже заплановано.</td></tr>
+    <tr><td><strong>failed</strong></td><td style="color:var(--error);">червоний</td><td>Останнє виконання завершилось помилкою (API недоступний, перевищено ліміт токенів, провайдер неправильно налаштований тощо). Деталі помилки — в панелі Результатів.</td></tr>
+    <tr><td><strong>canceled</strong></td><td style="color:var(--text-dim);">сірий</td><td>Скасовано вручну до виконання через кнопку ✕ Скасувати. Результату не було. Задача залишається у списку, але більше не запуститься.</td></tr>
+  </tbody></table>
+  <div class="callout callout-info"><strong>Щотижневі/щомісячні задачі:</strong> після успішного виконання (<em>done</em>) задача автоматично планує наступний <em>next_run_at</em> і повертається до статусу <em>pending</em>.</div>
+  <div class="callout callout-warn"><strong>Задачі потребують активного сервера:</strong> виконання відбувається на серверній стороні — задача запускається навіть коли ваш браузер закрито. Однак якщо сервер перезапускається під час виконання, задачу може знадобитися відтворити.</div>
+  <h3>Дії над задачами</h3>
+  <table class="domain-table"><thead><tr><th>Кнопка</th><th>Коли доступна</th><th>Дія</th></tr></thead><tbody>
+    <tr><td>📋 <strong>Результати</strong></td><td>Завжди</td><td>Відкриває панель результатів з усіма минулими виводами цієї задачі. Копіювання, завантаження як .md/.txt/.docx.</td></tr>
+    <tr><td>✕ <strong>Скасувати</strong></td><td>Лише статус <em>pending</em></td><td>Скасовує задачу до запуску. Статус змінюється на <em>canceled</em>. Дію не можна скасувати.</td></tr>
+    <tr><td>🗑 <strong>Видалити</strong></td><td>Завжди</td><td>Назавжди видаляє задачу та всі результати її виконання. Потребує діалогу підтвердження.</td></tr>
+  </tbody></table>
+</section>
+
+<section id="deepseek-uk">
+  <h2>API-ключі та AI-провайдери</h2>
+  <p>JS PROMPT підтримує кілька AI-провайдерів для генерації промтів та Планувальника. Активний провайдер для <em>Генератора промтів</em> обирається в межах сесії; провайдери для <em>Планувальника</em> налаштовуються загально адміністратором.</p>
+  <h3>Додавання AI-провайдерів (тільки для адміна)</h3>
+  <p>Адміністратори налаштовують провайдери в <strong>Адмін-панелі → AI-провайдери</strong>. Кожен провайдер потребує: унікального ключа, відображуваної назви, URL endpoint'у (сумісного з OpenAI <code>/v1/chat/completions</code>), назви моделі та опціонального заголовка/префіксу авторизації.</p>
+  <div class="callout callout-info"><strong>Вбудовані провайдери</strong> (DeepSeek, Gemini, Claude) попередньо налаштовані. Власні OpenAI-сумісні endpoint'и можна додати як додаткові провайдери.</div>
+  <h3>Введення API-ключа DeepSeek</h3>
+  <p>Рушій <strong>DeepSeek</strong> (для Генератора промтів) потребує вашого особистого API-ключа з <strong>platform.deepseek.com</strong>.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Отримайте ключ</h4><p>Зайдіть на <strong>platform.deepseek.com</strong> → API Keys → Create. Ключ починається з <code>sk-</code>.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Відкрийте діалог ключа</h4><p>Натисніть <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. Це відображає приховану кнопку API Key в хедері і одразу відкриває діалог введення ключа.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Вставте і збережіть</h4><p>Вставте ключ у поле вводу і натисніть <strong>Зберегти</strong>. Ключ зберігається лише у вашому браузері (<code>localStorage</code>) — він ніколи не надсилається на наші сервери і не відображається після збереження.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Оберіть рушій DeepSeek</h4><p>У селекторі рушія генерації на головній сторінці перейдіть на <strong>DeepSeek</strong>. Баланс акаунту з'явиться у футері застосунку з кнопкою оновлення.</p></div></div>
+  </div>
+  <div class="callout callout-ok"><strong>Серверний ключ:</strong> на продакшн-версії (promt.pp.ua) ключ платформи зберігається в серверному файлі <code>.env</code>. Ваш особистий ключ перекриває його для вашої сесії.</div>
+  <h3>Що відкриває Ctrl+Shift+K</h3>
+  <table class="domain-table"><thead><tr><th>Елемент діалогу</th><th>Опис</th></tr></thead><tbody>
+    <tr><td><strong>Поле API Key</strong></td><td>Вставте сюди свій ключ <code>sk-...</code>. Поле замасковане.</td></tr>
+    <tr><td><strong>Зберегти</strong></td><td>Зберігає в <code>localStorage</code> і закриває діалог. Ключ зберігається між перезавантаженнями.</td></tr>
+    <tr><td><strong>Очистити</strong></td><td>Видаляє збережений ключ, після чого знову буде використовуватись локальний рушій.</td></tr>
+    <tr><td><strong>Відображення балансу</strong></td><td>Показує залишок кредиту DeepSeek після збереження.</td></tr>
+  </tbody></table>
+</section>
+
+<section id="languages-uk">
+  <h2>Налаштування мови</h2>
+  <table class="domain-table"><thead><tr><th>Налаштування</th><th>Де</th><th>На що впливає</th></tr></thead><tbody>
+    <tr><td>Мова інтерфейсу</td><td>Футер — кнопки EN / UK / ES</td><td>Всі написи, кнопки, повідомлення, довідка</td></tr>
+    <tr><td>Мова виводу</td><td>Спадне меню в Генераторі</td><td>Мова згенерованого промту</td></tr>
+    <tr><td>Мова голосу</td><td>Автовизначення з мовлення</td><td>Модель транскрипції Whisper</td></tr>
+  </tbody></table>
+</section>
+
+<section id="install-uk">
+  <h2>Встановити як PWA</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Desktop</div><h4>Chrome / Edge</h4><p>Натисніть кнопку <strong>Встановити</strong> у хедері додатку або іконку встановлення в адресному рядку браузера.</p></div>
+    <div class="tip-card"><div class="tip-icon">Android</div><h4>Android Chrome</h4><p>Меню браузера → Встановити додаток.</p></div>
+    <div class="tip-card"><div class="tip-icon">iOS</div><h4>iOS Safari</h4><p>Поділитися → На екран «Домів». Додаток відкривається в автономному режимі.</p></div>
+    <div class="tip-card"><div class="tip-icon">Offline</div><h4>Офлайн-режим</h4><p>Всі ресурси кешуються Service Worker. Працює без інтернету після першого завантаження.</p></div>
+  </div>
+</section>
+
+<section id="domains-uk">
+  <h2>Підтримувані домени</h2>
+  <p>Система автоматично визначає домен вашого запиту та призначає відповідну роль експерта (15–20+ років досвіду).</p>
+  <table class="domain-table"><thead><tr><th>Домен</th><th>Роль експерта</th><th>Ключові слова</th></tr></thead><tbody>
+    <tr><td><span class="badge badge-blue">Розвідувальний аналіз</span></td><td>Старший аналітик розвідки</td><td>OSINT, геополітика, загроза, військовий, сценарій</td></tr>
+    <tr><td><span class="badge badge-blue">OSINT</span></td><td>OSINT-спеціаліст</td><td>відкриті джерела, геолокація, верифікація</td></tr>
+    <tr><td><span class="badge badge-blue">Стратегічні ризики</span></td><td>Експерт зі стратегічних ризиків</td><td>матриця ризиків, кризовий менеджмент</td></tr>
+    <tr><td><span class="badge badge-green">Медицина</span></td><td>Клініцист-діагност MD/PhD</td><td>діагноз, симптоми, лікування, клінічний</td></tr>
+    <tr><td><span class="badge badge-green">Кібербезпека</span></td><td>Пентестер / OSCP</td><td>pentest, вразливість, CVSS, шкідливе ПЗ</td></tr>
+    <tr><td><span class="badge badge-green">Фінансовий аналіз</span></td><td>Старший фінансовий аналітик CFA</td><td>інвестиції, DCF, портфель, оцінка</td></tr>
+    <tr><td><span class="badge badge-green">Право</span></td><td>Старший юридичний консультант</td><td>договір, закон, суд, регулювання, GDPR</td></tr>
+    <tr><td><span class="badge badge-blue">Програмування</span></td><td>Senior Software Engineer</td><td>код, Python, JavaScript, API, алгоритм</td></tr>
+    <tr><td><span class="badge badge-blue">Data Science</span></td><td>Lead Data Scientist</td><td>машинне навчання, модель, датасет, NLP</td></tr>
+    <tr><td><span class="badge badge-blue">Бізнес-стратегія</span></td><td>Старший бізнес-стратег MBA</td><td>стартап, вихід на ринок, SWOT, OKR</td></tr>
+    <tr><td><span class="badge badge-blue">Product Management</span></td><td>Senior Product Manager</td><td>дорожня карта, беклог, спринт, MVP</td></tr>
+    <tr><td><span class="badge badge-blue">Наукові дослідження</span></td><td>Науковий співробітник PhD</td><td>гіпотеза, експеримент, рецензування</td></tr>
+    <tr><td style="color:var(--text-dim);">Загальний</td><td>Універсальний експерт-консультант</td><td>Будь-яка тема</td></tr>
+  </tbody></table>
+</section>
+
+<section id="shortcuts-uk">
+  <h2>Гарячі клавіші</h2>
+  <table class="domain-table"><thead><tr><th>Дія</th><th>Комбінація</th></tr></thead><tbody>
+    <tr><td>Згенерувати промт</td><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td></tr>
+    <tr><td>Скопіювати вивід</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></td></tr>
+    <tr><td>Зберегти як .md</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td></tr>
+    <tr><td>Закрити модальне вікно</td><td><kbd>Esc</kbd></td></tr>
+    <tr><td>Підтвердити діалог</td><td><kbd>Enter</kbd></td></tr>
+    <tr><td style="color:var(--accent-2);font-weight:600;">Відкрити діалог API Key (прихована)</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></td></tr>
+  </tbody></table>
+  <div class="callout callout-info" style="margin-top:12px;">
+    <strong>Ctrl+Shift+K</strong> — відображає приховану кнопку API Key у хедері застосунку і <em>одразу</em> відкриває діалог введення ключа. Кнопка автоматично зникає після закриття діалогу.
+    <br><br>
+    <strong>Всередині діалогу:</strong> вставте свій DeepSeek-ключ (починається з <code>sk-</code>), натисніть <strong>Зберегти</strong>. Ключ зберігається лише в <code>localStorage</code> — не передається нікуди. Якщо серверний ключ вже налаштований (режим продакшн), поле показує лише заповнювач, а ваш особистий ключ перекриває його для поточної сесії. Натисніть <kbd>Esc</kbd> або клікніть поза діалогом, щоб закрити без збереження.
+  </div>
+</section>
+
+<section id="tips-uk">
+  <h2>Поради для кращих промтів</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Target</div><h4>Будьте конкретними</h4><p>Замість "напиши про ШІ" спробуйте "порівняй transformer vs LSTM для розпізнавання мовлення в реальному часі".</p></div>
+    <div class="tip-card"><div class="tip-icon">Context</div><h4>Вказуйте контекст</h4><p>Зазначте аудиторію, мету, обмеження або домен. Класифікатор використовує це для призначення правильної ролі.</p></div>
+    <div class="tip-card"><div class="tip-icon">Length</div><h4>Оптимальна довжина</h4><p>20–200 слів дають найкращі результати. Занадто коротко — загальний промт. Занадто довго — ключовий намір може розмитися.</p></div>
+    <div class="tip-card"><div class="tip-icon">Keywords</div><h4>Ключові слова домену</h4><p>Включайте терміни вашої сфери (CVSS, DCF, диференційна діагностика) для активації правильного шаблону.</p></div>
+    <div class="tip-card"><div class="tip-icon">Language</div><h4>Будь-яка мова вводу</h4><p>Вводьте українською або іспанською — система автоматично перекладає на англійську перед генерацією.</p></div>
+    <div class="tip-card"><div class="tip-icon">Style</div><h4>Підбирайте стиль</h4><p>Використовуйте <strong>Експертний</strong> для досліджень, <strong>Технічний</strong> для коду, <strong>Творчий</strong> для відкритих завдань.</p></div>
+  </div>
+</section>
+
+<section id="faq-uk">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чому перше завантаження таке тривале? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Pyodide (~8 МБ) завантажується при першому відвідуванні і кешується Service Worker. Пакети PDF/DOCX (~12 МБ) завантажуються лише при першому використанні Конвертера. Всі наступні сесії — миттєві.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чи потрібен API-ключ DeepSeek? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Ні. Локальний Python-рушій генерує промти без ключа. DeepSeek — опціональний і забезпечує вищу якість для складних доменів.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чи передається мій текст на сервер? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">При використанні локального рушія — ні, весь розрахунок у браузері. При використанні DeepSeek — текст надсилається лише до api.deepseek.com. На наші сервери дані не потрапляють.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Як скинути додаток? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">DevTools → Application → Storage → Clear site data. Це видаляє localStorage (збережені файли, API-ключ, мову) та кеш Service Worker.</div></div>
+  </div>
+</section>
+</div><!-- /uk -->
+
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  SPANISH  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="es">
+
+<section id="overview-es">
+  <div class="hero">
+    <div class="hero-version">Versión 1.0 · PWA · Modo sin conexión</div>
+    <h1>JS PROMPT — Ayuda y Documentación</h1>
+    <p>JS PROMPT es una Progressive Web Application profesional que transforma ideas y descripciones de tareas en prompts estructurados y de alta calidad para Claude AI — completamente en su navegador, sin enviar datos a servidores externos.</p>
+    <div class="feature-pills">
+      <span class="pill">Generador de prompts IA</span>
+      <span class="pill">PDF/DOCX a Markdown</span>
+      <span class="pill">Editor Markdown</span>
+      <span class="pill">Verificador 9 etapas</span>
+      <span class="pill">Entrada de voz (Whisper)</span>
+      <span class="pill">100% PWA sin conexión</span>
+      <span class="pill">EN / UK / ES</span>
+      <span class="pill">API DeepSeek</span>
+    </div>
+  </div>
+</section>
+
+<section id="architecture-es">
+  <h2>Arquitectura</h2>
+  <p>JS PROMPT funciona completamente del lado del cliente. Todos los cálculos se ejecutan en su navegador a través de <strong>Pyodide</strong> — Python compilado a WebAssembly.</p>
+  <div class="callout callout-info"><strong>Privacidad primero:</strong> su texto nunca abandona el navegador cuando se usa el motor local.</div>
+</section>
+
+<section id="prompt-gen-es">
+  <h2>Generador de Prompts</h2>
+  <p>La función principal: convierte cualquier idea en un prompt profesional para Claude con definición de rol, contexto, tarea, requisitos y formato de salida.</p>
+  <h3>Guía paso a paso</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Ingrese su texto</h4><p>Escriba o pegue cualquier descripción. Use la entrada de voz (botón de micrófono) para transcripción de voz.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Elija el estilo del prompt</h4><p><strong>Detallado</strong> — estructura completa. <strong>Conciso</strong> — comprimido. <strong>Experto</strong> — máxima profundidad. <strong>Creativo</strong> — tareas abiertas. <strong>Técnico</strong> — código/arquitectura.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Idioma de salida</h4><p>Elija el idioma para el prompt generado: <strong>Inglés, Ucraniano</strong> o <strong>Español</strong>.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Motor de generación</h4><p><strong>Local</strong> — motor Python Pyodide, sin clave API. <strong>DeepSeek</strong> — modelo en la nube, mayor calidad, requiere clave API.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Generar y usar</h4><p>Haga clic en <strong>Generar Prompt</strong>. Copie, guarde como <code>.md</code> o abra en el Editor.</p></div></div>
+  </div>
+  <div class="demo-block">
+    <h4>Demo interactivo</h4>
+    <textarea class="demo-input" id="demoInput-es" placeholder='Describa su tarea… p.ej. "Analiza el panorama competitivo para una herramienta SaaS"'></textarea>
+    <div class="demo-controls">
+      <select class="sim-select" id="demoStyle-es" style="max-width:200px;"><option value="detailed">Detallado</option><option value="concise">Conciso</option><option value="expert">Experto</option><option value="technical">Técnico</option></select>
+      <button class="sim-btn sim-btn-primary" onclick="runDemo('es')">Ver estructura</button>
+      <button class="sim-btn sim-btn-ghost" onclick="clearDemo('es')">Limpiar</button>
+    </div>
+    <div class="demo-output" id="demoOutput-es"></div>
+  </div>
+</section>
+
+<section id="converter-es">
+  <h2>Conversor PDF / DOCX</h2>
+  <p>Convierta archivos PDF y DOCX a Markdown limpio — conservando encabezados, listas, tablas y formato. Funciona sin conexión a través de Pyodide.</p>
+  <div class="callout callout-warn"><strong>Primer uso:</strong> los paquetes de la Fase 2 (~12 MB) se descargan en la primera conversión. Se almacenan en caché para uso sin conexión.</div>
+</section>
+
+<section id="editor-es">
+  <h2>Editor Markdown</h2>
+  <p>Editor integrado con vista previa en vivo y gestión de archivos en localStorage.</p>
+  <div class="accordion">
+    <div class="accordion-item open"><div class="accordion-header" onclick="toggleAccordion(this)">Cargar archivos <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Haga clic en <strong>Cargar .md</strong> o los archivos se cargan automáticamente desde el Conversor.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Guardar en localStorage <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Haga clic en <strong>Guardar en almacenamiento local</strong>. Los archivos persisten entre sesiones.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Vista previa en vivo <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Cambie a la pestaña <strong>Vista previa</strong> para ver Markdown renderizado.</div></div>
+  </div>
+</section>
+
+<section id="checker-es">
+  <h2>Verificador de Errores</h2>
+  <p>Pipeline de análisis Python de 9 etapas para detectar errores ortográficos, gramaticales y estilísticos. Compatible con texto en <strong>ucraniano</strong> e <strong>inglés</strong>.</p>
+
+  <div class="mockup-shell">
+    <div class="mockup-bar">
+      <div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <div class="mockup-url">promt.pp.ua — Verificador de Errores</div>
+    </div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Palabras</div><div style="font-size:20px;font-weight:800;color:var(--text);">247</div></div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Oraciones</div><div style="font-size:20px;font-weight:800;color:var(--text);">18</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(255,107,107,0.3);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Errores</div><div style="font-size:20px;font-weight:800;color:var(--error);">5</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(79,195,247,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Tokens Claude</div><div style="font-size:20px;font-weight:800;color:var(--accent);">1&nbsp;842</div></div>
+        <div style="background:var(--bg-2);border:1px solid rgba(102,187,106,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">Calidad</div><div style="font-size:16px;font-weight:800;color:var(--accent-2);">Bueno</div></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="sim-btn sim-btn-primary" style="font-size:12px;">Verificar</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Aplicar todas las correcciones</button>
+        <button class="sim-btn sim-btn-ghost" style="font-size:12px;">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Guía paso a paso</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Pegue su texto</h4><p>Vaya a la pestaña <strong>Error Checker</strong>. Pegue su prompt o cualquier texto. Tamaño óptimo: 50–2000 palabras.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Haga clic en "Verificar"</h4><p>El sistema ejecuta las 9 etapas de análisis mediante Pyodide. Un indicador de progreso muestra la etapa actual y el porcentaje.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Lea las estadísticas</h4><p>5 tarjetas de estadísticas: <strong>Palabras</strong>, <strong>Oraciones</strong>, <strong>Errores</strong>, <strong>Tokens Claude</strong> (estimación de consumo en Claude API), <strong>Calidad</strong>.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Examine el texto resaltado</h4><p>Su texto aparece con errores resaltados. <strong>Pase el cursor sobre cualquier resaltado</strong> para ver una descripción del error en tooltip.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Corrija errores — tres métodos</h4><p><strong>A — clic en sugerencia</strong>: haga clic en la sugerencia azul para aplicarla.</p><p><strong>B — Aplicar todas las correcciones</strong>: aceptar todas a la vez.</p><p><strong>C — Edición manual</strong>: edite el texto y vuelva a hacer clic en Verificar.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Guarde o copie el texto corregido</h4><p>Aparecen los botones <strong>Guardar .md corregido</strong> y <strong>Copiar texto corregido</strong>.</p></div></div>
+  </div>
+
+  <h3>Tokens de Claude</h3>
+  <div class="callout callout-info">
+    <strong>¿Qué son los tokens?</strong> La API de Claude procesa texto en tokens — aproximadamente 1 token ≈ 4 caracteres o ¾ de palabra. El contador <strong>Tokens Claude</strong> muestra una estimación de cuántos tokens consumirá su prompt.
+  </div>
+  <table class="domain-table" style="margin-top:10px;">
+    <thead><tr><th>Rango de tokens</th><th>Costo aproximado</th><th>Recomendación</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 1.000</td><td style="color:var(--ok);">Muy bajo</td><td>Ideal para tareas simples</td></tr>
+      <tr><td>1.000 – 4.000</td><td style="color:var(--accent-2);">Bajo</td><td>Prompt estándar — buen equilibrio</td></tr>
+      <tr><td>4.000 – 8.000</td><td style="color:var(--warn);">Moderado</td><td>Considere condensar</td></tr>
+      <tr><td>&gt; 8.000</td><td style="color:var(--error);">Alto</td><td>Divida en prompts más pequeños</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9 Etapas de análisis</h3>
+  <table class="domain-table">
+    <thead><tr><th>#</th><th>Etapa</th><th>Qué verifica</th><th>Ejemplo de corrección</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span style="color:var(--warn);font-weight:600;">Repeticiones</span></td><td>Misma palabra dos veces en ~5 palabras</td><td>"analista senior … analista senior" → marcado</td></tr>
+      <tr><td>2</td><td><span style="color:var(--text-dim);font-weight:600;">Espacios</span></td><td>Espacios dobles, espacios finales</td><td>"hola&nbsp;&nbsp;mundo" → "hola mundo"</td></tr>
+      <tr><td>3</td><td><span style="color:var(--warn);font-weight:600;">Puntuación</span></td><td>Comas faltantes, comillas sin cerrar</td><td>"Sin embargo el sistema" → "Sin embargo, el sistema"</td></tr>
+      <tr><td>4</td><td><span style="color:var(--text-dim);font-weight:600;">Vocabulario</span></td><td>Palabras vagas o débiles</td><td>"muy importante" → "crítico"</td></tr>
+      <tr><td>5</td><td><span style="color:var(--error);font-weight:600;">Ortografía (EN)</span></td><td>Palabras inglesas mal escritas</td><td>"analystt" → "analyst"</td></tr>
+      <tr><td>6</td><td><span style="color:var(--error);font-weight:600;">Gramática</span></td><td>Errores gramaticales; ruisismos en ucraniano</td><td>Construcciones incorrectas → alternativas correctas</td></tr>
+      <tr><td>7</td><td><span style="color:#ce93d8;font-weight:600;">Estilo</span></td><td>Clichés, lenguaje burocrático</td><td>"detallado y exhaustivo" → "minucioso"</td></tr>
+      <tr><td>8</td><td><span style="color:#ffb74d;font-weight:600;">Voz pasiva</span></td><td>Uso excesivo de construcciones pasivas</td><td>"fue analizado por el equipo" → "el equipo analizó"</td></tr>
+      <tr><td>9</td><td><span style="color:var(--accent);font-weight:600;">Estructura</span></td><td>Completitud del prompt (rol, tarea, formato)</td><td>Aviso si falta definición de rol o formato de salida</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn" style="margin-top:14px;">
+    <strong>Primer uso:</strong> <code>pyspellchecker</code> (~0.5 MB) se descarga una vez en el primer clic en Verificar y queda en caché para uso sin conexión.
+  </div>
+</section>
+
+<section id="voice-es">
+  <h2>Entrada de Voz</h2>
+  <p>Haga clic en el botón de micrófono en el Generador de Prompts para transcribir voz en <strong>inglés, ucraniano</strong> o <strong>español</strong>. La transcripción se ejecuta localmente a través del modelo Whisper.</p>
+</section>
+
+<section id="my-account-es">
+  <h2>Panel Mi cuenta</h2>
+  <p>Disponible para usuarios registrados. Haga clic en su nombre/correo en el encabezado superior derecho para abrir el menú desplegable y elija uno de los tres puntos de entrada: <strong>Mis prompts</strong>, <strong>Estadísticas</strong> o <strong>⏱ Programador</strong>. Los tres se abren dentro de la misma ventana modal <em>Mi cuenta</em> con pestañas en la parte superior.</p>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">Mi cuenta — resumen del panel</div></div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;text-align:center;">
+        <div style="background:rgba(79,195,247,0.10);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="color:var(--accent);font-weight:700;margin-bottom:4px;">📋 Biblioteca de prompts</div><div style="color:var(--text-dim);">Navegar, buscar, copiar,<br>cargar, eliminar prompts</div></div>
+        <div style="background:rgba(102,187,106,0.08);border:1px solid rgba(102,187,106,0.2);border-radius:10px;padding:12px;"><div style="color:var(--ok);font-weight:700;margin-bottom:4px;">📊 Estadísticas</div><div style="color:var(--text-dim);">Contadores de uso, tokens,<br>desglose por dominio, actividad</div></div>
+        <div style="background:rgba(255,167,38,0.08);border:1px solid rgba(255,167,38,0.2);border-radius:10px;padding:12px;"><div style="color:var(--warn);font-weight:700;margin-bottom:4px;">⏱ Programador</div><div style="color:var(--text-dim);">Tareas automatizadas, ver<br>resultados, gestionar estados</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="library-es">
+  <h2>Biblioteca de Prompts</h2>
+  <p>Su biblioteca personal de todos los prompts guardados en su cuenta mediante el botón <strong>💾 Guardar en la cuenta</strong>. Acceda mediante Mi cuenta → pestaña Biblioteca de prompts.</p>
+  <h3>Diseño de la ventana</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">Mi cuenta — Biblioteca de prompts</div></div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;">
+        <div style="flex:1;background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text-dim);">🔍 Buscar prompts…</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:18px;cursor:pointer;color:var(--accent);">↺</div>
+        <div style="background:rgba(79,195,247,0.08);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text-dim);">Todos los dominios ▾</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:var(--text);">Crear panel de administración</strong>
+          <span style="background:rgba(79,195,247,0.15);color:var(--accent);padding:1px 8px;border-radius:5px;font-size:11px;">Programación</span>
+        </div>
+        <div style="color:#607080;font-size:11px;font-style:italic;border-left:2px solid rgba(79,195,247,0.3);padding-left:6px;margin:4px 0;">📝 JS, HTML, PYODIDE, CSS…</div>
+        <div style="color:var(--text-dim);margin:4px 0;">You are a Senior Software Engineer / Tech Lead with 15+…</div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Copiar prompt</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📝 Copiar fuente</span>
+          <span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">↗ Cargar</span>
+          <span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Eliminar</span>
+          <span style="color:var(--text-dim);font-size:11px;margin-left:auto;">30/06/2026 · 900 palabras · 1874 tokens · Flawless</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h3>Elementos de la interfaz</h3>
+  <table class="domain-table"><thead><tr><th>Elemento</th><th>Descripción</th></tr></thead><tbody>
+    <tr><td>🔍 <strong>Campo de búsqueda</strong></td><td>Búsqueda de texto completo en títulos y contenido de prompts. La lista se actualiza mientras escribe.</td></tr>
+    <tr><td>↺ <strong>Botón actualizar</strong></td><td>Recarga la lista de prompts del servidor — útil si guardó un prompt en otra pestaña.</td></tr>
+    <tr><td>Menú desplegable <strong>Todos los dominios</strong></td><td>Filtrar por dominio (Programación, Medicina, Finanzas, etc.). Muestra solo los prompts del dominio seleccionado.</td></tr>
+    <tr><td><strong>Tarjeta de prompt</strong></td><td>Cada prompt guardado es una tarjeta con: Título, insignia de dominio, vista previa del texto fuente (cursiva, con borde izquierdo azul), vista previa del contenido del prompt y botones de acción.</td></tr>
+    <tr><td>📋 <strong>Copiar prompt</strong></td><td>Copia el texto completo del prompt generado al portapapeles.</td></tr>
+    <tr><td>📝 <strong>Copiar fuente</strong></td><td>Copia el texto fuente original (su idea/tarea) al portapapeles. Solo se muestra si se guardó un texto fuente.</td></tr>
+    <tr><td>↗ <strong>Cargar</strong></td><td>Carga el texto fuente en el campo "Su texto / idea / tarea" de la página principal, listo para regenerar. El panel Mi cuenta se cierra automáticamente.</td></tr>
+    <tr><td>🗑 <strong>Eliminar</strong></td><td>Elimina permanentemente el prompt tras un diálogo de confirmación. No se puede deshacer.</td></tr>
+    <tr><td><strong>Línea de metadatos</strong></td><td>Fecha guardada · recuento de palabras · recuento de tokens · puntuación de calidad (p. ej. "Flawless").</td></tr>
+  </tbody></table>
+  <h3>Búsqueda de prompts</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Escriba en el campo de búsqueda</h4><p>La lista se filtra instantáneamente. Busca en títulos y contenido de prompts simultáneamente.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Filtre por dominio</h4><p>Use el menú desplegable "Todos los dominios" para limitar los resultados a un dominio específico (por ejemplo, solo "Programación").</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Combine ambos filtros</h4><p>Ingrese una palabra clave <em>y</em> elija un dominio al mismo tiempo para refinar aún más.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Restablecer</h4><p>Borre el texto de búsqueda y restablezca el dominio a "Todos los dominios" para ver la lista completa (hasta 50 más recientes).</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Guardar un prompt:</strong> Después de generar un prompt, haga clic en <strong>💾 Guardar en la cuenta</strong> en la página principal. Un diálogo solicita un nombre personalizado y dominio. El texto fuente y el prompt generado se guardan juntos.</div>
+</section>
+
+<section id="scheduler-es">
+  <h2>Programador (Scheduler)</h2>
+  <p>El Programador le permite automatizar la ejecución de prompts según un horario — ejecutando sus prompts guardados a través de una IA en la nube (Gemini, DeepSeek o Claude) en un momento específico y repitiendo opcionalmente cada semana o mes. Acceda mediante Mi cuenta → pestaña ⏱ Programador.</p>
+  <h3>Diseño de la ventana</h3>
+  <div class="mockup-shell">
+    <div class="mockup-bar"><div class="mockup-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="mockup-url">Mi cuenta — Programador</div></div>
+    <div class="mockup-body">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Crear tarea programada</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Prompt a ejecutar: <span style="color:var(--accent);">Seleccione un prompt guardado…</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">IA objetivo: Gemini</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Tipo: Una vez</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Primera ejecución: 01/07/2026 09:00</div>
+          <div style="background:rgba(79,195,247,0.06);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-dim);">Tokens máx.: 8192</div>
+        </div>
+        <div style="background:var(--accent);color:#000;border-radius:8px;padding:8px 14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;">Programar tarea</div>
+      </div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Tareas programadas</div>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;"><strong style="color:var(--text);">Crear panel de administración</strong><span style="color:#29b6f6;">gemini</span></div>
+        <div style="color:var(--text-dim);margin:4px 0;">Programación · Una vez · Próximo: — · Estado: <span style="color:#66bb6a;">done</span> · Ejecuciones: 1</div>
+        <div style="display:flex;gap:6px;"><span style="background:rgba(79,195,247,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;">📋 Resultados</span><span style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:3px 8px;font-size:11px;color:#ff6b6b;">🗑 Eliminar</span></div>
+      </div>
+    </div>
+  </div>
+  <h3>Campos del formulario "Crear tarea"</h3>
+  <table class="domain-table"><thead><tr><th>Campo</th><th>Descripción</th></tr></thead><tbody>
+    <tr><td><strong>Prompt a ejecutar</strong></td><td>Seleccione de sus prompts guardados. El menú desplegable muestra dominio + título para cada uno.</td></tr>
+    <tr><td><strong>IA objetivo</strong></td><td>Elija el modelo de IA: <strong>Gemini</strong> (predeterminado, 8192 tokens), <strong>DeepSeek</strong> (8000 tokens) o <strong>Claude</strong> (8000 tokens). El proveedor debe estar configurado en el Panel de administración → Proveedores de IA.</td></tr>
+    <tr><td><strong>Tipo de programación</strong></td><td><strong>Una vez</strong> — se ejecuta exactamente una vez en la fecha/hora especificada. <strong>Semanal</strong> — se repite cada 7 días desde la primera ejecución. <strong>Mensual</strong> — se repite el mismo día cada mes.</td></tr>
+    <tr><td><strong>Fecha/hora de la primera ejecución</strong></td><td>Fecha y hora (en su zona horaria local) cuando la tarea debe ejecutarse por primera vez.</td></tr>
+    <tr><td><strong>Tokens máximos</strong></td><td>Máximo de tokens que la IA puede usar por ejecución. El valor predeterminado varía por proveedor. Deje vacío para usar el predeterminado.</td></tr>
+  </tbody></table>
+  <h3>Cómo crear una tarea programada</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Primero guarde un prompt</h4><p>Vaya al Generador de prompts, genere un prompt y haga clic en <strong>💾 Guardar en la cuenta</strong>. Solo los prompts guardados aparecen en el menú desplegable del Programador.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Seleccione el prompt</h4><p>Abra la pestaña Programador, encuentre el menú desplegable <em>Prompt a ejecutar</em>, elija su prompt (indicado como "Dominio — Título").</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Elija la IA y el horario</h4><p>Seleccione el proveedor de IA, establezca el tipo de programación (Una vez / Semanal / Mensual), establezca la fecha/hora de la primera ejecución y, opcionalmente, ajuste los Tokens máximos.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Haga clic en "Programar tarea"</h4><p>Aparece un mensaje de confirmación. La tarea se muestra a continuación en la sección Tareas programadas con estado <span style="color:var(--accent);">pending</span>.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Espere la ejecución</h4><p>El Programador del servidor verifica periódicamente las tareas pendientes. Cuando llega el momento de ejecución, envía el prompt a la IA, almacena la respuesta y actualiza el estado.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Ver resultados</h4><p>Haga clic en <strong>📋 Resultados</strong> en cualquier tarea para ver todas las salidas de ejecuciones anteriores. Cada resultado muestra: marca de tiempo, estado, recuento de tokens, duración y la respuesta completa de la IA. Descargue como <code>.md</code>, <code>.txt</code> o <code>.docx</code>, o copie al portapapeles.</p></div></div>
+  </div>
+  <h3>Referencia de estados de tareas</h3>
+  <table class="domain-table"><thead><tr><th>Estado</th><th>Color</th><th>Significado</th></tr></thead><tbody>
+    <tr><td><strong>pending</strong></td><td style="color:var(--accent);">azul</td><td>Esperando el tiempo programado. Aún no se ha ejecutado. El botón <strong>✕ Cancelar</strong> está visible — haga clic para detener antes de la ejecución.</td></tr>
+    <tr><td><strong>running</strong></td><td style="color:var(--accent);">azul</td><td>Ejecutándose actualmente (la llamada a la API de IA está en progreso). No cancele.</td></tr>
+    <tr><td><strong>done</strong></td><td style="color:var(--ok);">verde</td><td>La última ejecución se completó con éxito. El resultado está disponible mediante el botón 📋 Resultados. Para tareas semanales/mensuales, la siguiente ejecución ya está programada.</td></tr>
+    <tr><td><strong>failed</strong></td><td style="color:var(--error);">rojo</td><td>La última ejecución encontró un error (API no disponible, límite de tokens excedido, proveedor mal configurado, etc.). Los detalles del error están en el panel Resultados.</td></tr>
+    <tr><td><strong>canceled</strong></td><td style="color:var(--text-dim);">gris</td><td>Cancelado manualmente antes de la ejecución mediante el botón ✕ Cancelar. No se produjo ningún resultado. La tarea permanece visible pero no se ejecutará de nuevo.</td></tr>
+  </tbody></table>
+  <div class="callout callout-info"><strong>Tareas semanales/mensuales:</strong> después de una ejecución exitosa (<em>done</em>), la tarea programa automáticamente su próximo <em>next_run_at</em> y vuelve al estado <em>pending</em>.</div>
+  <div class="callout callout-warn"><strong>Las tareas programadas necesitan un servidor activo:</strong> la ejecución ocurre del lado del servidor — la tarea se ejecuta incluso cuando su navegador está cerrado. Sin embargo, si el servidor se reinicia durante una ejecución, puede que sea necesario recrear la tarea.</div>
+  <h3>Acciones de tareas</h3>
+  <table class="domain-table"><thead><tr><th>Botón</th><th>Disponible cuando</th><th>Acción</th></tr></thead><tbody>
+    <tr><td>📋 <strong>Resultados</strong></td><td>Siempre</td><td>Abre el panel de resultados con todas las salidas de ejecuciones anteriores. Copiar, descargar como .md/.txt/.docx.</td></tr>
+    <tr><td>✕ <strong>Cancelar</strong></td><td>Solo estado <em>pending</em></td><td>Cancela la tarea antes de ejecutarse. El estado cambia a <em>canceled</em>. No se puede deshacer.</td></tr>
+    <tr><td>🗑 <strong>Eliminar</strong></td><td>Siempre</td><td>Elimina permanentemente la tarea y todos sus resultados de ejecución. Requiere un diálogo de confirmación.</td></tr>
+  </tbody></table>
+</section>
+
+<section id="deepseek-es">
+  <h2>Claves API y proveedores de IA</h2>
+  <p>JS PROMPT admite múltiples proveedores de IA para la generación de prompts y el Programador. El proveedor activo para el <em>Generador de prompts</em> se selecciona por sesión; los proveedores para el <em>Programador</em> son configurados en toda la plataforma por el administrador.</p>
+  <h3>Añadir proveedores de IA (solo administrador)</h3>
+  <p>Los administradores configuran los proveedores en <strong>Panel de administración → Proveedores de IA</strong>. Cada proveedor necesita: una clave única, etiqueta visible, URL de endpoint (compatible con OpenAI <code>/v1/chat/completions</code>), nombre del modelo y encabezado/prefijo de autorización opcional.</p>
+  <div class="callout callout-info"><strong>Proveedores incorporados</strong> (DeepSeek, Gemini, Claude) están preconfigurados. Los endpoints compatibles con OpenAI personalizados se pueden agregar como proveedores adicionales.</div>
+  <h3>Ingresar su clave API de DeepSeek</h3>
+  <p>El motor <strong>DeepSeek</strong> (para el Generador de prompts) requiere su clave API personal de <strong>platform.deepseek.com</strong>.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Obtenga su clave</h4><p>Visite <strong>platform.deepseek.com</strong> → API Keys → Create. La clave comienza con <code>sk-</code>.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Abra el diálogo de clave</h4><p>Presione <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. Esto revela un botón oculto de API Key en el encabezado y abre inmediatamente el diálogo de entrada de clave.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Pegue y guarde</h4><p>Pegue su clave en el campo de entrada y haga clic en <strong>Guardar</strong>. La clave se guarda únicamente en el <code>localStorage</code> de su navegador — nunca se transmite a nuestros servidores ni se muestra después de guardar.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Seleccione el motor DeepSeek</h4><p>En el selector de motor de generación en la página principal, cambie a <strong>DeepSeek</strong>. El saldo de su cuenta aparecerá en el pie de página de la app con un botón de actualización manual.</p></div></div>
+  </div>
+  <div class="callout callout-ok"><strong>Clave del servidor:</strong> en producción (promt.pp.ua), la clave de la plataforma está configurada en un archivo <code>.env</code> del lado del servidor. Su clave personal la reemplaza para su sesión.</div>
+  <h3>Qué abre Ctrl+Shift+K</h3>
+  <table class="domain-table"><thead><tr><th>Elemento del diálogo</th><th>Descripción</th></tr></thead><tbody>
+    <tr><td><strong>Campo de API Key</strong></td><td>Pegue aquí su clave <code>sk-...</code>. El campo está enmascarado.</td></tr>
+    <tr><td><strong>Guardar</strong></td><td>Guarda en <code>localStorage</code> y cierra el diálogo. La clave persiste entre recargas de página.</td></tr>
+    <tr><td><strong>Borrar</strong></td><td>Elimina la clave almacenada para que se vuelva a usar el motor local.</td></tr>
+    <tr><td><strong>Visualización del saldo</strong></td><td>Muestra su crédito restante de DeepSeek después de guardar.</td></tr>
+  </tbody></table>
+</section>
+
+<section id="languages-es">
+  <h2>Configuración de Idioma</h2>
+  <table class="domain-table"><thead><tr><th>Configuración</th><th>Dónde</th><th>Qué afecta</th></tr></thead><tbody>
+    <tr><td>Idioma de la interfaz</td><td>Pie de página — botones EN / UK / ES</td><td>Todas las etiquetas, botones, mensajes, ayuda</td></tr>
+    <tr><td>Idioma de salida</td><td>Menú desplegable en el Generador</td><td>Idioma del prompt generado</td></tr>
+    <tr><td>Idioma de voz</td><td>Detectado automáticamente</td><td>Modelo de transcripción Whisper</td></tr>
+  </tbody></table>
+</section>
+
+<section id="install-es">
+  <h2>Instalar como PWA</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Desktop</div><h4>Chrome / Edge</h4><p>Haga clic en el botón <strong>Instalar</strong> en el encabezado de la aplicación.</p></div>
+    <div class="tip-card"><div class="tip-icon">Android</div><h4>Android Chrome</h4><p>Menú del navegador → Instalar aplicación.</p></div>
+    <div class="tip-card"><div class="tip-icon">iOS</div><h4>iOS Safari</h4><p>Compartir → Añadir a pantalla de inicio.</p></div>
+    <div class="tip-card"><div class="tip-icon">Offline</div><h4>Modo sin conexión</h4><p>Todos los recursos son almacenados en caché por el Service Worker.</p></div>
+  </div>
+</section>
+
+<section id="domains-es">
+  <h2>Dominios Soportados</h2>
+  <table class="domain-table"><thead><tr><th>Dominio</th><th>Rol experto</th><th>Palabras clave</th></tr></thead><tbody>
+    <tr><td><span class="badge badge-blue">Análisis de Inteligencia</span></td><td>Analista de Inteligencia Senior</td><td>OSINT, geopolítica, amenaza, militar</td></tr>
+    <tr><td><span class="badge badge-blue">OSINT</span></td><td>Especialista OSINT</td><td>fuentes abiertas, geolocalización, verificación</td></tr>
+    <tr><td><span class="badge badge-blue">Riesgo Estratégico</span></td><td>Experto en Riesgo Estratégico</td><td>matriz de riesgos, planificación de escenarios</td></tr>
+    <tr><td><span class="badge badge-green">Medicina</span></td><td>Clínico-Diagnosticista MD/PhD</td><td>diagnóstico, síntomas, tratamiento, clínico</td></tr>
+    <tr><td><span class="badge badge-green">Ciberseguridad</span></td><td>Pentester / OSCP</td><td>pentest, vulnerabilidad, CVSS, malware</td></tr>
+    <tr><td><span class="badge badge-green">Análisis Financiero</span></td><td>Analista Financiero Senior CFA</td><td>inversión, DCF, cartera, valoración</td></tr>
+    <tr><td><span class="badge badge-green">Legal</span></td><td>Consultor Legal Senior</td><td>contrato, ley, tribunal, GDPR</td></tr>
+    <tr><td><span class="badge badge-blue">Programación</span></td><td>Senior Software Engineer</td><td>código, Python, JavaScript, API, algoritmo</td></tr>
+    <tr><td><span class="badge badge-blue">Data Science</span></td><td>Lead Data Scientist</td><td>machine learning, modelo, dataset, NLP</td></tr>
+    <tr><td><span class="badge badge-blue">Estrategia Empresarial</span></td><td>Estratega Empresarial Senior MBA</td><td>startup, SWOT, OKR, go-to-market</td></tr>
+    <tr><td><span class="badge badge-blue">Product Management</span></td><td>Senior Product Manager</td><td>hoja de ruta, backlog, sprint, MVP</td></tr>
+    <tr><td><span class="badge badge-blue">Investigación Científica</span></td><td>Científico Investigador PhD</td><td>hipótesis, experimento, revisión por pares</td></tr>
+    <tr><td style="color:var(--text-dim);">General</td><td>Consultor Experto Universal</td><td>Cualquier tema</td></tr>
+  </tbody></table>
+</section>
+
+<section id="shortcuts-es">
+  <h2>Atajos de Teclado</h2>
+  <table class="domain-table"><thead><tr><th>Acción</th><th>Atajo</th></tr></thead><tbody>
+    <tr><td>Generar prompt</td><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td></tr>
+    <tr><td>Copiar salida</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></td></tr>
+    <tr><td>Guardar como .md</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td></tr>
+    <tr><td>Cerrar modal</td><td><kbd>Esc</kbd></td></tr>
+    <tr><td>Confirmar diálogo</td><td><kbd>Enter</kbd></td></tr>
+    <tr><td style="color:var(--accent-2);font-weight:600;">Abrir diálogo API Key (oculto)</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></td></tr>
+  </tbody></table>
+  <div class="callout callout-info" style="margin-top:12px;">
+    <strong>Ctrl+Shift+K</strong> — revela el botón oculto de API Key en el encabezado de la aplicación y <em>abre inmediatamente</em> el diálogo de entrada de clave. El botón de API Key desaparece automáticamente después de cerrar el diálogo.
+    <br><br>
+    <strong>Dentro del diálogo:</strong> pegue su clave DeepSeek (comienza con <code>sk-</code>), haga clic en <strong>Guardar</strong>. La clave se guarda únicamente en <code>localStorage</code> — nunca se transmite. Si ya hay una clave del lado del servidor configurada (modo producción), el campo muestra solo un marcador de posición y su clave personal la reemplaza para la sesión actual. Presione <kbd>Esc</kbd> o haga clic fuera para cerrar sin guardar.
+  </div>
+</section>
+
+<section id="tips-es">
+  <h2>Consejos de Entrada</h2>
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">Target</div><h4>Sea específico</h4><p>En lugar de "escribe sobre IA", pruebe "comparar transformer vs LSTM para reconocimiento de voz en tiempo real".</p></div>
+    <div class="tip-card"><div class="tip-icon">Context</div><h4>Incluya contexto</h4><p>Mencione audiencia, propósito, restricciones o dominio. El clasificador usa esto para asignar el rol experto correcto.</p></div>
+    <div class="tip-card"><div class="tip-icon">Length</div><h4>Longitud óptima</h4><p>20–200 palabras dan los mejores resultados.</p></div>
+    <div class="tip-card"><div class="tip-icon">Keywords</div><h4>Palabras clave del dominio</h4><p>Incluya términos de su campo (CVSS, DCF, diagnóstico diferencial) para activar la plantilla experta correcta.</p></div>
+    <div class="tip-card"><div class="tip-icon">Language</div><h4>Cualquier idioma de entrada</h4><p>Escriba en ucraniano o español — el sistema traduce automáticamente al inglés antes de generar el prompt.</p></div>
+    <div class="tip-card"><div class="tip-icon">Style</div><h4>Combine estilo con tarea</h4><p>Use <strong>Experto</strong> para investigación, <strong>Técnico</strong> para código, <strong>Creativo</strong> para tareas abiertas.</p></div>
+  </div>
+</section>
+
+<section id="faq-es">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Por qué tarda en cargar la primera vez? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Pyodide (~8 MB) se descarga en la primera visita y el Service Worker lo almacena en caché. Los paquetes PDF/DOCX (~12 MB) solo se descargan en el primer uso del Conversor.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Necesito una clave API de DeepSeek? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">No. El motor Python local genera prompts sin ninguna clave. DeepSeek es opcional y proporciona mayor calidad para dominios complejos.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Se envía mi texto a algún servidor? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Motor local: no — todo el procesamiento en su navegador. Motor DeepSeek: su texto se envía solo a api.deepseek.com. No llegan datos a nuestros servidores.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Cómo reinicio la aplicación? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">DevTools → Application → Storage → Clear site data. Esto elimina localStorage y el caché del Service Worker.</div></div>
+  </div>
+</section>
+</div><!-- /es -->
+
+</main>
+</div><!-- .layout -->
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   LANGUAGE SYSTEM
+══════════════════════════════════════════════════════════ */
+var _currentLang = 'en';
+
+function setHelpLang(lang) {
+  if (lang !== 'en' && lang !== 'uk' && lang !== 'es') lang = 'en';
+  _currentLang = lang;
+
+  // Toggle content sections
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    el.classList.toggle('visible', el.dataset.lang === lang);
+  });
+
+  // Toggle nav sections
+  document.querySelectorAll('.sidebar nav[data-lang]').forEach(function(el) {
+    el.classList.toggle('visible', el.dataset.lang === lang);
+  });
+
+  // Update html lang attribute
+  document.documentElement.lang = lang;
+
+  // Update active button
+  document.querySelectorAll('.help-lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+  });
+
+  // Store preference
+  try { localStorage.setItem('help_lang', lang); } catch(e) {}
+}
+
+/* Listen for language changes from parent frame */
+window.addEventListener('message', function(e) {
+  if (!e.data) return;
+  if (e.data.type === 'setLang' && e.data.lang) {
+    setHelpLang(e.data.lang);
+    // Hide the manual lang bar when parent controls language
+    var bar = document.getElementById('helpLangBar');
+    if (bar) bar.style.display = 'none';
+  }
+});
+
+/* On init: check URL param, parent postMessage, or localStorage */
+(function() {
+  // URL param: prompt_help.html?lang=uk
+  var urlLang = new URLSearchParams(window.location.search).get('lang');
+  // localStorage fallback
+  var storedLang = '';
+  try { storedLang = localStorage.getItem('help_lang') || ''; } catch(e) {}
+
+  var initLang = urlLang || storedLang || 'en';
+  setHelpLang(initLang);
+
+  // Signal to parent that we're ready to receive language
+  try { window.parent.postMessage({ type: 'helpReady' }, '*'); } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════════
+   READ PROGRESS BAR
+══════════════════════════════════════════════════════════ */
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+  var bar = document.getElementById('readProgress');
+  if (bar) bar.style.width = Math.min(pct, 100) + '%';
+}, { passive: true });
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVE NAV LINK
+══════════════════════════════════════════════════════════ */
+var _observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (!e.isIntersecting) return;
+    document.querySelectorAll('nav a').forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
+    });
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('section[id]').forEach(function(s) { _observer.observe(s); });
+
+/* ══════════════════════════════════════════════════════════
+   ACCORDION
+══════════════════════════════════════════════════════════ */
+function toggleAccordion(header) {
+  header.closest('.accordion-item').classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════════════════════
+   INTERACTIVE DEMO
+══════════════════════════════════════════════════════════ */
+var DOMAIN_MAP = [
+  { rx: /osint|intelligence|geopolit|military|threat|terrorism|scenario|escalation|розвідк|геополіт|загроза|військов/i, role: 'Senior Intelligence Analyst', domain: 'intelligence_analysis' },
+  { rx: /invest|portfolio|dcf|trading|valuation|financial|stocks|crypto|інвестиц|портфель|фінанс/i, role: 'Senior Financial Analyst CFA', domain: 'financial_analysis' },
+  { rx: /pentest|vuln|exploit|cybersecurity|malware|firewall|кібербезпека|вразливість/i, role: 'Penetration Tester / OSCP', domain: 'cybersecurity' },
+  { rx: /diagnos|patient|symptom|treatment|clinical|disease|medication|діагноз|симптом|лікуванн/i, role: 'Clinician-Diagnostician MD', domain: 'medical' },
+  { rx: /code|function|algorithm|python|javascript|api|sql|debug|refactor|код|алгоритм/i, role: 'Senior Software Engineer', domain: 'programming' },
+  { rx: /startup|strategy|market|swot|competitive|go-to-market|стратегія|бізнес|конкурент/i, role: 'Senior Business Strategist MBA', domain: 'business_strategy' },
+  { rx: /machine learning|dataset|model|nlp|neural|classification|machine|датасет/i, role: 'Lead Data Scientist', domain: 'data_science' },
+  { rx: /legal|law|contract|regulation|gdpr|compliance|court|право|закон|договір/i, role: 'Senior Legal Consultant', domain: 'legal' },
+];
+
+var STYLE_LABELS = {
+  en: { detailed: 'Detailed (full structure, 10+ sections)', concise: 'Concise (compressed)', expert: 'Expert (max analytical depth)', technical: 'Technical (code & architecture)' },
+  uk: { detailed: 'Детальний (повна структура, 10+ секцій)', concise: 'Стислий (стиснутий)', expert: 'Експертний (максимальна глибина)', technical: 'Технічний (код та архітектура)' },
+  es: { detailed: 'Detallado (estructura completa, 10+ secciones)', concise: 'Conciso (comprimido)', expert: 'Experto (máxima profundidad)', technical: 'Técnico (código y arquitectura)' },
+};
+
+var DEMO_LABELS = {
+  en: { title: 'Prompt structure preview', domain: 'Domain detected:', role: 'Expert role:', style: 'Style:', length: 'Input length:', words: 'words', tooShort: 'too short for best results', tooLong: 'long — key intent may dilute', goodLength: 'good length', sections: 'Sections that will be generated:', noText: 'Please enter a task description above.' },
+  uk: { title: 'Попередній перегляд структури', domain: 'Виявлений домен:', role: 'Роль експерта:', style: 'Стиль:', length: 'Довжина вводу:', words: 'слів', tooShort: 'занадто коротко для кращих результатів', tooLong: 'довго — ключовий намір може розмитися', goodLength: 'хороша довжина', sections: 'Секції що будуть згенеровані:', noText: 'Будь ласка, введіть опис завдання вище.' },
+  es: { title: 'Vista previa de estructura', domain: 'Dominio detectado:', role: 'Rol experto:', style: 'Estilo:', length: 'Longitud de entrada:', words: 'palabras', tooShort: 'demasiado corto para mejores resultados', tooLong: 'largo — la intención clave puede diluirse', goodLength: 'buena longitud', sections: 'Secciones que se generarán:', noText: 'Por favor ingrese una descripción de tarea arriba.' },
+};
+
+var SECTIONS = {
+  en: ['Role Definition — expert with 15–20+ years experience', 'Context Block — task summary and constraints', 'Task Definition — clear primary objective', 'Detailed Requirements — 5+ numbered, domain-specific', 'Chain-of-Thought &lt;scratchpad&gt; methodology', 'Report Structure — section-by-section template', 'Probability Yardstick (analytical domains)', 'Anti-Hallucination Controls', 'Examples Clause — 2 concrete output examples'],
+  uk: ['Визначення ролі — експерт з 15–20+ роками досвіду', 'Контекстний блок — резюме завдання', 'Визначення завдання — чітка первинна мета', 'Детальні вимоги — 5+ пунктів', 'Chain-of-Thought &lt;scratchpad&gt; методологія', 'Структура звіту — шаблон розділ за розділом', 'Шкала ймовірностей (аналітичні домени)', 'Контроль антигалюцинацій', 'Приклади виводу — 2 конкретних приклади'],
+  es: ['Definición de rol — experto con 15–20+ años de experiencia', 'Bloque de contexto — resumen de tarea', 'Definición de tarea — objetivo primario claro', 'Requisitos detallados — 5+ numerados', 'Metodología Chain-of-Thought &lt;scratchpad&gt;', 'Estructura del informe — plantilla sección por sección', 'Probability Yardstick (dominios analíticos)', 'Controles anti-alucinación', 'Cláusula de ejemplos — 2 ejemplos concretos'],
+};
+
+function detectDomain(text) {
+  for (var i = 0; i < DOMAIN_MAP.length; i++) {
+    if (DOMAIN_MAP[i].rx.test(text)) return DOMAIN_MAP[i];
+  }
+  return { role: 'Universal Expert Consultant', domain: 'general' };
+}
+
+function runDemo(lang) {
+  var text  = (document.getElementById('demoInput-' + lang) || {}).value || '';
+  var style = (document.getElementById('demoStyle-' + lang) || {}).value || 'detailed';
+  var out   = document.getElementById('demoOutput-' + lang);
+  var L     = DEMO_LABELS[lang] || DEMO_LABELS.en;
+  var SL    = STYLE_LABELS[lang] || STYLE_LABELS.en;
+  var SC    = SECTIONS[lang]     || SECTIONS.en;
+  if (!out) return;
+
+  text = text.trim();
+  if (!text) {
+    out.innerHTML = '<p style="color:var(--text-dim);">' + L.noText + '</p>';
+    out.classList.add('visible');
+    return;
+  }
+
+  out.innerHTML = '<span class="loader-spin"></span>';
+  out.classList.add('visible');
+
+  setTimeout(function() {
+    var domain    = detectDomain(text);
+    var wordCount = text.split(/\s+/).length;
+    var lenLabel  = wordCount < 10 ? '⚠ ' + L.tooShort : wordCount > 300 ? '⚠ ' + L.tooLong : '&#10003; ' + L.goodLength;
+    out.innerHTML =
+      '<h3>' + L.title + '</h3>' +
+      '<p><strong>' + L.domain + '</strong> ' + domain.domain.replace(/_/g, ' ') + '</p>' +
+      '<p><strong>' + L.role + '</strong> ' + domain.role + '</p>' +
+      '<p><strong>' + L.style + '</strong> ' + (SL[style] || style) + '</p>' +
+      '<p><strong>' + L.length + '</strong> ' + wordCount + ' ' + L.words + ' — ' + lenLabel + '</p>' +
+      '<p style="margin-top:10px;color:var(--accent-2);font-weight:600;">' + L.sections + '</p>' +
+      '<ul>' + SC.map(function(s) { return '<li>' + s + '</li>'; }).join('') + '</ul>';
+  }, 700);
+}
+
+function clearDemo(lang) {
+  var inp = document.getElementById('demoInput-' + lang);
+  var out = document.getElementById('demoOutput-' + lang);
+  if (inp) inp.value = '';
+  if (out) { out.innerHTML = ''; out.classList.remove('visible'); }
+}
+
+/* Open first accordion in each visible section */
+document.querySelectorAll('.accordion-item.open').forEach(function(item) {
+  // already marked open in HTML — just leave it
+});
+</script>
+</body>
+</html>

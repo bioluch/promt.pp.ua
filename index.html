@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#132f4c">
+  <meta name="description" content="JS PROMPT — professional Claude prompt generator and PDF/DOCX to Markdown converter">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="JS PROMPT">
+  <meta http-equiv="Content-Security-Policy" 
+      content="connect-src 'self' 
+               https://api.deepseek.com 
+               https://api.anthropic.com 
+               https://huggingface.co 
+               https://cdn.jsdelivr.net 
+               https://esm.sh 
+               https://generativelanguage.googleapis.com
+               https://pypi.org
+               https://files.pythonhosted.org
+               https://www.googletagmanager.com
+               https://www.google-analytics.com
+               https://*.google-analytics.com
+               https://*.analytics.google.com
+               https://stats.g.doubleclick.net">
+
+  <title>JS PROMPT</title>
+
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PKDV27S4');</script>
+  <!-- End Google Tag Manager -->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="png/js-promt-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="png/js-promt-16x16.png">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="png/js-promt-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="png/js-promt-167x167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="png/js-promt-152x152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="png/js-promt-120x120.png">
+  <meta name="msapplication-TileImage" content="png/js-promt-144x144.png">
+  <meta name="msapplication-TileColor" content="#132f4c">
+
+
+
+
+  <link rel="preload" href="fonts/Play-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="fonts/Play-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+  <!-- esm.sh CDN preconnect for @opendocsg/pdf2md dynamic import -->
+  <link rel="preconnect" href="https://esm.sh" crossorigin="anonymous">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/css-spinner.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" id="silktide-consent-manager-css" href="cookie-banner/npkut-silktide-consent-manager.css">
+  <script src="cookie-banner/silktide-consent-manager.js"></script>
+    <script>
+        silktideCookieBannerManager.updateCookieBannerConfig({
+          background: {
+            showBackground: true
+          },
+          cookieIcon: {
+            position: "bottomLeft"
+          },
+          cookieTypes: [
+            {
+              id: "necessary",
+              name: "Necessary",
+              description: "<p>These cookies are necessary for the website to function properly and cannot be switched off. They help with things like logging in and setting your privacy preferences.</p>",
+              required: true,
+              onAccept: function() {
+                // Necessary cookies are always active — no extra logic needed
+              }
+            },
+            {
+              id: "analytics",
+              name: "Analytics",
+              description: "<p>These cookies help us improve the site by tracking which pages are most popular and how visitors move around the site.</p>",
+              defaultValue: true,
+              onAccept: function() {
+                // Використовуємо dataLayer, якщо gtag ще не завантажений
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    analytics_storage: 'granted',
+                  });
+                }
+                // Завжди пушимо подію в dataLayer
+                if (typeof dataLayer !== 'undefined') {
+                  dataLayer.push({
+                    'event': 'consent_accepted_analytics',
+                  });
+                }
+              },
+              onReject: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    analytics_storage: 'denied',
+                  });
+                }
+              }
+            },
+            {
+              id: "advertising",
+              name: "Advertising",
+              description: "<p>These cookies provide extra features and personalization to improve your experience. They may be set by us or by partners whose services we use.</p>",
+              onAccept: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    ad_storage: 'granted',
+                    ad_user_data: 'granted',
+                    ad_personalization: 'granted',
+                  });
+                }
+                if (typeof dataLayer !== 'undefined') {
+                  dataLayer.push({
+                    'event': 'consent_accepted_advertising',
+                  });
+                }
+              },
+              onReject: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    ad_storage: 'denied',
+                    ad_user_data: 'denied',
+                    ad_personalization: 'denied',
+                  });
+                }
+              }
+            }
+          ],
+          text: {
+            banner: {
+              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://idea4rs.pp.ua/cookie-policy\" target=\"_blank\">Cookie Policy.</a></p>",
+              acceptAllButtonText: "Accept all",
+              acceptAllButtonAccessibleLabel: "Accept all cookies",
+              rejectNonEssentialButtonText: "Reject non-essential",
+              rejectNonEssentialButtonAccessibleLabel: "Reject non-essential",
+              preferencesButtonText: "Preferences",
+              preferencesButtonAccessibleLabel: "Toggle preferences"
+            },
+            preferences: {
+              title: "Customize your cookie preferences",
+              description: "<p>We respect your right to privacy. You can choose not to allow some types of cookies. Your cookie preferences will apply across our website.</p>",
+              creditLinkText: "Get this banner for free",
+              creditLinkAccessibleLabel: "Get this banner for free"
+            }
+          },
+          position: {
+            banner: "center"
+          }
+        });
+    </script>
+
+  <!-- Balance widget styles -->
+  <style>
+    .footer-balance {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary, #8baabf);
+      margin: 2px 0;
+    }
+    .balance-label {
+      font-weight: 500;
+      color: var(--text-secondary, #8baabf);
+    }
+    .balance-label::after { content: ':'; margin-right: 2px; }
+    .balance-value {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      transition: color 0.3s;
+    }
+    .balance-ok     { color: var(--ok, #4caf50); }
+    .balance-empty  { color: var(--warning, #ff9800); }
+    .balance-error  { color: var(--error, #ef5350); font-weight: 400; }
+    .balance-unknown{ color: var(--text-secondary, #8baabf); }
+    .balance-refresh {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--text-secondary, #8baabf);
+      padding: 0 2px;
+      border-radius: 4px;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .balance-refresh:hover {
+      color: var(--accent, #29b6f6);
+      transform: rotate(20deg);
+    }
+    .balance-refresh:active { transform: rotate(180deg); }
+  </style>
+
+  <!-- ── Install Modal styles ──────────────────────────────── -->
+  <style>
+    /* Overlay — reuses .modal-overlay base, adds slide-up animation */
+    .install-modal-overlay {
+      align-items: flex-end;        /* slide in from bottom on mobile */
+    }
+    @media (min-width: 480px) {
+      .install-modal-overlay { align-items: center; }
+    }
+
+    .install-modal-overlay { opacity: 0; transition: opacity 0.25s ease; }
+    .install-modal-overlay.install-modal-visible { opacity: 1; }
+
+    /* Box */
+    .install-modal-box {
+      max-width: 420px;
+      width: 100%;
+      border-radius: 24px;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(160deg, var(--bg-2) 0%, var(--bg-1) 100%);
+      border: 1px solid rgba(79, 195, 247, 0.35);
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(79, 195, 247, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.25s ease;
+    }
+    .install-modal-visible .install-modal-box {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Header */
+    .install-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 28px 28px 20px;
+      background: linear-gradient(135deg,
+        rgba(79, 195, 247, 0.08) 0%,
+        rgba(41, 182, 246, 0.04) 100%);
+      border-bottom: 1px solid rgba(79, 195, 247, 0.12);
+    }
+
+    /* Icon */
+    .install-modal-icon-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .install-modal-icon {
+      border-radius: 18px;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(79, 195, 247, 0.2);
+      display: block;
+    }
+    .install-modal-icon-glow {
+      position: absolute;
+      inset: -6px;
+      border-radius: 22px;
+      background: radial-gradient(circle,
+        rgba(79, 195, 247, 0.25) 0%,
+        transparent 70%);
+      pointer-events: none;
+      animation: installGlowPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes installGlowPulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.08); }
+    }
+
+    /* Title block */
+    .install-modal-title-wrap { flex: 1; min-width: 0; }
+    .install-modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0 0 6px;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .install-modal-domain {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+    .install-modal-domain-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 6px var(--ok);
+      animation: domainDotBlink 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes domainDotBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* Subtitle */
+    .install-modal-subtitle {
+      margin: 0;
+      padding: 18px 28px 4px;
+      font-size: 13.5px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* Features list */
+    .install-modal-features {
+      list-style: none;
+      margin: 0;
+      padding: 12px 28px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .install-modal-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .install-feature-icon {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-3), var(--accent));
+      color: var(--bg-0);
+      font-size: 10px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      box-shadow: 0 2px 8px rgba(79, 195, 247, 0.35);
+    }
+
+    /* Actions */
+    .install-modal-actions {
+      display: flex;
+      gap: 10px;
+      padding: 4px 28px 28px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .install-btn-cancel {
+      background: transparent;
+      border: 1px solid rgba(79, 195, 247, 0.2);
+      color: var(--text-dim);
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .install-btn-cancel:hover {
+      border-color: rgba(79, 195, 247, 0.45);
+      color: var(--text);
+      background: rgba(79, 195, 247, 0.06);
+    }
+    .install-btn-install {
+      flex: 1;
+      max-width: 200px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow:
+        0 4px 16px rgba(79, 195, 247, 0.35),
+        0 1px 0 rgba(255,255,255,0.15) inset;
+      transition: all 0.18s;
+      position: relative;
+      overflow: hidden;
+    }
+    .install-btn-install::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.12) 0%,
+        transparent 60%);
+      pointer-events: none;
+    }
+    .install-btn-install:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 6px 24px rgba(79, 195, 247, 0.5),
+        0 1px 0 rgba(255,255,255,0.15) inset;
+    }
+    .install-btn-install:active {
+      transform: translateY(0);
+    }
+    .install-btn-arrow {
+      font-size: 17px;
+      line-height: 1;
+      animation: installArrowBounce 1.4s ease-in-out infinite;
+    }
+    @keyframes installArrowBounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(3px); }
+    }
+
+    /* Mobile: bottom sheet */
+    @media (max-width: 479px) {
+      .install-modal-box {
+        border-radius: 24px 24px 0 0;
+        max-width: 100%;
+      }
+    }
+  </style>
+
+  <!-- ── Save file dialog styles ───────────────────────────────── -->
+  <style>
+    /* Entry animation for all app dialogs */
+    .app-dialog-overlay {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .app-dialog-overlay.app-dialog-visible { opacity: 1; }
+    .app-dialog-overlay.app-dialog-closing { opacity: 0; }
+
+    .app-dialog-box {
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
+                  opacity  0.2s ease;
+    }
+    .app-dialog-visible .app-dialog-box {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Footer buttons row */
+    .app-dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 24px 22px;
+    }
+
+    /* Cancel button in dialogs */
+    .app-dialog-cancel, .app-savefile-cancel {
+      background: transparent;
+      border: 1px solid rgba(79, 195, 247, 0.2);
+      color: var(--text-dim);
+      padding: 9px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .app-dialog-cancel:hover, .app-savefile-cancel:hover {
+      border-color: rgba(79, 195, 247, 0.45);
+      color: var(--text);
+      background: rgba(79, 195, 247, 0.06);
+    }
+
+    /* Danger confirm button */
+    .app-dialog-danger {
+      background: var(--error);
+      color: #fff;
+      border: none;
+    }
+    .app-dialog-danger:hover { filter: brightness(1.12); }
+
+    /* Text input in dialogs */
+    .app-dialog-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.18s;
+    }
+    .app-dialog-input:focus { border-color: var(--accent); }
+
+    /* ── Save file dialog specifics ── */
+    .app-savefile-box { max-width: 420px; }
+
+    .app-savefile-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .app-savefile-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    /* Icon + meta row */
+    .app-savefile-icon-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: rgba(79, 195, 247, 0.06);
+      border: 1px solid rgba(79, 195, 247, 0.15);
+      border-radius: 12px;
+    }
+    .app-savefile-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--bg-3), var(--bg-4));
+      border: 1px solid rgba(79, 195, 247, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-2);
+      flex-shrink: 0;
+    }
+    .app-savefile-meta { min-width: 0; }
+    .app-savefile-type {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 2px;
+    }
+    .app-savefile-size {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Label */
+    .app-savefile-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    /* Input + extension row */
+    .app-savefile-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .app-savefile-input {
+      border-radius: 10px 0 0 10px !important;
+      flex: 1;
+    }
+    .app-savefile-ext {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      background: rgba(79, 195, 247, 0.08);
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 10px 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      white-space: nowrap;
+      height: 42px;
+    }
+
+    /* Save button icon alignment */
+    .app-savefile-save {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+
+  <!-- ── Dialog input: suppress password manager & search X-button ── -->
+  <style>
+    /* type="search" shows a native clear (×) button — hide it */
+    .app-dialog-input[type="search"]::-webkit-search-cancel-button,
+    .app-dialog-input[type="search"]::-webkit-search-decoration,
+    .app-dialog-input[type="search"]::-ms-clear { display: none; }
+    .app-dialog-input[type="search"] { -webkit-appearance: none; appearance: none; }
+
+    /* Prevent DuckDuckGo / 1Password / Bitwarden inline icons */
+    .app-dialog-input { background-image: none !important; }
+  </style>
+
+  <!-- ── Local file list button styles ─────────────────────────── -->
+  <style>
+    .file-btn-load,
+    .file-btn-del {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .file-btn-load {
+      color: var(--accent-2);
+      border: 1px solid rgba(79, 195, 247, 0.2);
+    }
+    .file-btn-load:hover {
+      background: rgba(79, 195, 247, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .file-btn-del {
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 107, 107, 0.15);
+    }
+    .file-btn-del:hover {
+      background: rgba(255, 107, 107, 0.12);
+      border-color: var(--error);
+      color: var(--error);
+    }
+    .file-btn-del:hover svg { stroke: var(--error); }
+  </style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKDV27S4"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- ── Spinner overlay ─────────────────────────────────────── -->
+<div class="hourglass-container" id="hourglassIndicator">
+  <canvas class="hourglass-canvas" id="hourglassCanvas"></canvas>
+  <div class="hourglass-text" id="hourglassText">Loading…</div>
+</div>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header>
+  <a class="logo" href="#" aria-label="JS PROMPT Home">
+    <div class="logo-icon">
+      <img src="png/js-promt-152x152.png" alt="JS PROMPT icon" width="38" height="38">
+    </div>
+    <span class="logo-name">JS PROMPT</span>
+  </a>
+  <div class="header-right">
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText" data-i18n="status.init">Initialising…</span>
+    </div>
+    <button id="btnInstall" data-i18n="btn.install" data-i18n-title="btn.install">Install</button>
+    <button id="authBtn" aria-label="Account" style="background:rgba(79,195,247,0.12);border:1px solid rgba(79,195,247,0.35);color:#4fc3f7;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+      <img src="png/user-male.png" width="20" height="20" style="border-radius:50%;" alt="">
+      <span id="authBtnLabel">Sign In</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────── -->
+<main>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-panel="prompt" role="tab" aria-selected="true"
+            data-i18n="tab.prompt">Text → Prompt</button>
+    <button class="tab" data-panel="convert" role="tab" aria-selected="false"
+            data-i18n="tab.convert">PDF/DOCX Converter</button>
+    <button class="tab" data-panel="editor" role="tab" aria-selected="false"
+            data-i18n="tab.editor">Markdown Editor</button>
+    <button class="tab" data-panel="check" role="tab" aria-selected="false"
+            data-i18n="tab.check">Error Checker</button>
+  </div>
+
+  <!-- Panel 1: Prompt Generator -->
+  <section class="panel active" id="panel-prompt" role="tabpanel">
+    <div class="card">
+      <h2><span data-i18n="p1.title">Professional Claude Prompt Generator</span>
+          <span class="badge">AI</span></h2>
+      <p class="subtitle" data-i18n="p1.subtitle">Enter any text — the system structures it into a ready-made prompt.</p>
+
+      <!-- ── DeepSeek API Key Banner ── -->
+      <!-- API Key banner — input moved to modal (appApiKeyModal) to prevent browser password manager -->
+      <div class="api-key-banner hidden" id="apiKeyBanner">
+        <span class="api-key-banner-icon">&#128273;</span>
+        <div class="api-key-banner-body">
+          <label class="api-key-label">DeepSeek API Key</label>
+          <div class="api-key-row">
+            <span id="apiKeyStatus" class="api-key-status-text"></span>
+            <button class="btn btn-primary api-key-save-btn" id="btnSaveApiKey" data-i18n="apikey.btn.save">Save</button>
+          </div>
+          <p class="api-key-hint" id="apiKeyHint"></p>
+        </div>
+        <button class="api-key-banner-close" id="btnCloseApiKey" data-i18n-title="apikey.btn.hide" title="Hide" aria-label="close">&times;</button>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label for="promptInput" data-i18n="p1.label.input">Your text / idea / task</label>
+          <textarea id="promptInput"
+            data-i18n-placeholder="p1.placeholder"
+            placeholder="E.g. I want AI to help write technology articles…"></textarea>
+
+          <div class="engine-selector-row">
+            <label class="engine-label" data-i18n="engine.label">Generation engine:</label>
+            <div class="engine-tabs">
+              <button class="engine-tab active" data-engine="deepseek">
+                DeepSeek AI
+              </button>
+              <button class="engine-tab" data-engine="local">
+                <span data-i18n="engine.local">Local</span>
+              </button>
+            </div>
+          </div>
+
+          <label for="promptStyle" style="margin-top:12px;" data-i18n="p1.label.style">Prompt style</label>
+          <select id="promptStyle">
+            <option value="detailed" data-i18n="p1.style.detailed">Detailed (full structure)</option>
+            <option value="concise"  data-i18n="p1.style.concise">Concise (short)</option>
+            <option value="expert"   data-i18n="p1.style.expert">Expert (deep context)</option>
+            <option value="creative" data-i18n="p1.style.creative">Creative (for creative tasks)</option>
+            <option value="technical"data-i18n="p1.style.technical">Technical (code/architecture)</option>
+          </select>
+
+          <label for="promptLang" style="margin-top:12px;" data-i18n="p1.label.lang">Output language</label>
+          <select id="promptLang">
+            <option value="en" selected>English</option>
+            <option value="uk">Українська</option>
+            <option value="es">Español</option>
+          </select>
+
+          <div class="btn-row">
+            <button class="btn btn-primary"   id="btnGenPrompt"   data-i18n="p1.btn.generate">Generate Prompt</button>
+            <button class="btn btn-secondary"  id="btnClearPrompt" data-i18n="p1.btn.clear">Clear</button>
+            <button class="btn btn-ghost api-key-open-btn" id="btnOpenApiKey" data-i18n-title="apikey.btn.title" title="API Key settings" style="visibility: hidden;">🔑 API Key</button>
+          </div>
+        </div>
+        <div>
+          <div class="output-label-row">
+            <label data-i18n="p1.label.output">Ready prompt for Claude</label>
+            <div class="output-view-tabs" id="outputViewTabs">
+              <button class="output-view-tab active" data-view="rendered" data-i18n="output.preview" title="Rendered Markdown">Preview</button>
+              <button class="output-view-tab" data-view="raw" title="Raw text" data-i18n="output.raw">Raw</button>
+            </div>
+          </div>
+
+          <!-- Rendered Markdown view (default) -->
+          <div class="output-box output-rendered" id="promptOutput">
+            <span class="output-placeholder" data-i18n="p1.output.empty">The generated prompt in Markdown format will appear here…</span>
+          </div>
+          <!-- Raw text view (hidden by default) -->
+          <textarea class="output-box output-raw hidden" id="promptOutputRaw" readonly
+                    placeholder="Raw prompt text will appear here…" spellcheck="false"></textarea>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="btnCopyPrompt" data-i18n="p1.btn.copy">Copy</button>
+            <button class="btn btn-secondary" id="btnSavePrompt" data-i18n="p1.btn.save">Save .md</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 2: Converter -->
+  <section class="panel" id="panel-convert" role="tabpanel">
+    <div class="card">
+      <h2 data-i18n="p2.title">PDF / DOCX → Markdown Converter</h2>
+      <p class="subtitle" data-i18n="p2.subtitle">Upload files — converted to Markdown preserving headings, lists and tables.</p>
+      <div class="drop-zone" id="dropZone">
+        <div class="icon" aria-hidden="true">📂</div>
+        <p data-i18n-html="p2.drop.click"><strong>Click</strong> or drag files here</p>
+        <p style="margin-top:6px;font-size:12px;" data-i18n="p2.drop.hint">Supported: .pdf, .docx (multiple files allowed)</p>
+        <input type="file" id="fileInput" accept=".pdf,.docx" multiple hidden>
+      </div>
+      <div id="convertResult" style="margin-top:20px;"></div>
+    </div>
+  </section>
+
+  <!-- Panel 3: Markdown Editor -->
+  <section class="panel" id="panel-editor" role="tabpanel">
+    <div class="card">
+      <h2 data-i18n="p3.title">Markdown Editor</h2>
+      <p class="subtitle" data-i18n="p3.subtitle">Load .md files, edit and save them. Preview supported.</p>
+      <div class="grid-2">
+        <div>
+          <label for="mdEditor" data-i18n="p3.label.editor">Editor</label>
+          <textarea class="editor" id="mdEditor"
+            data-i18n-placeholder="p3.placeholder"
+            placeholder="# Heading&#10;&#10;Your Markdown text…"></textarea>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="btnLoadMd"    data-i18n="p3.btn.load">📂 Load .md</button>
+            <button class="btn btn-primary"   id="btnSaveMd"    data-i18n="p3.btn.save">Save .md</button>
+            <button class="btn btn-secondary" id="btnSaveLocal" data-i18n="p3.btn.local">💾 Save to local storage</button>
+            <input type="file" id="mdFileInput" accept=".md,.markdown,.txt" hidden>
+          </div>
+          <label style="margin-top:14px;" data-i18n="p3.label.saved">Saved files (localStorage)</label>
+          <div class="file-list" id="localFiles"></div>
+        </div>
+        <div>
+          <label data-i18n="p3.label.preview">Preview</label>
+          <div class="output-box" id="mdPreview" style="font-family:inherit;font-size:14px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 4: Error Checker -->
+  <section class="panel" id="panel-check" role="tabpanel">
+    <div class="card">
+      <h2 data-i18n="p4.title">Error Checker</h2>
+      <p class="subtitle" data-i18n="p4.subtitle">Analysis for spelling, grammar and stylistic errors with correction suggestions.</p>
+      <div class="stats">
+        <div class="stat"><div class="label" data-i18n="p4.stat.words">Words</div><div class="value" id="statWords">0</div></div>
+        <div class="stat"><div class="label" data-i18n="p4.stat.sentences">Sentences</div><div class="value" id="statSent">0</div></div>
+        <div class="stat"><div class="label" data-i18n="p4.stat.errors">Errors</div><div class="value" id="statErr" style="color:var(--error)">0</div></div>
+        <div class="stat"><div class="label" data-i18n="p4.stat.tokens">Claude Tokens</div><div class="value" id="statTokens" style="color:var(--accent)">0</div></div>
+        <div class="stat"><div class="label" data-i18n="p4.stat.quality">Quality</div><div class="value" id="statQual">—</div></div>
+      </div>
+      <label for="checkInput" data-i18n="p4.label.input">Text to check</label>
+      <textarea class="editor" id="checkInput"
+        data-i18n-placeholder="p4.placeholder"
+        placeholder="Paste text to check…"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary"   id="btnCheck"      data-i18n="p4.btn.check">Check</button>
+        <button class="btn btn-secondary" id="btnApplyFixes" data-i18n="p4.btn.apply">Apply All Fixes</button>
+        <button class="btn btn-ghost"     id="btnClearCheck" data-i18n="p4.btn.clear">Clear</button>
+      </div>
+      <div class="btn-row" id="checkActionRow" style="display:none;">
+        <button class="btn btn-primary"   id="btnSaveFixed"  data-i18n="p4.btn.saveFixed">Save Fixed .md</button>
+        <button class="btn btn-secondary" id="btnCopyFixed"  data-i18n="p4.btn.copyFixed">Copy Fixed Text</button>
+        <button class="btn" id="btnSaveToDb" data-i18n="save.btn.saveToAccount" style="background:rgba(102,187,106,0.2);border-color:rgba(102,187,106,0.5);color:#66bb6a;">💾 Save to Account</button>
+      </div>
+      <div id="checkResult" style="margin-top:20px;"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer id="appFooter">
+  <div class="footer-inner">
+
+    <div class="footer-links">
+      <a href="#" id="footerAbout" class="footer-link" data-i18n="footer.about">About</a>
+      <span class="footer-sep">·</span>
+      <a href="#" id="footerPrivacy" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
+      <span class="footer-sep">·</span>
+      <a href="#" id="footerHelp" class="footer-link" data-i18n="footer.help">Help</a>
+    </div>
+
+    <div class="footer-copy" data-i18n="footer.copy">© 2026 JS PROMPT. All rights reserved.</div>
+
+    <!-- DeepSeek account balance -->
+    <div class="footer-balance" id="footerBalance" title="">
+      <span class="balance-label" data-i18n="balance.label">Balance</span>
+      <span class="balance-value balance-unknown">—</span>
+      <button class="balance-refresh" data-i18n-title="balance.refresh" title="Refresh balance" aria-label="Refresh balance">&#x21BA;</button>
+    </div>
+
+    <div class="footer-lang">
+      <span class="footer-lang-label" data-i18n="footer.lang">Language</span>
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="en" aria-label="Switch to English">EN</button>
+        <button class="lang-btn"        data-lang="uk" aria-label="Перейти на українську">UK</button>
+        <button class="lang-btn"        data-lang="es" aria-label="Cambiar a español">ES</button>
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ── Scripts ──────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="js/spinner.js"></script>
+<script src="js/language.js"></script>
+<script src="js/python_core.js"></script>
+<script src="js/voice_translate.js"></script>
+<script src="js/deepseek.js"></script>
+<script src="js/prompt.js" defer></script>
+<script src="js/api-client.js"></script>
+<script src="js/auth-ui.js"></script>
+<script src="./push-client.js"></script>
+
+
+</body>
+</html>

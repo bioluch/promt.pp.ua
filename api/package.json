@@ -1,0 +1,26 @@
+{
+  "name": "jsprompt-api",
+  "version": "2.0.0",
+  "description": "JS PROMPT v2 — Express API + Scheduler backend",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "scheduler": "node scheduler.js",
+    "dev": "NODE_ENV=development node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.14",
+    "pg": "^8.12.0",
+    "web-push": "^3.6.7"
+  }
+}

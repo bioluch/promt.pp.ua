@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ua.pp.promt.twa",
+      "sha256_cert_fingerprints": [
+        "D1:30:38:BE:DE:E8:B9:67:48:5E:12:BA:1D:FA:43:5F:DE:6C:98:70:04:09:A6:78:AE:1D:3B:74:FD:8E:6D:07",
+        "40:78:88:1B:FC:32:F6:D7:C0:D9:67:05:F1:A8:31:6D:CA:67:DC:15:EC:35:B3:28:A9:18:6F:2D:97:B5:43:80"
+      ]
+    }
+  }
+]

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin Panel · JS PROMPT</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Hamburger (mobile/tablet) -->
+  <button class="admin-hamburger" id="adminHamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Sidebar overlay backdrop (mobile) -->
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
+
+  <div class="admin-shell">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-logo">
+        <div class="admin-logo-icon">🛡️</div>
+        <div>
+          <div class="admin-logo-text">JS PROMPT</div>
+          <div class="admin-logo-sub" data-i18n="admin.panel">Admin Panel</div>
+        </div>
+      </div>
+
+      <button class="admin-nav-item active" data-section="dashboard" data-i18n="nav.dashboard"> Dashboard</button>
+      <button class="admin-nav-item" data-section="users"     data-i18n="nav.users"> Users</button>
+      <button class="admin-nav-item" data-section="prompts"   data-i18n="nav.prompts"> All Prompts</button>
+      <button class="admin-nav-item" data-section="providers" data-i18n="nav.providers"> AI Providers</button>
+      <button class="admin-nav-item" data-section="danger"    data-i18n="nav.danger">⚠️ Danger Zone</button>
+      <button class="admin-nav-item" id="navHelp"             data-i18n="nav.help">❓ Help</button>
+
+      <a class="admin-back-link" href="index.html" data-i18n="nav.back">← Back to app</a>
+
+      <div class="admin-lang-footer">
+        <span class="admin-lang-footer-label" data-i18n="footer.lang">Language</span>
+        <div class="admin-lang-switcher">
+          <button class="admin-lang-btn active" data-lang="en" aria-label="Switch to English">EN</button>
+          <button class="admin-lang-btn"        data-lang="uk" aria-label="Перейти на українську">UK</button>
+          <button class="admin-lang-btn"        data-lang="es" aria-label="Cambiar a español">ES</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 id="sectionTitle" data-i18n="section.dashboard.title">Dashboard</h1>
+          <p id="sectionSub"    data-i18n="section.dashboard.sub">Overview of platform activity</p>
+        </div>
+        <button class="theme-toggle" id="themeToggle" data-i18n="theme.day">🌙 Night Mode</button>
+      </div>
+
+      <div id="adminContent"></div>
+    </main>
+  </div>
+
+  <div class="admin-toast" id="adminToast"></div>
+
+  <script src="js/api-client.js"></script>
+  <script src="js/auth-ui.js"></script>
+  <script src="js/admin-lang.js"></script>
+  <script src="js/admin.js"></script>
+
+  <!-- Hamburger / sidebar toggle -->
+  <script>
+    (function () {
+      const btn      = document.getElementById('adminHamburger');
+      const sidebar  = document.getElementById('adminSidebar');
+      const overlay  = document.getElementById('adminSidebarOverlay');
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      btn.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+      });
+      overlay.addEventListener('click', closeSidebar);
+
+      // Close sidebar when nav item clicked on mobile
+      sidebar.querySelectorAll('.admin-nav-item, .admin-back-link').forEach(el => {
+        el.addEventListener('click', () => {
+          if (window.innerWidth <= 600) closeSidebar();
+        });
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeSidebar();
+      });
+    })();
+  </script>
+</body>
+</html>

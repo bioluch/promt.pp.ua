@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS PROMPT — Admin Help</title>
+<link rel="stylesheet" href="css/prompt_help.css">
+<link rel="stylesheet" href="css/admin_help.css">
+</head>
+<body>
+
+<div class="read-progress" id="readProgress"></div>
+
+<div class="help-lang-bar" id="helpLangBar">
+  <button class="help-lang-btn" onclick="setHelpLang('en')">EN</button>
+  <button class="help-lang-btn" onclick="setHelpLang('uk')">UK</button>
+  <button class="help-lang-btn" onclick="setHelpLang('es')">ES</button>
+</div>
+
+<div class="layout">
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div>
+      <div class="sidebar-logo-text">JS PROMPT</div>
+      <div class="sidebar-logo-badge">ADMIN HELP</div>
+    </div>
+  </div>
+
+  <nav data-lang="en" class="visible">
+    <div class="nav-section">Overview</div>
+    <a href="#a-overview-en">Admin Panel Overview</a>
+    <a href="#a-access-en">Accessing the Panel</a>
+    <div class="nav-section">Sections</div>
+    <a href="#a-dashboard-en">Dashboard</a>
+    <a href="#a-users-en">Users</a>
+    <a href="#a-apikeys-en">🔑 API Keys</a>
+    <a href="#a-prompts-en">All Prompts</a>
+    <a href="#a-providers-en">AI Providers</a>
+    <div class="nav-section">Danger Zone</div>
+    <a href="#a-backup-en">Database Backup</a>
+    <a href="#a-restore-en">Restore Database</a>
+    <a href="#a-wipe-en">Wipe Database</a>
+    <div class="nav-section">Reference</div>
+    <a href="#a-lang-en">Interface Language</a>
+    <a href="#a-faq-en">FAQ</a>
+  </nav>
+
+  <nav data-lang="uk">
+    <div class="nav-section">Огляд</div>
+    <a href="#a-overview-uk">Огляд адмін-панелі</a>
+    <a href="#a-access-uk">Доступ до панелі</a>
+    <div class="nav-section">Розділи</div>
+    <a href="#a-dashboard-uk">Дашборд</a>
+    <a href="#a-users-uk">Користувачі</a>
+    <a href="#a-apikeys-uk">🔑 API Ключі</a>
+    <a href="#a-prompts-uk">Усі промти</a>
+    <a href="#a-providers-uk">AI-провайдери</a>
+    <div class="nav-section">Небезпечна зона</div>
+    <a href="#a-backup-uk">Резервна копія БД</a>
+    <a href="#a-restore-uk">Відновлення БД</a>
+    <a href="#a-wipe-uk">Очищення БД</a>
+    <div class="nav-section">Довідник</div>
+    <a href="#a-lang-uk">Мова інтерфейсу</a>
+    <a href="#a-faq-uk">FAQ</a>
+  </nav>
+
+  <nav data-lang="es">
+    <div class="nav-section">Descripción</div>
+    <a href="#a-overview-es">Resumen del panel</a>
+    <a href="#a-access-es">Acceso al panel</a>
+    <div class="nav-section">Secciones</div>
+    <a href="#a-dashboard-es">Panel principal</a>
+    <a href="#a-users-es">Usuarios</a>
+    <a href="#a-apikeys-es">🔑 Claves API</a>
+    <a href="#a-prompts-es">Todos los prompts</a>
+    <a href="#a-providers-es">Proveedores de IA</a>
+    <div class="nav-section">Zona de peligro</div>
+    <a href="#a-backup-es">Copia de seguridad</a>
+    <a href="#a-restore-es">Restaurar la base de datos</a>
+    <a href="#a-wipe-es">Borrar la base de datos</a>
+    <div class="nav-section">Referencia</div>
+    <a href="#a-lang-es">Idioma de la interfaz</a>
+    <a href="#a-faq-es">FAQ</a>
+  </nav>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════ -->
+<main class="content">
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  ENGLISH  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="en" class="visible">
+
+<section id="a-overview-en">
+  <div class="hero">
+    <div class="hero-version">Admin Panel · v2 · 6 sections</div>
+    <h1>JS PROMPT — Administrator Guide</h1>
+    <p>The Admin Panel gives administrators full control over users, prompts, AI provider configuration, and the database itself. This guide covers every capability available to an admin account.</p>
+    <div class="feature-pills">
+      <span class="pill">User Management</span>
+      <span class="pill">Prompt Moderation</span>
+      <span class="pill">AI Provider Config</span>
+      <span class="pill">Database Backup & Restore</span>
+      <span class="pill">EN / UK / ES</span>
+    </div>
+  </div>
+</section>
+
+<section id="a-access-en">
+  <h2>Accessing the Panel</h2>
+  <p>Open <code>/admin.html</code> directly, or click <strong>🛡 Admin Panel</strong> in the user dropdown menu on the main app page. Access requires signing in with an account whose role is <strong>admin</strong> — regular user accounts are redirected with an "Admin access required" message.</p>
+  <div class="callout callout-info"><strong>Role check:</strong> the panel checks your role on every page load. If your admin rights are revoked while a session is open, you'll be blocked on the next refresh.</div>
+</section>
+
+<section id="a-dashboard-en">
+  <h2>Dashboard</h2>
+  <p>The landing section after signing in. Shows platform-wide counters and recent activity at a glance.</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4> Stat cards</h4><p>Total Users, Active Users, Total Prompts, Pending Jobs, and Completed Jobs — refreshed on every visit to the section.</p></div>
+    <div class="cap-card"><h4> Events by type</h4><p>A table of recorded usage events grouped by type and count, useful for spotting unusual activity.</p></div>
+  </div>
+</section>
+
+<section id="a-users-en">
+  <h2>Users</h2>
+  <p>Full list of registered accounts with per-user metrics and management actions.</p>
+  <table class="domain-table"><thead><tr><th>Column</th><th>Meaning</th></tr></thead><tbody>
+    <tr><td>Prompts</td><td>Number of prompts saved by this user</td></tr>
+    <tr><td>Logins</td><td>Total successful sign-ins</td></tr>
+    <tr><td>Last Login</td><td>Date of the most recent sign-in</td></tr>
+    <tr><td>Active</td><td>Whether the account can currently sign in</td></tr>
+  </tbody></table>
+  <h3>Actions</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Add User</h4><p>Create a new account directly — email, password, optional display name, and role (User or Admin).</p></div>
+    <div class="cap-card"><h4>Active / Disabled toggle</h4><p>Click the status button to instantly enable or disable sign-in for that account, without deleting any data.</p></div>
+    <div class="cap-card"><h4>Promote / Demote</h4><p>Switch a user between <strong>user</strong> and <strong>admin</strong> roles with one click.</p></div>
+    <div class="cap-card"><h4>Delete</h4><p>Permanently removes the account and <strong>all</strong> of their prompts, jobs, and data. Requires confirmation. Cannot be undone.</p></div>
+  </div>
+</section>
+
+<section id="a-apikeys-en">
+  <h2>🔑 API Keys Management</h2>
+  <p>Each user stores their own API keys in the database, tied to their account. Administrators can view, add, edit, and delete keys for any user via the <strong>🔑 API Keys</strong> button in the Users table — without needing to know the full key value.</p>
+
+  <h3>User Search</h3>
+  <p>Type any combination of characters in the search field to instantly filter the users table. Matching rows are highlighted. If no results match, a "No users found" message appears.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Users — search bar</div></div>
+    <div class="mockup-body">
+      <div class="mk-search">
+        <div class="mk-input" style="min-width:200px;">🔍 pulavskyi…</div>
+        <div class="mk-btn primary">+ Add User</div>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Email</th><th>Role</th><th>Prompts</th><th>Active</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(79,195,247,0.06);">
+            <td>pulavskyi@gmail.com</td>
+            <td><span class="mk-tag blue">user</span></td>
+            <td style="text-align:center;">2</td>
+            <td><span class="mk-tag green">✓ Active</span></td>
+            <td><div class="mk-actions"><span class="mk-btn default">Promote</span><span class="mk-btn danger">Delete</span><span class="mk-btn accent">🔑 API Keys</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Opening the API Keys Panel</h3>
+  <p>Click the <strong>🔑 API Keys</strong> button on any user row. A modal window opens showing all API keys configured for that user, with the key value masked (only the prefix is visible).</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">🔑 API Keys — user modal</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>🔑 API Keys — pulavskyi@gmail.com</h5>
+        <table class="mk-table">
+          <thead><tr><th>Provider</th><th>Key prefix</th><th class="hide-xs">Updated</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><strong>claude</strong></td><td><code>sk-ant-api0…</code></td><td class="hide-xs">7/2/2026</td><td><div class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></div></td></tr>
+            <tr><td><strong>gemini</strong></td><td><code>AIzaSyXXXX…</code></td><td class="hide-xs">7/1/2026</td><td><div class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></div></td></tr>
+            <tr><td><strong>perplexity</strong></td><td><code>pplx-hvm2j…</code></td><td class="hide-xs">7/1/2026</td><td><div class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></div></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;"><span class="mk-btn primary">+ Add Key</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Available Actions</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Add Key</h4><p>Enter the provider name (e.g. <code>claude</code>, <code>groq</code>) and paste the full API key. Saved instantly to the database for that user.</p></div>
+    <div class="cap-card"><h4>Edit</h4><p>Opens a form pre-filled with the provider name. Paste a new key value to replace the existing one. The old key is overwritten.</p></div>
+    <div class="cap-card"><h4>Delete key</h4><p>Removes only that provider's key for this user. A confirmation dialog shows the provider name and user email before deletion. Cannot be undone.</p></div>
+    <div class="cap-card"><h4>Masking</h4><p>Only the key prefix (first 10 characters) is stored in the <code>key_prefix</code> column and shown in the table — the full key is never displayed in the admin UI.</p></div>
+  </div>
+
+  <h3>Adding a New Key</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Add API Key form</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>Add API Key</h5>
+        <div class="mk-field">
+          <span class="mk-label">Provider name</span>
+          <div class="mk-input wide">deepseek</div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-label">API Key</span>
+          <div class="mk-input wide">••••••••••••••••••••••••••••••••</div>
+        </div>
+        <div class="mk-actions" style="margin-top:10px;">
+          <span class="mk-btn default" style="flex:1;text-align:center;">Cancel</span>
+          <span class="mk-btn primary" style="flex:1;text-align:center;">Save</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-info"><strong>Note:</strong> provider names must be lowercase and match the keys used by the Scheduler (e.g. <code>claude</code>, <code>gemini</code>, <code>deepseek</code>, <code>perplexity</code>). An incorrect name means the Scheduler won't find the key at runtime.</div>
+  <div class="callout callout-warn"><strong>Security:</strong> API keys are stored as plain text in the database. Restrict database access to trusted administrators only. Never share or log full key values.</div>
+</section>
+
+
+<section id="a-prompts-en">
+  <h2>All Prompts</h2>
+  <p>Browse and moderate every prompt saved by every user on the platform, with full-text search across titles and content.</p>
+  <h3>Actions per prompt</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>👁 View / Edit</h4><p>Opens the prompt with editable Title, User (email), and Domain fields, plus the full Source Text and Prompt Content. Both texts have a one-click <strong>Copy</strong> button. Save Changes commits any edits, including reassigning the prompt to a different user by email.</p></div>
+    <div class="cap-card"><h4>📋 Copy</h4><p>Duplicates the prompt. A dialog lets you set a new Title, target User (email), and Domain before confirming — useful for moving a prompt to another account or cloning a template.</p></div>
+    <div class="cap-card"><h4>🗑 Delete</h4><p>Soft-deletes the prompt after a confirmation dialog.</p></div>
+  </div>
+</section>
+
+<section id="a-providers-en">
+  <h2>AI Providers — Endpoint Configuration</h2>
+  <p>Configure the model endpoints used by the Scheduler when running automated jobs. Supports Gemini, DeepSeek, Claude, Perplexity, and any custom OpenAI-compatible endpoint. Each provider is a row in the <code>ai_provider_endpoints</code> database table.</p>
+
+  <h3>Provider List &amp; Toolbar</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">AI Provider Endpoints — toolbar</div></div>
+    <div class="mockup-body">
+      <div class="mk-search" style="justify-content:flex-end;margin-bottom:8px;">
+        <span class="mk-btn default">↑ Export</span>
+        <span class="mk-btn default">↓ Import</span>
+        <span class="mk-btn primary">+ Add Provider</span>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Provider</th><th>Endpoint URL</th><th>Model</th><th class="hide-xs">Options</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Claude</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://api.anthropic.com/v1/messages</td>
+            <td>claude-sonnet-4-6</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"tools":[…]}</td>
+            <td><span class="mk-tag green">active</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gemini</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://…/v1beta/models/{model}:generateContent</td>
+            <td>gemini-2.5-flash</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"tools":[…]}</td>
+            <td><span class="mk-tag green">active</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></td>
+          </tr>
+          <tr>
+            <td><strong>Groq</strong></td>
+            <td style="font-size:9px;max-width:120px;">https://api.groq.com/openai/v1/…</td>
+            <td>llama-3.3-70b</td>
+            <td class="hide-xs">—</td>
+            <td><span class="mk-tag gray">inactive</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Delete</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Edit AI Provider — All Fields</h3>
+  <p>Click <strong>Edit</strong> on any row to open the form. All fields map directly to columns in the <code>ai_provider_endpoints</code> table.</p>
+
+  <div class="provider-edit-layout">
+    <div class="provider-form-mockup">
+      <div class="mockup">
+        <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Edit AI Provider — Claude</div></div>
+        <div class="mockup-body">
+          <div class="mk-modal" style="max-width:100%;">
+            <div class="mk-field"><span class="mk-label">Provider Key (locked)</span><div class="mk-input wide">claude</div></div>
+            <div class="mk-field"><span class="mk-label">Display Label</span><div class="mk-input wide">Claude</div></div>
+            <div class="mk-field"><span class="mk-label">Endpoint URL</span><div class="mk-input wide">https://api.anthropic.com/v1/messages</div></div>
+            <div class="mk-field"><span class="mk-label">Model Name</span><div class="mk-input wide">claude-sonnet-4-6</div></div>
+            <div class="mk-field-row">
+              <div class="mk-field"><span class="mk-label">Auth Header</span><div class="mk-input wide">x-api-key</div></div>
+              <div class="mk-field"><span class="mk-label">Auth Prefix</span><div class="mk-input wide">Bearer&nbsp;</div></div>
+            </div>
+            <div class="mk-field">
+              <span class="mk-label">Provider Options (JSON)</span>
+              <div class="mk-input wide" style="height:54px;overflow:hidden;font-size:9px;line-height:1.4;">{"tools":[{"name":"web_search",<br>"type":"web_search_YYYYMMDD",<br>"max_uses":5}]}</div>
+            </div>
+            <div style="display:flex;gap:12px;margin:8px 0 4px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Active</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Built-in</label>
+            </div>
+            <div class="mk-actions" style="margin-top:10px;">
+              <span class="mk-btn default" style="flex:1;text-align:center;">Cancel</span>
+              <span class="mk-btn primary" style="flex:1;text-align:center;">Save</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="provider-fields-desc">
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_key</code></div>
+        <div class="field-desc-badge fd-locked">🔒 locked</div>
+        <p>Unique internal identifier. Lowercase letters, digits and underscores only (e.g. <code>claude</code>, <code>gemini</code>, <code>my_llm</code>). Set once at creation — cannot be changed, as it is the primary key referenced by Scheduled Jobs. Changing it would orphan all existing jobs targeting this provider.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>label</code></div>
+        <div class="field-desc-badge fd-required">required</div>
+        <p>Display name shown in dropdowns and the provider list (e.g. <em>Claude</em>, <em>Gemini 2.5 Flash</em>). Has no technical effect — purely cosmetic.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>endpoint_url</code></div>
+        <div class="field-desc-badge fd-required">required</div>
+        <p>Full API URL the Scheduler calls when making inference requests. For Gemini v1beta use <code>{model}</code> as a placeholder — the Scheduler substitutes the actual model name at runtime. Examples: <code>https://api.anthropic.com/v1/messages</code>, <code>https://api.openai.com/v1/chat/completions</code>.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>model_name</code></div>
+        <div class="field-desc-badge fd-required">required</div>
+        <p>Model identifier sent verbatim in the request body (e.g. <code>claude-sonnet-4-6</code>, <code>gemini-2.5-flash</code>, <code>gpt-4o</code>). Must exactly match the value the provider's API expects.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_header</code></div>
+        <div class="field-desc-badge fd-optional">optional</div>
+        <p>HTTP header name used to send the API key. Default: <code>Authorization</code>. Claude uses <code>x-api-key</code> instead. Leave as-is unless the provider requires a non-standard header.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_prefix</code></div>
+        <div class="field-desc-badge fd-optional">optional</div>
+        <p>Text prepended to the API key value. Default: <code>Bearer&nbsp;</code> (with trailing space). Some providers need an empty prefix or a different word. The Scheduler concatenates: <code>auth_prefix + api_key</code>.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_options</code></div>
+        <div class="field-desc-badge fd-optional">optional · JSON</div>
+        <p>Provider-specific extra parameters sent in every API request body. Must be valid JSON. The Scheduler merges this object with the base request payload at runtime.</p>
+        <p style="margin-top:6px;">Common patterns:</p>
+        <table class="domain-table" style="font-size:11px;margin-top:6px;">
+          <thead><tr><th>Provider</th><th>Example value</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Claude</td><td><code>{"tools":[{"name":"web_search","type":"web_search_YYYYMMDD","max_uses":5}]}</code></td><td>Enables live web search. <strong>Date is auto-updated</strong> to the job's run date at execution time.</td></tr>
+            <tr><td>Gemini</td><td><code>{"use_v1beta":true,"tools":[{"google_search":{}}]}</code></td><td>Forces v1beta endpoint (required for Google Search grounding).</td></tr>
+            <tr><td>Perplexity</td><td><code>{"return_citations":true,"search_recency_filter":"week"}</code></td><td>Adds citations and filters to recent results.</td></tr>
+            <tr><td>Others</td><td><code>{}</code> or empty</td><td>No extra params — standard OpenAI-compatible request.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout-info" style="margin-top:8px;"><strong>Auto-date:</strong> the <code>web_search_YYYYMMDD</code> suffix in Claude's tool type is automatically replaced with the actual job execution date (e.g. <code>web_search_20270110</code> for a job scheduled on January 10, 2027).</div>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_active</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ checkbox</div>
+        <p>When unchecked, the Scheduler skips this provider and all Scheduled Jobs targeting it will fail with a "provider not found" error. Use to temporarily disable a provider without deleting it.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_builtin</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ checkbox</div>
+        <p>Marks the provider as a core system provider. Built-in providers show a <span class="mk-tag blue" style="font-size:9px;">builtin</span> badge in the list. Deleting a built-in triggers a stronger confirmation warning. Checking this box does <em>not</em> protect the provider from deletion — it only changes the UI warning level.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Export / Import</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>↑ Export</h4><p>Downloads all providers as a JSON file (<code>ai_providers_YYYY-MM-DD.json</code>). Use for backup before changes, or to migrate providers to another instance.</p></div>
+    <div class="cap-card"><h4>↓ Import</h4><p>Reads a JSON file exported from any instance. Uses <code>ON CONFLICT … DO UPDATE</code> — existing providers are updated, new ones are inserted. Does not delete providers absent from the file.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Built-in deletion:</strong> deleting a built-in provider (e.g. Gemini) shows an extra warning because all Scheduled Jobs targeting that <code>provider_key</code> will immediately start failing.</div>
+</section>
+
+<section id="a-backup-en">
+  <h2>Danger Zone — Database Backup</h2>
+  <p>Creates a full PostgreSQL backup (schema + data) and stores it as a downloadable <code>.sql.gz</code> file on the server.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Click "Create Backup"</h4><p>Runs <code>pg_dump</code> on the server, strips owner/privilege/extension statements for portability, and compresses the result.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Find it in the list</h4><p>Every backup appears with filename, size, and creation time, newest first.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Download anytime</h4><p>Click <strong>Download</strong> to save the <code>.sql.gz</code> file to your computer for off-server safekeeping.</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Tip:</strong> download a fresh backup before any risky operation — restoring or wiping the database.</div>
+</section>
+
+<section id="a-restore-en">
+  <h2>Danger Zone — Restore Database</h2>
+  <p>Restores the database from a backup, <strong>overwriting all current data</strong>. Two ways to do it:</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>Restore from server list</h4><p>Click <strong>Restore</strong> next to any backup already stored on the server.</p></div>
+    <div class="cap-card"><h4>Upload &amp; Restore</h4><p>Choose a <code>.sql.gz</code> file from your computer and restore directly from it — the file is also saved to the server's backup list afterward.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Type-to-confirm:</strong> both paths require typing the word <code>RESTORE</code> in a confirmation dialog before proceeding — a safeguard against accidental clicks on this irreversible action.</div>
+  <p>The restore runs inside a single database transaction: if any statement fails, PostgreSQL automatically rolls back every change, so the database is never left half-restored.</p>
+</section>
+
+<section id="a-wipe-en">
+  <h2>Danger Zone — Wipe Database</h2>
+  <p>Permanently deletes <strong>every user account except your own</strong>, along with all of their prompts, source texts, scheduled jobs, and API keys. Your own admin account and the AI Provider configuration are preserved.</p>
+  <div class="callout callout-warn"><strong>Double confirmation:</strong> two separate confirmation dialogs must be accepted in sequence before the wipe executes. There is no undo — always create a fresh backup first.</div>
+</section>
+
+<section id="a-lang-en">
+  <h2>Interface Language</h2>
+  <p>The admin panel footer (left sidebar, below "Back to app") has an <strong>EN / UK / ES</strong> switcher. Your choice is remembered in this browser and applies to every section, dialog, and this Help window.</p>
+</section>
+
+<section id="a-faq-en">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Can I undo a database wipe or restore? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">No. Both actions are permanent. Always create and download a backup beforehand using "Create Backup" in the Danger Zone.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">What happens if I delete a built-in AI provider? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Any Scheduled Job pointing at that provider will start failing. The confirmation dialog warns about this before deletion.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Can I change a user's role without deleting their account? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Yes — use the Promote / Demote button in the Users table. It switches between "user" and "admin" instantly.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Can I move a prompt to a different user? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Yes — open the prompt with View, change the "User (email)" field, and click Save Changes. Or use Copy to duplicate it onto another account while keeping the original.</div></div>
+  </div>
+</section>
+</div><!-- /en -->
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  УКРАЇНСЬКА  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="uk">
+
+<section id="a-overview-uk">
+  <div class="hero">
+    <div class="hero-version">Адмін-панель · v2 · 6 розділів</div>
+    <h1>JS PROMPT — Інструкція адміністратора</h1>
+    <p>Адмін-панель надає повний контроль над користувачами, промтами, конфігурацією AI-провайдерів та самою базою даних. Ця інструкція описує всі можливості, доступні адміністраторському акаунту.</p>
+    <div class="feature-pills">
+      <span class="pill">Керування користувачами</span>
+      <span class="pill">Модерація промтів</span>
+      <span class="pill">Налаштування AI-провайдерів</span>
+      <span class="pill">Резервне копіювання та відновлення БД</span>
+      <span class="pill">EN / UK / ES</span>
+    </div>
+  </div>
+</section>
+
+<section id="a-access-uk">
+  <h2>Доступ до панелі</h2>
+  <p>Відкрийте <code>/admin.html</code> безпосередньо, або натисніть <strong>🛡 Адмін-панель</strong> у меню користувача на головній сторінці застосунку. Доступ потребує входу з облікового запису, чия роль — <strong>admin</strong>; звичайні облікові записи отримують повідомлення "Для цього облікового запису потрібен доступ адміністратора".</p>
+  <div class="callout callout-info"><strong>Перевірка ролі:</strong> панель перевіряє вашу роль при кожному завантаженні сторінки. Якщо права адміністратора відкликано під час активної сесії, доступ буде заблоковано після наступного оновлення.</div>
+</section>
+
+<section id="a-dashboard-uk">
+  <h2>Дашборд</h2>
+  <p>Початковий розділ після входу. Показує загальні показники платформи та останню активність одним поглядом.</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4> Картки статистики</h4><p>Усього користувачів, активні користувачі, усього промтів, задачі в очікуванні та завершені задачі — оновлюються при кожному відкритті розділу.</p></div>
+    <div class="cap-card"><h4> Події за типом</h4><p>Таблиця зафіксованих подій використання, згрупованих за типом і кількістю — корисно для виявлення нетипової активності.</p></div>
+  </div>
+</section>
+
+<section id="a-users-uk">
+  <h2>Користувачі</h2>
+  <p>Повний список зареєстрованих облікових записів з показниками по кожному користувачу та діями керування.</p>
+  <table class="domain-table"><thead><tr><th>Колонка</th><th>Значення</th></tr></thead><tbody>
+    <tr><td>Промти</td><td>Кількість промтів, збережених цим користувачем</td></tr>
+    <tr><td>Входи</td><td>Загальна кількість успішних входів</td></tr>
+    <tr><td>Останній вхід</td><td>Дата останнього входу в систему</td></tr>
+    <tr><td>Активний</td><td>Чи може цей акаунт зараз увійти в систему</td></tr>
+  </tbody></table>
+  <h3>Дії</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Додати користувача</h4><p>Створення нового акаунту напряму — email, пароль, необов'язкове відображуване ім'я та роль (User або Admin).</p></div>
+    <div class="cap-card"><h4>Перемикач Активний / Вимкнено</h4><p>Натисніть на кнопку статусу, щоб миттєво дозволити чи заборонити вхід для цього акаунту, без видалення жодних даних.</p></div>
+    <div class="cap-card"><h4>Підвищити / Понизити</h4><p>Перемикання користувача між ролями <strong>user</strong> та <strong>admin</strong> одним кліком.</p></div>
+    <div class="cap-card"><h4>Видалити</h4><p>Назавжди видаляє акаунт та <strong>всі</strong> його промти, задачі й дані. Потребує підтвердження. Дію не можна скасувати.</p></div>
+  </div>
+</section>
+
+<section id="a-apikeys-uk">
+  <h2>🔑 Управління API Ключами</h2>
+  <p>Кожен користувач зберігає власні API ключі в базі даних, прив'язані до свого акаунту. Адміністратори можуть переглядати, додавати, редагувати та видаляти ключі для будь-якого користувача через кнопку <strong>🔑 API Ключі</strong> в таблиці користувачів — без необхідності знати повне значення ключа.</p>
+
+  <h3>Пошук користувача</h3>
+  <p>Введіть будь-яку комбінацію символів у поле пошуку, щоб миттєво відфільтрувати таблицю користувачів. Рядки що відповідають запиту — підсвічуються. Якщо збігів немає — з'являється повідомлення «Користувачів не знайдено».</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Користувачі — рядок пошуку</div></div>
+    <div class="mockup-body">
+      <div class="mk-search">
+        <div class="mk-input" style="min-width:200px;">🔍 pulavskyi…</div>
+        <div class="mk-btn primary">+ Додати користувача</div>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Email</th><th>Роль</th><th>Промти</th><th>Активний</th><th>Дії</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(79,195,247,0.06);">
+            <td>pulavskyi@gmail.com</td>
+            <td><span class="mk-tag blue">user</span></td>
+            <td style="text-align:center;">2</td>
+            <td><span class="mk-tag green">✓ Активний</span></td>
+            <td><div class="mk-actions"><span class="mk-btn default">Підвищити</span><span class="mk-btn danger">Видалити</span><span class="mk-btn accent">🔑 API Ключі</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Відкриття панелі API ключів</h3>
+  <p>Натисніть кнопку <strong>🔑 API Ключі</strong> у рядку будь-якого користувача. Відкривається модальне вікно, що показує всі API ключі, налаштовані для цього користувача — значення ключа замасковане (відображається лише префікс).</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">🔑 API Ключі — модальне вікно</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>🔑 API Ключі — pulavskyi@gmail.com</h5>
+        <table class="mk-table">
+          <thead><tr><th>Провайдер</th><th>Префікс ключа</th><th class="hide-xs">Оновлено</th><th>Дії</th></tr></thead>
+          <tbody>
+            <tr><td><strong>claude</strong></td><td><code>sk-ant-api0…</code></td><td class="hide-xs">02.07.2026</td><td><div class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Видал.</span></div></td></tr>
+            <tr><td><strong>gemini</strong></td><td><code>AIzaSyXXXX…</code></td><td class="hide-xs">01.07.2026</td><td><div class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Видал.</span></div></td></tr>
+            <tr><td><strong>perplexity</strong></td><td><code>pplx-hvm2j…</code></td><td class="hide-xs">01.07.2026</td><td><div class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Видал.</span></div></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;"><span class="mk-btn primary">+ Додати ключ</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Доступні дії</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Додати ключ</h4><p>Введіть назву провайдера (наприклад <code>claude</code>, <code>groq</code>) та вставте повний API ключ. Зберігається миттєво в базі даних для цього користувача.</p></div>
+    <div class="cap-card"><h4>Редагувати</h4><p>Відкриває форму з назвою провайдера. Вставте нове значення ключа, щоб замінити існуючий. Старий ключ буде перезаписано.</p></div>
+    <div class="cap-card"><h4>Видалити ключ</h4><p>Видаляє лише ключ цього провайдера для даного користувача. Діалог підтвердження показує назву провайдера та email користувача. Дію не можна скасувати.</p></div>
+    <div class="cap-card"><h4>Маскування</h4><p>У таблиці відображається лише префікс ключа (перші 10 символів) — повне значення в адмін-інтерфейсі ніколи не показується.</p></div>
+  </div>
+
+  <h3>Додавання нового ключа</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Форма додавання API ключа</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>Додати API ключ</h5>
+        <div class="mk-field">
+          <span class="mk-label">Назва провайдера</span>
+          <div class="mk-input wide">deepseek</div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-label">API Ключ</span>
+          <div class="mk-input wide">••••••••••••••••••••••••••••••••</div>
+        </div>
+        <div class="mk-row" style="margin-top:10px;">
+          <span class="mk-btn default" style="flex:1;text-align:center;">Скасувати</span>
+          <span class="mk-btn primary" style="flex:1;text-align:center;">Зберегти</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-info"><strong>Примітка:</strong> назви провайдерів мають бути в нижньому регістрі і відповідати ключам, що використовує Scheduler (наприклад <code>claude</code>, <code>gemini</code>, <code>deepseek</code>, <code>perplexity</code>). Невірна назва означає, що Scheduler не знайде ключ під час виконання задачі.</div>
+  <div class="callout callout-warn"><strong>Безпека:</strong> API ключі зберігаються у відкритому вигляді в базі даних. Обмежте доступ до бази даних лише довіреним адміністраторам. Ніколи не діліться і не логуйте повні значення ключів.</div>
+</section>
+
+
+<section id="a-prompts-uk">
+  <h2>Усі промти</h2>
+  <p>Перегляд і модерація кожного промту, збереженого кожним користувачем платформи, з повнотекстовим пошуком за назвою та вмістом.</p>
+  <h3>Дії над промтом</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>👁 Перегляд / Редагування</h4><p>Відкриває промт з редагованими полями Назва, Користувач (email) та Домен, а також повним Вихідним текстом і Вмістом промту. Обидва тексти мають кнопку <strong>Копіювати</strong> в один клік. Зберегти зміни застосовує будь-які правки, включно з перепризначенням промту іншому користувачу за email.</p></div>
+    <div class="cap-card"><h4>📋 Копіювати</h4><p>Дублює промт. Діалог дозволяє вказати нову Назву, цільового Користувача (email) та Домен перед підтвердженням — корисно для перенесення промту на інший акаунт або клонування шаблону.</p></div>
+    <div class="cap-card"><h4>🗑 Видалити</h4><p>М'яко видаляє промт після діалогу підтвердження.</p></div>
+  </div>
+</section>
+
+<section id="a-providers-uk">
+  <h2>AI-провайдери — Налаштування endpoint'ів</h2>
+  <p>Налаштування endpoint'ів моделей, які використовує Планувальник при виконанні автоматичних задач. Підтримує Gemini, DeepSeek, Claude, Perplexity та будь-який власний OpenAI-сумісний endpoint. Кожен провайдер — це рядок в таблиці <code>ai_provider_endpoints</code> бази даних.</p>
+
+  <h3>Список провайдерів та панель інструментів</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">AI Provider Endpoints — панель</div></div>
+    <div class="mockup-body">
+      <div class="mk-search" style="justify-content:flex-end;margin-bottom:8px;">
+        <span class="mk-btn default">↑ Експорт</span>
+        <span class="mk-btn default">↓ Імпорт</span>
+        <span class="mk-btn primary">+ Додати провайдера</span>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Провайдер</th><th>URL endpoint'у</th><th>Модель</th><th class="hide-xs">Параметри</th><th>Статус</th><th>Дії</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Claude</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://api.anthropic.com/v1/messages</td>
+            <td>claude-sonnet-4-6</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"tools":[…]}</td>
+            <td><span class="mk-tag green">активний</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Вид.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gemini</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://…/v1beta/models/{model}:generateContent</td>
+            <td>gemini-2.5-flash</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"use_v1beta":true}</td>
+            <td><span class="mk-tag green">активний</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Вид.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Groq</strong></td>
+            <td style="font-size:9px;max-width:120px;">https://api.groq.com/openai/v1/…</td>
+            <td>llama-3.3-70b</td>
+            <td class="hide-xs">—</td>
+            <td><span class="mk-tag gray">неактивний</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Ред.</span><span class="mk-btn danger">Вид.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Редагування провайдера — всі поля</h3>
+  <p>Натисніть <strong>Редагувати</strong> у будь-якому рядку, щоб відкрити форму. Всі поля безпосередньо відповідають колонкам таблиці <code>ai_provider_endpoints</code>.</p>
+
+  <div class="provider-edit-layout">
+    <div class="provider-form-mockup">
+      <div class="mockup">
+        <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Редагувати AI-провайдера — Claude</div></div>
+        <div class="mockup-body">
+          <div class="mk-modal" style="max-width:100%;">
+            <div class="mk-field"><span class="mk-label">Ключ провайдера (заблоковано)</span><div class="mk-input wide">claude</div></div>
+            <div class="mk-field"><span class="mk-label">Відображувана назва</span><div class="mk-input wide">Claude</div></div>
+            <div class="mk-field"><span class="mk-label">URL endpoint'у</span><div class="mk-input wide">https://api.anthropic.com/v1/messages</div></div>
+            <div class="mk-field"><span class="mk-label">Назва моделі</span><div class="mk-input wide">claude-sonnet-4-6</div></div>
+            <div class="mk-field-row">
+              <div class="mk-field"><span class="mk-label">Заголовок авторизації</span><div class="mk-input wide">x-api-key</div></div>
+              <div class="mk-field"><span class="mk-label">Префікс авторизації</span><div class="mk-input wide">Bearer&nbsp;</div></div>
+            </div>
+            <div class="mk-field">
+              <span class="mk-label">Параметри провайдера (JSON)</span>
+              <div class="mk-input wide" style="height:54px;overflow:hidden;font-size:9px;line-height:1.4;">{"tools":[{"name":"web_search",<br>"type":"web_search_YYYYMMDD",<br>"max_uses":5}]}</div>
+            </div>
+            <div style="display:flex;gap:12px;margin:8px 0 4px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Активний</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Вбудований</label>
+            </div>
+            <div class="mk-actions" style="margin-top:10px;">
+              <span class="mk-btn default" style="flex:1;text-align:center;">Скасувати</span>
+              <span class="mk-btn primary" style="flex:1;text-align:center;">Зберегти</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="provider-fields-desc">
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_key</code></div>
+        <div class="field-desc-badge fd-locked">🔒 заблоковано</div>
+        <p>Унікальний внутрішній ідентифікатор. Лише малі літери, цифри та підкреслення (наприклад <code>claude</code>, <code>gemini</code>, <code>my_llm</code>). Встановлюється один раз при створенні — не може бути змінений, оскільки є первинним ключем, на який посилаються заплановані задачі. Зміна призведе до «осиротіння» всіх існуючих задач.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>label</code></div>
+        <div class="field-desc-badge fd-required">обов'язково</div>
+        <p>Відображувана назва у випадаючих списках та переліку провайдерів (наприклад <em>Claude</em>, <em>Gemini 2.5 Flash</em>). Не має технічного значення — лише для відображення.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>endpoint_url</code></div>
+        <div class="field-desc-badge fd-required">обов'язково</div>
+        <p>Повна URL-адреса API, яку Планувальник викликає при запитах до моделі. Для Gemini v1beta використовуйте <code>{model}</code> як заповнювач — Планувальник підставить реальну назву моделі під час виконання. Приклади: <code>https://api.anthropic.com/v1/messages</code>, <code>https://api.openai.com/v1/chat/completions</code>.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>model_name</code></div>
+        <div class="field-desc-badge fd-required">обов'язково</div>
+        <p>Ідентифікатор моделі, що передається дослівно в тілі запиту (наприклад <code>claude-sonnet-4-6</code>, <code>gemini-2.5-flash</code>, <code>gpt-4o</code>). Має точно відповідати значенню, якого очікує API провайдера.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_header</code></div>
+        <div class="field-desc-badge fd-optional">необов'язково</div>
+        <p>Ім'я HTTP-заголовка для передачі API ключа. За замовчуванням: <code>Authorization</code>. Claude використовує <code>x-api-key</code>. Змінюйте лише якщо провайдер вимагає нестандартний заголовок.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_prefix</code></div>
+        <div class="field-desc-badge fd-optional">необов'язково</div>
+        <p>Текст, що додається перед значенням API ключа. За замовчуванням: <code>Bearer&nbsp;</code> (з пробілом). Деякі провайдери потребують порожній префікс або інше слово. Планувальник конкатенує: <code>auth_prefix + api_key</code>.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_options</code></div>
+        <div class="field-desc-badge fd-optional">необов'язково · JSON</div>
+        <p>Специфічні для провайдера додаткові параметри, що передаються в кожному запиті. Має бути валідним JSON. Планувальник об'єднує цей об'єкт з базовим тілом запиту під час виконання.</p>
+        <table class="domain-table" style="font-size:11px;margin-top:8px;">
+          <thead><tr><th>Провайдер</th><th>Приклад</th><th>Ефект</th></tr></thead>
+          <tbody>
+            <tr><td>Claude</td><td><code>{"tools":[{"name":"web_search","type":"web_search_YYYYMMDD","max_uses":5}]}</code></td><td>Вмикає живий веб-пошук. <strong>Дата оновлюється автоматично</strong> до дати виконання задачі.</td></tr>
+            <tr><td>Gemini</td><td><code>{"use_v1beta":true,"tools":[{"google_search":{}}]}</code></td><td>Примушує використовувати v1beta (обов'язково для Google Search grounding).</td></tr>
+            <tr><td>Perplexity</td><td><code>{"return_citations":true,"search_recency_filter":"week"}</code></td><td>Додає цитування і фільтрує свіжі результати.</td></tr>
+            <tr><td>Інші</td><td><code>{}</code> або порожньо</td><td>Без додаткових параметрів.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout-info" style="margin-top:8px;"><strong>Авто-дата:</strong> суфікс <code>web_search_YYYYMMDD</code> в типі інструмента Claude автоматично замінюється датою виконання задачі (наприклад <code>web_search_20270110</code> для задачі запланованої на 10 січня 2027).</div>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_active</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ чекбокс</div>
+        <p>Якщо знято — Планувальник ігнорує цього провайдера, і всі заплановані задачі, що його використовують, завершуватимуться помилкою «провайдера не знайдено». Використовуйте для тимчасового вимкнення без видалення.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_builtin</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ чекбокс</div>
+        <p>Позначає провайдера як системний. Вбудовані провайдери відображаються з бейджем <span class="mk-tag blue" style="font-size:9px;">builtin</span>. При видаленні вбудованого провайдера показується посилене попередження. Встановлення цього прапорця <em>не захищає</em> від видалення — лише змінює рівень попередження.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Експорт / Імпорт</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>↑ Експорт</h4><p>Завантажує всіх провайдерів як JSON-файл (<code>ai_providers_YYYY-MM-DD.json</code>). Використовуйте для резервної копії або перенесення на інший сервер.</p></div>
+    <div class="cap-card"><h4>↓ Імпорт</h4><p>Зчитує JSON-файл, експортований з будь-якого екземпляра. Використовує <code>ON CONFLICT … DO UPDATE</code> — існуючі провайдери оновлюються, нові додаються. Провайдери, відсутні у файлі, не видаляються.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Видалення вбудованого провайдера:</strong> видалення вбудованого провайдера (наприклад Gemini) показує додаткове попередження, оскільки всі заплановані задачі з цим <code>provider_key</code> негайно почнуть завершуватись помилкою.</div>
+</section>
+
+<section id="a-backup-uk">
+  <h2>Небезпечна зона — Резервна копія бази даних</h2>
+  <p>Створює повну резервну копію PostgreSQL (схема + дані) і зберігає її як файл <code>.sql.gz</code>, доступний для завантаження з сервера.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Натисніть "Створити резервну копію"</h4><p>Запускає <code>pg_dump</code> на сервері, видаляє команди власника/прав/розширень для переносимості, і стискає результат.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Знайдіть її у списку</h4><p>Кожна резервна копія з'являється з назвою файлу, розміром і часом створення, найновіші — першими.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Завантажте будь-коли</h4><p>Натисніть <strong>Завантажити</strong>, щоб зберегти файл <code>.sql.gz</code> на свій комп'ютер для зберігання поза сервером.</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Порада:</strong> завантажте свіжу резервну копію перед будь-якою ризикованою операцією — відновленням чи очищенням бази даних.</div>
+</section>
+
+<section id="a-restore-uk">
+  <h2>Небезпечна зона — Відновлення бази даних</h2>
+  <p>Відновлює базу даних з резервної копії, <strong>перезаписуючи всі поточні дані</strong>. Два способи зробити це:</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>Відновлення зі списку на сервері</h4><p>Натисніть <strong>Відновити</strong> поруч із будь-якою резервною копією, що вже зберігається на сервері.</p></div>
+    <div class="cap-card"><h4>Завантажити та відновити</h4><p>Оберіть файл <code>.sql.gz</code> зі свого комп'ютера і відновіть базу безпосередньо з нього — файл також буде збережено у списку резервних копій на сервері.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Підтвердження текстом:</strong> обидва шляхи вимагають ввести слово <code>RESTORE</code> у діалозі підтвердження перед продовженням — запобіжник проти випадкових кліків на цій незворотній дії.</div>
+  <p>Відновлення виконується всередині однієї транзакції бази даних: якщо будь-яка команда дає збій, PostgreSQL автоматично відкочує всі зміни, тож база даних ніколи не залишається наполовину відновленою.</p>
+</section>
+
+<section id="a-wipe-uk">
+  <h2>Небезпечна зона — Очищення бази даних</h2>
+  <p>Назавжди видаляє <strong>усі облікові записи користувачів, крім вашого власного</strong>, разом з усіма їхніми промтами, вихідними текстами, запланованими задачами та API-ключами. Ваш власний обліковий запис адміністратора та конфігурація AI-провайдерів зберігаються.</p>
+  <div class="callout callout-warn"><strong>Подвійне підтвердження:</strong> потрібно послідовно прийняти два окремі діалоги підтвердження перед виконанням очищення. Відновлення неможливе — завжди створюйте свіжу резервну копію спочатку.</div>
+</section>
+
+<section id="a-lang-uk">
+  <h2>Мова інтерфейсу</h2>
+  <p>У футері адмін-панелі (лівий сайдбар, під посиланням "Назад до застосунку") є перемикач <strong>EN / UK / ES</strong>. Ваш вибір запам'ятовується в цьому браузері й застосовується до кожного розділу, діалогу та цього вікна довідки.</p>
+</section>
+
+<section id="a-faq-uk">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чи можна скасувати очищення або відновлення бази даних? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Ні. Обидві дії незворотні. Завжди створюйте та завантажуйте резервну копію наперед, використовуючи "Створити резервну копію" в Небезпечній зоні.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Що станеться, якщо я видалю вбудованого AI-провайдера? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Будь-яка запланована задача, що використовує цього провайдера, почне завершуватись помилкою. Діалог підтвердження попереджає про це перед видаленням.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чи можу я змінити роль користувача без видалення його акаунту? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Так — використайте кнопку Підвищити / Понизити в таблиці Користувачів. Вона миттєво перемикає між "user" та "admin".</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Чи можу я перенести промт на іншого користувача? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Так — відкрийте промт через Перегляд, змініть поле "Користувач (email)" і натисніть Зберегти зміни. Або скористайтесь Копіювати, щоб дублювати його на інший акаунт, зберігши оригінал.</div></div>
+  </div>
+</section>
+</div><!-- /uk -->
+
+<!-- ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  ESPAÑOL  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ -->
+<div data-lang="es">
+
+<section id="a-overview-es">
+  <div class="hero">
+    <div class="hero-version">Panel de administración · v2 · 5 secciones</div>
+    <h1>JS PROMPT — Guía del administrador</h1>
+    <p>El panel de administración brinda control total sobre los usuarios, los prompts, la configuración de proveedores de IA y la propia base de datos. Esta guía cubre todas las capacidades disponibles para una cuenta de administrador.</p>
+    <div class="feature-pills">
+      <span class="pill">Gestión de usuarios</span>
+      <span class="pill">Moderación de prompts</span>
+      <span class="pill">Configuración de proveedores de IA</span>
+      <span class="pill">Copia de seguridad y restauración de la BD</span>
+      <span class="pill">EN / UK / ES</span>
+    </div>
+  </div>
+</section>
+
+<section id="a-access-es">
+  <h2>Acceso al panel</h2>
+  <p>Abra <code>/admin.html</code> directamente, o haga clic en <strong>🛡 Panel de administración</strong> en el menú desplegable del usuario en la página principal de la aplicación. El acceso requiere iniciar sesión con una cuenta cuyo rol sea <strong>admin</strong>; las cuentas de usuario normales reciben el mensaje "Se requiere acceso de administrador para esta cuenta".</p>
+  <div class="callout callout-info"><strong>Verificación de rol:</strong> el panel verifica su rol en cada carga de página. Si sus permisos de administrador son revocados durante una sesión abierta, se le bloqueará en la siguiente actualización.</div>
+</section>
+
+<section id="a-dashboard-es">
+  <h2>Panel principal</h2>
+  <p>La sección de entrada tras iniciar sesión. Muestra contadores de toda la plataforma y la actividad reciente de un vistazo.</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4> Tarjetas de estadísticas</h4><p>Total de usuarios, usuarios activos, total de prompts, tareas pendientes y tareas completadas — se actualizan en cada visita a la sección.</p></div>
+    <div class="cap-card"><h4> Eventos por tipo</h4><p>Una tabla de eventos de uso registrados, agrupados por tipo y cantidad, útil para detectar actividad inusual.</p></div>
+  </div>
+</section>
+
+<section id="a-users-es">
+  <h2>Usuarios</h2>
+  <p>Lista completa de cuentas registradas con métricas por usuario y acciones de gestión.</p>
+  <table class="domain-table"><thead><tr><th>Columna</th><th>Significado</th></tr></thead><tbody>
+    <tr><td>Prompts</td><td>Número de prompts guardados por este usuario</td></tr>
+    <tr><td>Inicios de sesión</td><td>Total de inicios de sesión exitosos</td></tr>
+    <tr><td>Último inicio de sesión</td><td>Fecha del inicio de sesión más reciente</td></tr>
+    <tr><td>Activo</td><td>Si la cuenta puede iniciar sesión actualmente</td></tr>
+  </tbody></table>
+  <h3>Acciones</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Añadir usuario</h4><p>Crea una nueva cuenta directamente — correo, contraseña, nombre visible opcional y rol (Usuario o Administrador).</p></div>
+    <div class="cap-card"><h4>Alternador Activo / Desactivado</h4><p>Haga clic en el botón de estado para habilitar o deshabilitar instantáneamente el inicio de sesión de esa cuenta, sin eliminar ningún dato.</p></div>
+    <div class="cap-card"><h4>Promover / Degradar</h4><p>Cambia a un usuario entre los roles <strong>usuario</strong> y <strong>administrador</strong> con un clic.</p></div>
+    <div class="cap-card"><h4>Eliminar</h4><p>Elimina permanentemente la cuenta y <strong>todos</strong> sus prompts, tareas y datos. Requiere confirmación. No se puede deshacer.</p></div>
+  </div>
+</section>
+
+<section id="a-apikeys-es">
+  <h2>🔑 Gestión de Claves API</h2>
+  <p>Cada usuario almacena sus propias claves API en la base de datos, vinculadas a su cuenta. Los administradores pueden ver, añadir, editar y eliminar claves de cualquier usuario mediante el botón <strong>🔑 Claves API</strong> en la tabla de usuarios — sin necesidad de conocer el valor completo de la clave.</p>
+
+  <h3>Búsqueda de usuarios</h3>
+  <p>Escriba cualquier combinación de caracteres en el campo de búsqueda para filtrar instantáneamente la tabla de usuarios. Las filas coincidentes se resaltan. Si no hay resultados, aparece el mensaje «No se encontraron usuarios».</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Usuarios — barra de búsqueda</div></div>
+    <div class="mockup-body">
+      <div class="mk-search">
+        <div class="mk-input" style="min-width:200px;">🔍 pulavskyi…</div>
+        <div class="mk-btn primary">+ Añadir usuario</div>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Correo</th><th>Rol</th><th>Prompts</th><th>Activo</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(79,195,247,0.06);">
+            <td>pulavskyi@gmail.com</td>
+            <td><span class="mk-tag blue">user</span></td>
+            <td style="text-align:center;">2</td>
+            <td><span class="mk-tag green">✓ Activo</span></td>
+            <td><div class="mk-actions"><span class="mk-btn default">Promover</span><span class="mk-btn danger">Eliminar</span><span class="mk-btn accent">🔑 Claves API</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Abrir el panel de Claves API</h3>
+  <p>Haga clic en el botón <strong>🔑 Claves API</strong> en cualquier fila de usuario. Se abre una ventana modal con todas las claves API configuradas para ese usuario — el valor de la clave aparece enmascarado (solo se muestra el prefijo).</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">🔑 Claves API — ventana modal</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>🔑 Claves API — pulavskyi@gmail.com</h5>
+        <table class="mk-table">
+          <thead><tr><th>Proveedor</th><th>Prefijo de clave</th><th class="hide-xs">Actualizado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr><td><strong>claude</strong></td><td><code>sk-ant-api0…</code></td><td class="hide-xs">2/7/2026</td><td><div class="mk-actions"><span class="mk-btn default">Editar</span><span class="mk-btn danger">Eliminar</span></div></td></tr>
+            <tr><td><strong>gemini</strong></td><td><code>AIzaSyXXXX…</code></td><td class="hide-xs">1/7/2026</td><td><div class="mk-actions"><span class="mk-btn default">Editar</span><span class="mk-btn danger">Eliminar</span></div></td></tr>
+            <tr><td><strong>perplexity</strong></td><td><code>pplx-hvm2j…</code></td><td class="hide-xs">1/7/2026</td><td><div class="mk-actions"><span class="mk-btn default">Editar</span><span class="mk-btn danger">Eliminar</span></div></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;"><span class="mk-btn primary">+ Añadir clave</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Acciones disponibles</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>+ Añadir clave</h4><p>Ingrese el nombre del proveedor (p. ej. <code>claude</code>, <code>groq</code>) y pegue la clave API completa. Se guarda instantáneamente en la base de datos para ese usuario.</p></div>
+    <div class="cap-card"><h4>Editar</h4><p>Abre un formulario con el nombre del proveedor. Pegue un nuevo valor de clave para reemplazar el existente. La clave anterior se sobreescribe.</p></div>
+    <div class="cap-card"><h4>Eliminar clave</h4><p>Elimina solo la clave de ese proveedor para este usuario. Un diálogo de confirmación muestra el nombre del proveedor y el correo del usuario. Esta acción no se puede deshacer.</p></div>
+    <div class="cap-card"><h4>Enmascaramiento</h4><p>Solo el prefijo de la clave (primeros 10 caracteres) se muestra en la tabla — el valor completo nunca se muestra en la interfaz de administración.</p></div>
+  </div>
+
+  <h3>Añadir una nueva clave</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Formulario — añadir clave API</div></div>
+    <div class="mockup-body">
+      <div class="mk-modal">
+        <h5>Añadir clave API</h5>
+        <div class="mk-field">
+          <span class="mk-label">Nombre del proveedor</span>
+          <div class="mk-input wide">deepseek</div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-label">Clave API</span>
+          <div class="mk-input wide">••••••••••••••••••••••••••••••••</div>
+        </div>
+        <div class="mk-row" style="margin-top:10px;">
+          <span class="mk-btn default" style="flex:1;text-align:center;">Cancelar</span>
+          <span class="mk-btn primary" style="flex:1;text-align:center;">Guardar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-info"><strong>Nota:</strong> los nombres de proveedor deben estar en minúsculas y coincidir con las claves que utiliza el Scheduler (p. ej. <code>claude</code>, <code>gemini</code>, <code>deepseek</code>, <code>perplexity</code>). Un nombre incorrecto significa que el Scheduler no encontrará la clave en tiempo de ejecución.</div>
+  <div class="callout callout-warn"><strong>Seguridad:</strong> las claves API se almacenan en texto plano en la base de datos. Restrinja el acceso a la base de datos solo a administradores de confianza. Nunca comparta ni registre valores de claves completos.</div>
+</section>
+
+
+<section id="a-prompts-es">
+  <h2>Todos los prompts</h2>
+  <p>Explore y modere cada prompt guardado por cada usuario de la plataforma, con búsqueda de texto completo en títulos y contenido.</p>
+  <h3>Acciones por prompt</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>👁 Ver / Editar</h4><p>Abre el prompt con campos editables de Título, Usuario (correo) y Dominio, además del Texto fuente completo y el Contenido del prompt. Ambos textos tienen un botón de <strong>Copiar</strong> con un clic. Guardar cambios aplica cualquier edición, incluida la reasignación del prompt a otro usuario por correo.</p></div>
+    <div class="cap-card"><h4>📋 Copiar</h4><p>Duplica el prompt. Un diálogo le permite establecer un nuevo Título, Usuario (correo) de destino y Dominio antes de confirmar — útil para mover un prompt a otra cuenta o clonar una plantilla.</p></div>
+    <div class="cap-card"><h4>🗑 Eliminar</h4><p>Elimina el prompt (borrado lógico) tras un diálogo de confirmación.</p></div>
+  </div>
+</section>
+
+<section id="a-providers-es">
+  <h2>Proveedores de IA — Configuración de endpoints</h2>
+  <p>Configure los endpoints de modelos que usa el Programador al ejecutar tareas automatizadas. Compatible con Gemini, DeepSeek, Claude, Perplexity y cualquier endpoint personalizado compatible con OpenAI. Cada proveedor es una fila en la tabla <code>ai_provider_endpoints</code> de la base de datos.</p>
+
+  <h3>Lista de proveedores y barra de herramientas</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">AI Provider Endpoints — barra</div></div>
+    <div class="mockup-body">
+      <div class="mk-search" style="justify-content:flex-end;margin-bottom:8px;">
+        <span class="mk-btn default">↑ Exportar</span>
+        <span class="mk-btn default">↓ Importar</span>
+        <span class="mk-btn primary">+ Añadir proveedor</span>
+      </div>
+      <table class="mk-table">
+        <thead><tr><th>Proveedor</th><th>URL endpoint</th><th>Modelo</th><th class="hide-xs">Opciones</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Claude</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://api.anthropic.com/v1/messages</td>
+            <td>claude-sonnet-4-6</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"tools":[…]}</td>
+            <td><span class="mk-tag green">activo</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Del.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gemini</strong> <span class="mk-tag blue">builtin</span></td>
+            <td style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis;">https://…/v1beta/models/{model}:generateContent</td>
+            <td>gemini-2.5-flash</td>
+            <td class="hide-xs" style="font-size:9px;color:#90a4ae;">{"use_v1beta":true}</td>
+            <td><span class="mk-tag green">activo</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Del.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Groq</strong></td>
+            <td style="font-size:9px;max-width:120px;">https://api.groq.com/openai/v1/…</td>
+            <td>llama-3.3-70b</td>
+            <td class="hide-xs">—</td>
+            <td><span class="mk-tag gray">inactivo</span></td>
+            <td class="mk-actions"><span class="mk-btn default">Edit</span><span class="mk-btn danger">Del.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Editar proveedor de IA — todos los campos</h3>
+  <p>Haga clic en <strong>Editar</strong> en cualquier fila para abrir el formulario. Todos los campos corresponden directamente a columnas de la tabla <code>ai_provider_endpoints</code>.</p>
+
+  <div class="provider-edit-layout">
+    <div class="provider-form-mockup">
+      <div class="mockup">
+        <div class="mockup-bar"><div class="mockup-dot r"></div><div class="mockup-dot y"></div><div class="mockup-dot g"></div><div class="mockup-title">Editar proveedor de IA — Claude</div></div>
+        <div class="mockup-body">
+          <div class="mk-modal" style="max-width:100%;">
+            <div class="mk-field"><span class="mk-label">Clave del proveedor (bloqueada)</span><div class="mk-input wide">claude</div></div>
+            <div class="mk-field"><span class="mk-label">Etiqueta visible</span><div class="mk-input wide">Claude</div></div>
+            <div class="mk-field"><span class="mk-label">URL del endpoint</span><div class="mk-input wide">https://api.anthropic.com/v1/messages</div></div>
+            <div class="mk-field"><span class="mk-label">Nombre del modelo</span><div class="mk-input wide">claude-sonnet-4-6</div></div>
+            <div class="mk-field-row">
+              <div class="mk-field"><span class="mk-label">Encabezado de auth</span><div class="mk-input wide">x-api-key</div></div>
+              <div class="mk-field"><span class="mk-label">Prefijo de auth</span><div class="mk-input wide">Bearer&nbsp;</div></div>
+            </div>
+            <div class="mk-field">
+              <span class="mk-label">Opciones del proveedor (JSON)</span>
+              <div class="mk-input wide" style="height:54px;overflow:hidden;font-size:9px;line-height:1.4;">{"tools":[{"name":"web_search",<br>"type":"web_search_YYYYMMDD",<br>"max_uses":5}]}</div>
+            </div>
+            <div style="display:flex;gap:12px;margin:8px 0 4px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Activo</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#e3f2fd;"><input type="checkbox" checked disabled> Incorporado</label>
+            </div>
+            <div class="mk-actions" style="margin-top:10px;">
+              <span class="mk-btn default" style="flex:1;text-align:center;">Cancelar</span>
+              <span class="mk-btn primary" style="flex:1;text-align:center;">Guardar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="provider-fields-desc">
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_key</code></div>
+        <div class="field-desc-badge fd-locked">🔒 bloqueado</div>
+        <p>Identificador único interno. Solo letras minúsculas, dígitos y guiones bajos (p. ej. <code>claude</code>, <code>gemini</code>, <code>my_llm</code>). Se establece una vez al crear — no puede cambiarse, ya que es la clave primaria referenciada por las Tareas programadas. Cambiarlo dejaría huérfanas todas las tareas existentes.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>label</code></div>
+        <div class="field-desc-badge fd-required">obligatorio</div>
+        <p>Nombre visible en listas desplegables y la tabla de proveedores (p. ej. <em>Claude</em>, <em>Gemini 2.5 Flash</em>). No tiene efecto técnico — es puramente cosmético.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>endpoint_url</code></div>
+        <div class="field-desc-badge fd-required">obligatorio</div>
+        <p>URL completa de la API que llama el Programador al hacer solicitudes de inferencia. Para Gemini v1beta use <code>{model}</code> como marcador de posición — el Programador lo sustituye por el nombre real del modelo en tiempo de ejecución.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>model_name</code></div>
+        <div class="field-desc-badge fd-required">obligatorio</div>
+        <p>Identificador del modelo enviado literalmente en el cuerpo de la solicitud (p. ej. <code>claude-sonnet-4-6</code>, <code>gemini-2.5-flash</code>, <code>gpt-4o</code>). Debe coincidir exactamente con el valor que espera la API del proveedor.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_header</code></div>
+        <div class="field-desc-badge fd-optional">opcional</div>
+        <p>Nombre del encabezado HTTP usado para enviar la clave API. Predeterminado: <code>Authorization</code>. Claude usa <code>x-api-key</code>. Modifíquelo solo si el proveedor requiere un encabezado no estándar.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>auth_prefix</code></div>
+        <div class="field-desc-badge fd-optional">opcional</div>
+        <p>Texto antepuesto al valor de la clave API. Predeterminado: <code>Bearer&nbsp;</code> (con espacio). Algunos proveedores necesitan un prefijo vacío u otra palabra. El Programador concatena: <code>auth_prefix + api_key</code>.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>provider_options</code></div>
+        <div class="field-desc-badge fd-optional">opcional · JSON</div>
+        <p>Parámetros adicionales específicos del proveedor enviados en cada solicitud. Debe ser JSON válido. El Programador fusiona este objeto con el cuerpo base de la solicitud en tiempo de ejecución.</p>
+        <table class="domain-table" style="font-size:11px;margin-top:8px;">
+          <thead><tr><th>Proveedor</th><th>Ejemplo</th><th>Efecto</th></tr></thead>
+          <tbody>
+            <tr><td>Claude</td><td><code>{"tools":[{"name":"web_search","type":"web_search_YYYYMMDD","max_uses":5}]}</code></td><td>Activa búsqueda web en tiempo real. <strong>La fecha se actualiza automáticamente</strong> a la fecha de ejecución de la tarea.</td></tr>
+            <tr><td>Gemini</td><td><code>{"use_v1beta":true,"tools":[{"google_search":{}}]}</code></td><td>Fuerza endpoint v1beta (requerido para Google Search grounding).</td></tr>
+            <tr><td>Perplexity</td><td><code>{"return_citations":true,"search_recency_filter":"week"}</code></td><td>Añade citas y filtra resultados recientes.</td></tr>
+            <tr><td>Otros</td><td><code>{}</code> o vacío</td><td>Sin parámetros extra — solicitud estándar compatible con OpenAI.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout-info" style="margin-top:8px;"><strong>Fecha automática:</strong> el sufijo <code>web_search_YYYYMMDD</code> en el tipo de herramienta de Claude se reemplaza automáticamente con la fecha de ejecución de la tarea (p. ej. <code>web_search_20270110</code> para una tarea programada el 10 de enero de 2027).</div>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_active</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ casilla</div>
+        <p>Si está desmarcado, el Programador omite este proveedor y todas las Tareas programadas que lo usan fallarán con el error "proveedor no encontrado". Úselo para deshabilitar temporalmente sin eliminar.</p>
+      </div>
+      <div class="field-desc-card">
+        <div class="field-desc-name"><code>is_builtin</code></div>
+        <div class="field-desc-badge fd-checkbox">☑ casilla</div>
+        <p>Marca al proveedor como sistema principal. Los proveedores incorporados muestran la insignia <span class="mk-tag blue" style="font-size:9px;">builtin</span>. Eliminar uno activa una advertencia más estricta. Marcar esta casilla <em>no protege</em> contra la eliminación — solo cambia el nivel de advertencia.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Exportar / Importar</h3>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>↑ Exportar</h4><p>Descarga todos los proveedores como archivo JSON (<code>ai_providers_YYYY-MM-DD.json</code>). Úselo para respaldo antes de cambios o para migrar a otra instancia.</p></div>
+    <div class="cap-card"><h4>↓ Importar</h4><p>Lee un archivo JSON exportado de cualquier instancia. Usa <code>ON CONFLICT … DO UPDATE</code> — los proveedores existentes se actualizan, los nuevos se insertan. No elimina los proveedores ausentes del archivo.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Eliminación de proveedor incorporado:</strong> eliminar un proveedor incorporado (p. ej. Gemini) muestra una advertencia adicional porque todas las Tareas programadas con ese <code>provider_key</code> comenzarán a fallar inmediatamente.</div>
+</section>
+
+<section id="a-backup-es">
+  <h2>Zona de peligro — Copia de seguridad de la base de datos</h2>
+  <p>Crea una copia de seguridad completa de PostgreSQL (esquema + datos) y la guarda como un archivo <code>.sql.gz</code> descargable en el servidor.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Haga clic en "Crear copia de seguridad"</h4><p>Ejecuta <code>pg_dump</code> en el servidor, elimina las instrucciones de propietario/privilegios/extensión para portabilidad, y comprime el resultado.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Encuéntrela en la lista</h4><p>Cada copia de seguridad aparece con nombre de archivo, tamaño y hora de creación, las más recientes primero.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Descargue en cualquier momento</h4><p>Haga clic en <strong>Descargar</strong> para guardar el archivo <code>.sql.gz</code> en su computadora para custodia fuera del servidor.</p></div></div>
+  </div>
+  <div class="callout callout-info"><strong>Consejo:</strong> descargue una copia de seguridad reciente antes de cualquier operación riesgosa — restaurar o borrar la base de datos.</div>
+</section>
+
+<section id="a-restore-es">
+  <h2>Zona de peligro — Restaurar la base de datos</h2>
+  <p>Restaura la base de datos desde una copia de seguridad, <strong>sobrescribiendo todos los datos actuales</strong>. Dos formas de hacerlo:</p>
+  <div class="cap-grid">
+    <div class="cap-card"><h4>Restaurar desde la lista del servidor</h4><p>Haga clic en <strong>Restaurar</strong> junto a cualquier copia de seguridad ya almacenada en el servidor.</p></div>
+    <div class="cap-card"><h4>Subir y restaurar</h4><p>Elija un archivo <code>.sql.gz</code> de su computadora y restaure directamente desde él — el archivo también se guarda en la lista de copias de seguridad del servidor después.</p></div>
+  </div>
+  <div class="callout callout-warn"><strong>Confirmación escrita:</strong> ambas rutas requieren escribir la palabra <code>RESTORE</code> en un diálogo de confirmación antes de continuar — una salvaguarda contra clics accidentales en esta acción irreversible.</div>
+  <p>La restauración se ejecuta dentro de una única transacción de base de datos: si alguna instrucción falla, PostgreSQL revierte automáticamente todos los cambios, por lo que la base de datos nunca queda parcialmente restaurada.</p>
+</section>
+
+<section id="a-wipe-es">
+  <h2>Zona de peligro — Borrar la base de datos</h2>
+  <p>Elimina permanentemente <strong>todas las cuentas de usuario excepto la suya</strong>, junto con todos sus prompts, textos fuente, tareas programadas y claves API. Su propia cuenta de administrador y la configuración de proveedores de IA se conservan.</p>
+  <div class="callout callout-warn"><strong>Doble confirmación:</strong> deben aceptarse dos diálogos de confirmación separados en secuencia antes de ejecutar el borrado. No hay forma de deshacer — siempre cree primero una copia de seguridad reciente.</div>
+</section>
+
+<section id="a-lang-es">
+  <h2>Idioma de la interfaz</h2>
+  <p>El pie de página del panel de administración (barra lateral izquierda, debajo de "Volver a la app") tiene un selector <strong>EN / UK / ES</strong>. Su elección se recuerda en este navegador y se aplica a cada sección, diálogo y esta ventana de ayuda.</p>
+</section>
+
+<section id="a-faq-es">
+  <h2>FAQ</h2>
+  <div class="accordion">
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Puedo deshacer un borrado o restauración de la base de datos? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">No. Ambas acciones son permanentes. Siempre cree y descargue una copia de seguridad de antemano usando "Crear copia de seguridad" en la Zona de peligro.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Qué sucede si elimino un proveedor de IA incorporado? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Cualquier Tarea programada que apunte a ese proveedor comenzará a fallar. El diálogo de confirmación advierte sobre esto antes de la eliminación.</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Puedo cambiar el rol de un usuario sin eliminar su cuenta? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Sí — use el botón Promover / Degradar en la tabla de Usuarios. Cambia instantáneamente entre "usuario" y "administrador".</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">¿Puedo mover un prompt a otro usuario? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Sí — abra el prompt con Ver, cambie el campo "Usuario (correo)" y haga clic en Guardar cambios. O use Copiar para duplicarlo en otra cuenta conservando el original.</div></div>
+  </div>
+</section>
+</div><!-- /es -->
+
+</main>
+</div><!-- .layout -->
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   LANGUAGE SYSTEM
+══════════════════════════════════════════════════════════ */
+var _currentLang = 'en';
+
+function setHelpLang(lang) {
+  if (lang !== 'en' && lang !== 'uk' && lang !== 'es') lang = 'en';
+  _currentLang = lang;
+
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    el.classList.toggle('visible', el.dataset.lang === lang);
+  });
+  document.querySelectorAll('.sidebar nav[data-lang]').forEach(function(el) {
+    el.classList.toggle('visible', el.dataset.lang === lang);
+  });
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.help-lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+  });
+  try { localStorage.setItem('admin_help_lang', lang); } catch(e) {}
+}
+
+window.addEventListener('message', function(e) {
+  if (!e.data) return;
+  if (e.data.type === 'setLang' && e.data.lang) {
+    setHelpLang(e.data.lang);
+    var bar = document.getElementById('helpLangBar');
+    if (bar) bar.style.display = 'none';
+  }
+});
+
+(function() {
+  var urlLang = new URLSearchParams(window.location.search).get('lang');
+  var storedLang = '';
+  try { storedLang = localStorage.getItem('admin_help_lang') || ''; } catch(e) {}
+  var initLang = urlLang || storedLang || 'en';
+  setHelpLang(initLang);
+  try { window.parent.postMessage({ type: 'helpReady' }, '*'); } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════════
+   READ PROGRESS BAR
+══════════════════════════════════════════════════════════ */
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+  var bar = document.getElementById('readProgress');
+  if (bar) bar.style.width = Math.min(pct, 100) + '%';
+}, { passive: true });
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVE NAV LINK
+══════════════════════════════════════════════════════════ */
+var _observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (!e.isIntersecting) return;
+    document.querySelectorAll('nav a').forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
+    });
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('section[id]').forEach(function(s) { _observer.observe(s); });
+
+/* ══════════════════════════════════════════════════════════
+   ACCORDION
+══════════════════════════════════════════════════════════ */
+function toggleAccordion(header) {
+  header.closest('.accordion-item').classList.toggle('open');
+}
+</script>
+</body>
+</html>

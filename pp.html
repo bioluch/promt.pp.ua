@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#132f4c">
+  <meta name="description" content="JS PROMPT — Privacy Policy">
+
+  <title>Privacy Policy — JS PROMPT</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="png/js-promt-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="png/js-promt-16x16.png">
+  <link rel="icon" href="favicon.ico">
+
+  <link rel="preload" href="fonts/Play-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="fonts/Play-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+
+  <!-- App design system — shared with index.html -->
+  <link rel="stylesheet" href="css/index.css">
+
+  <style>
+    /* ── Page layout ── */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pp-wrap {
+      flex: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+      width: 100%;
+    }
+
+    /* ── Back link ── */
+    .pp-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(19,47,76,0.5);
+      transition: all 0.2s;
+    }
+    .pp-back:hover {
+      color: var(--accent-2);
+      border-color: var(--accent);
+      background: rgba(46,90,138,0.4);
+    }
+
+    /* ── Header ── */
+    .pp-header {
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pp-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .pp-updated {
+      display: inline-block;
+      background: rgba(79,195,247,0.1);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .pp-updated strong { color: var(--accent-2); }
+
+    /* ── Card wrapper for legal content ── */
+    .legal-card {
+      background: linear-gradient(145deg, rgba(19,47,76,0.7), rgba(10,25,41,0.8));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    /* ── Typography inside legal card ── */
+    .legal-card h2 {
+      font-size: 18px;
+      color: var(--accent-2);
+      font-weight: 700;
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .legal-card h2:first-child { margin-top: 0; }
+
+    .legal-card h3 {
+      font-size: 15px;
+      color: var(--accent);
+      font-weight: 700;
+      margin: 20px 0 8px;
+    }
+
+    .legal-card h4 {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 700;
+      margin: 16px 0 8px;
+    }
+
+    .legal-card p {
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.75;
+      margin: 0 0 14px;
+    }
+
+    .legal-card ul {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .legal-card li {
+      position: relative;
+      padding-left: 18px;
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .legal-card li::before {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 0.62em;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .legal-card strong { color: var(--text); font-weight: 700; }
+    .legal-card em     { color: var(--text-dim); font-style: italic; }
+    .legal-card sup    { color: var(--text-dim); font-size: 0.7em; }
+
+    .legal-card a {
+      color: var(--accent-2);
+      text-decoration: underline;
+      text-decoration-color: var(--border);
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+    }
+    .legal-card a:hover { color: var(--accent); }
+
+    /* ── Table of contents ── */
+    .legal-toc {
+      background: rgba(6,17,31,0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 28px;
+    }
+    .legal-toc > p {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .legal-toc ol {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin: 0;
+      padding-left: 20px;
+      list-style: decimal;
+    }
+    .legal-toc li {
+      color: var(--text-dim);
+      font-size: 13px;
+      padding-left: 0;
+    }
+    .legal-toc li::before { content: none; }
+    .legal-toc a { color: var(--text-dim); }
+    .legal-toc a:hover { color: var(--accent-2); }
+    /* ── TOC 2-col on wider screens ── */
+    @media (min-width: 600px) {
+      .legal-toc ol { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Tables ── */
+    .legal-card table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 18px;
+      font-size: 13px;
+    }
+    .legal-card th,
+    .legal-card td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .legal-card th {
+      color: var(--text);
+      font-weight: 700;
+      border-bottom: 1px solid rgba(79,195,247,0.4);
+      background: rgba(19,47,76,0.4);
+    }
+    .legal-card tr:last-child td { border-bottom: none; }
+
+    /* ── Notice / warning box ── */
+    .legal-notice {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: rgba(255,183,77,0.08);
+      border: 1px solid rgba(255,183,77,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 22px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+    .legal-notice strong { color: var(--warn); }
+    .legal-notice .icon { flex-shrink: 0; font-size: 16px; line-height: 1; }
+
+    /* ── Fill-in placeholder ── */
+    .fill-in {
+      display: inline-block;
+      color: var(--warn);
+      background: rgba(255,183,77,0.1);
+      border: 1px dashed rgba(255,183,77,0.4);
+      border-radius: 4px;
+      padding: 0 4px;
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    /* ── Footer ── */
+    #appFooter {
+      border-top: 1px solid var(--border);
+      background: rgba(10,25,41,0.7);
+      backdrop-filter: blur(12px);
+      padding: 18px 24px;
+    }
+    .footer-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+
+    /* ════════════════════════════════════════════════════════════
+       RESPONSIVE — XS≤380 / SM≤600 / MD≤900 / LG≤1400 / XL>1400
+       ════════════════════════════════════════════════════════════ */
+
+    /* ── XL: wide monitors > 1400px ── */
+    @media (min-width: 1401px) {
+      .pp-wrap {
+        max-width: 1020px;
+        padding: 48px 40px 80px;
+      }
+      .legal-card {
+        padding: 44px 48px;
+        border-radius: 20px;
+      }
+      .pp-header h1     { font-size: 36px; }
+      .legal-card h2    { font-size: 20px; margin-top: 36px; }
+      .legal-card h3    { font-size: 16px; }
+      .legal-card p,
+      .legal-card li    { font-size: 15px; line-height: 1.8; }
+      .legal-toc ol     { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .legal-toc li     { font-size: 14px; }
+      .legal-card table { font-size: 14px; }
+      .legal-card th,
+      .legal-card td    { padding: 12px 16px; }
+      .legal-notice     { padding: 18px 22px; font-size: 14px; }
+    }
+
+    /* ── LG: standard desktop 901–1400px (base styles cover this) ── */
+
+    /* ── MD: tablet 601–900px ── */
+    @media (max-width: 900px) {
+      .pp-wrap {
+        padding: 24px 20px 56px;
+      }
+      .legal-card {
+        padding: 28px 24px;
+        border-radius: 14px;
+      }
+      .pp-header h1   { font-size: 24px; }
+      .legal-card h2  { font-size: 17px; margin-top: 28px; }
+      .legal-toc      { padding: 16px 18px; }
+      .legal-toc li   { font-size: 12px; }
+      .footer-inner   { gap: 12px; }
+    }
+
+    /* ── SM: phones ≤ 600px ── */
+    @media (max-width: 600px) {
+      /* Layout */
+      .pp-wrap {
+        padding: 16px 14px 48px;
+      }
+      .legal-card {
+        padding: 18px 14px;
+        border-radius: 12px;
+      }
+
+      /* Back link */
+      .pp-back {
+        font-size: 12px;
+        padding: 7px 12px;
+        margin-bottom: 18px;
+      }
+
+      /* Header */
+      .pp-header    { margin-bottom: 20px; padding-bottom: 16px; }
+      .pp-header h1 { font-size: 20px; margin-bottom: 10px; }
+      .pp-updated   { font-size: 11px; padding: 3px 10px; }
+
+      /* TOC */
+      .legal-toc {
+        padding: 14px 14px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .legal-toc > p  { font-size: 11px; margin-bottom: 8px; }
+      .legal-toc ol   {
+        grid-template-columns: 1fr; /* single column on phones */
+        gap: 3px;
+        padding-left: 16px;
+      }
+      .legal-toc li   { font-size: 12px; }
+
+      /* Headings */
+      .legal-card h2 { font-size: 15px; margin-top: 24px; margin-bottom: 10px; padding-bottom: 6px; }
+      .legal-card h3 { font-size: 13px; margin-top: 16px; }
+      .legal-card h4 { font-size: 13px; margin-top: 12px; }
+
+      /* Body text */
+      .legal-card p,
+      .legal-card li  { font-size: 13px; line-height: 1.7; }
+      .legal-card ul  { gap: 6px; margin-bottom: 14px; }
+
+      /* Tables — horizontal scroll */
+      .legal-card table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+      }
+      .legal-card th,
+      .legal-card td  { padding: 8px 10px; }
+
+      /* Notice box */
+      .legal-notice {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 14px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      .legal-notice .icon { font-size: 18px; }
+
+      /* Footer */
+      #appFooter    { padding: 14px 14px; }
+      .footer-inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+      }
+      .footer-inner .pp-back { margin-bottom: 0; }
+    }
+
+    /* ── XS: very small phones ≤ 380px ── */
+    @media (max-width: 380px) {
+      .pp-wrap        { padding: 12px 10px 40px; }
+      .legal-card     { padding: 14px 10px; }
+      .pp-header h1   { font-size: 18px; }
+      .legal-card h2  { font-size: 14px; }
+      .legal-card p,
+      .legal-card li  { font-size: 12px; }
+      .legal-toc li   { font-size: 11px; }
+      .legal-card table { font-size: 11px; }
+      .legal-card th,
+      .legal-card td  { padding: 6px 8px; }
+    }
+
+    /* ── Landscape mobile (wide + short) ── */
+    @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+      .pp-wrap {
+        padding: 12px 20px 40px;
+      }
+      .pp-header { margin-bottom: 16px; }
+      .pp-header h1 { font-size: 20px; }
+      .legal-card   { padding: 18px 22px; }
+      .legal-card h2 { font-size: 15px; margin-top: 20px; }
+      .legal-toc    { padding: 12px 16px; margin-bottom: 16px; }
+      .legal-toc ol { grid-template-columns: 1fr 1fr; } /* restore 2-col in landscape */
+    }
+
+    /* ── Touch devices — larger tap targets for links ── */
+    @media (hover: none) and (pointer: coarse) {
+      .pp-back    { padding: 10px 16px; min-height: 44px; }
+      .legal-toc a { display: inline-block; padding: 3px 0; }
+      .legal-card a { padding: 1px 0; }
+    }
+
+    /* ── Print ── */
+    @media print {
+      header, #appFooter, .pp-back, .legal-toc { display: none !important; }
+      .pp-wrap        { max-width: 100%; padding: 0; }
+      .legal-card     {
+        background: white;
+        color: black;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        padding: 0;
+      }
+      .legal-card h2  { color: #1a1a1a; border-bottom: 1px solid #ccc; }
+      .legal-card h3  { color: #333; }
+      .legal-card p,
+      .legal-card li  { color: #222; font-size: 11pt; }
+      .legal-card th  { background: #f0f0f0; color: #000; }
+      .legal-card td  { color: #222; }
+      .legal-notice   { background: #fff8e1; border: 1px solid #f0c000; }
+      .legal-card a   { color: #1565c0; }
+      .pp-header h1   { -webkit-background-clip: unset; background-clip: unset;
+                        color: #1a1a1a; background: none; }
+    }
+  </style>
+    <link rel="stylesheet" id="silktide-consent-manager-css" href="cookie-banner/npkut-silktide-consent-manager.css">
+  <script src="cookie-banner/silktide-consent-manager.js"></script>
+    <script>
+        silktideCookieBannerManager.updateCookieBannerConfig({
+          background: {
+            showBackground: true
+          },
+          cookieIcon: {
+            position: "bottomLeft"
+          },
+          cookieTypes: [
+            {
+              id: "necessary",
+              name: "Necessary",
+              description: "<p>These cookies are necessary for the website to function properly and cannot be switched off. They help with things like logging in and setting your privacy preferences.</p>",
+              required: true,
+              onAccept: function() {
+                console.log('Add logic for the required Necessary here');
+              }
+            },
+            {
+              id: "analytics",
+              name: "Analytics",
+              description: "<p>These cookies help us improve the site by tracking which pages are most popular and how visitors move around the site.</p>",
+              defaultValue: true,
+              onAccept: function() {
+                // Використовуємо dataLayer, якщо gtag ще не завантажений
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    analytics_storage: 'granted',
+                  });
+                }
+                // Завжди пушимо подію в dataLayer
+                if (typeof dataLayer !== 'undefined') {
+                  dataLayer.push({
+                    'event': 'consent_accepted_analytics',
+                  });
+                }
+              },
+              onReject: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    analytics_storage: 'denied',
+                  });
+                }
+              }
+            },
+            {
+              id: "advertising",
+              name: "Advertising",
+              description: "<p>These cookies provide extra features and personalization to improve your experience. They may be set by us or by partners whose services we use.</p>",
+              onAccept: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    ad_storage: 'granted',
+                    ad_user_data: 'granted',
+                    ad_personalization: 'granted',
+                  });
+                }
+                if (typeof dataLayer !== 'undefined') {
+                  dataLayer.push({
+                    'event': 'consent_accepted_advertising',
+                  });
+                }
+              },
+              onReject: function() {
+                if (typeof gtag !== 'undefined') {
+                  gtag('consent', 'update', {
+                    ad_storage: 'denied',
+                    ad_user_data: 'denied',
+                    ad_personalization: 'denied',
+                  });
+                }
+              }
+            }
+          ],
+          text: {
+            banner: {
+              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://idea4rs.pp.ua/cookie-policy\" target=\"_blank\">Cookie Policy.</a></p>",
+              acceptAllButtonText: "Accept all",
+              acceptAllButtonAccessibleLabel: "Accept all cookies",
+              rejectNonEssentialButtonText: "Reject non-essential",
+              rejectNonEssentialButtonAccessibleLabel: "Reject non-essential",
+              preferencesButtonText: "Preferences",
+              preferencesButtonAccessibleLabel: "Toggle preferences"
+            },
+            preferences: {
+              title: "Customize your cookie preferences",
+              description: "<p>We respect your right to privacy. You can choose not to allow some types of cookies. Your cookie preferences will apply across our website.</p>",
+              creditLinkText: "Get this banner for free",
+              creditLinkAccessibleLabel: "Get this banner for free"
+            }
+          },
+          position: {
+            banner: "center"
+          }
+        });
+    </script>
+</head>
+<body>
+
+<div class="pp-wrap">
+
+  <a href="index.html" class="pp-back">&#8592; Back to JS PROMPT</a>
+
+  <div class="pp-header">
+    <h1>Privacy Policy</h1>
+    <span class="pp-updated">Last updated: <strong>June 19, 2026</strong></span>
+  </div>
+
+  <main class="legal-card">
+<div class="legal-toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#who-we-are">1. Who We Are</a></li>
+          <li><a href="#definitions">2. Interpretation and Definitions</a></li>
+          <li><a href="#data-we-collect">3. Data We Collect</a></li>
+          <li><a href="#ai-processing">4. How We Use AI to Process Your Data</a></li>
+          <li><a href="#legal-basis">5. Legal Basis for Processing (GDPR)</a></li>
+          <li><a href="#how-we-use">6. How We Use Your Data</a></li>
+          <li><a href="#who-we-share">7. Who We Share Your Data With</a></li>
+          <li><a href="#transfers">8. International Data Transfers</a></li>
+          <li><a href="#retention">9. Data Retention</a></li>
+          <li><a href="#security">10. Data Security &amp; Breach Notification</a></li>
+          <li><a href="#children">11. Children's Privacy</a></li>
+          <li><a href="#eu-rights">12. Your Rights (EU/EEA, UK &amp; Switzerland)</a></li>
+          <li><a href="#us-rights">13. Your Rights (United States)</a></li>
+          <li><a href="#other-disclosures">14. Other Disclosures</a></li>
+          <li><a href="#links">15. Links to Other Websites</a></li>
+          <li><a href="#changes">16. Changes to this Policy</a></li>
+          <li><a href="#contact">17. Contact Us</a></li>
+        </ol>
+      </div>
+
+      <p>This Privacy Policy describes how SC KOLIBRI LLC ("the Company", "We", "Us" or "Our") collects, uses, discloses, and protects Your information when You use JS PROMPT (the "Service"), and explains the rights available to You under the EU General Data Protection Regulation (GDPR), the UK GDPR, applicable U.S. federal and state privacy laws, and other data protection laws that may apply to You.</p>
+      <p>We process Your Personal Data only as described in this Policy. By using the Service You acknowledge that You have read this Policy; where the law requires Your consent (for example, for non-essential cookies or for processing special category data), We will ask for it separately before processing begins. If You do not agree with this Policy, please do not use Our Service.</p>
+
+      <h2 id="who-we-are">1. Who We Are</h2>
+      <p>For the purposes of the GDPR and other applicable data protection laws, the data controller responsible for Your Personal Data is:</p>
+      <ul>
+        <li><strong>Legal name:</strong> SC KOLIBRI LLC</li>
+        <li><strong>Registered address:</strong> 61001, Ukraine, Kharkiv, prov. Kinnyi 8a</li>
+        <li><strong>Business registration / tax number:</strong> 44086930 (EDRPOU)</li>
+        <li><strong>Contact email:</strong> <a href="mailto:bioluch@gmail.com">bioluch@gmail.com</a></li>
+      </ul>
+      <p>We are established in Ukraine, which the European Commission has not recognized as providing an adequate level of data protection. Where We process the Personal Data of individuals in the EU/EEA, UK, or Switzerland, We do so subject to the safeguards described in Section 8 (International Data Transfers).</p>
+
+      <h3>Our EU Representative</h3>
+      <p>Because We offer the Service to individuals in the EU/EEA and monitor their behaviour within the EU/EEA (e.g. via analytics cookies), Article 27 GDPR requires Us to designate a representative in the Union. Our representative is:</p>
+      <p>ONKOCET Ltd., 47 Pribisova str., 84105 Bratislava, Slovakia. Tel.: +421 (2) 44 64 09 77, email: <a href="mailto:onkocet@gmail.com">onkocet@gmail.com</a></p>
+
+      <h3>Data Protection Officer</h3>
+      <p>We have assessed that We are not required to appoint a Data Protection Officer under Article 37 GDPR. Privacy-related inquiries can be directed to the contact details in Section 17.</p>
+
+      <h2 id="definitions">2. Interpretation and Definitions</h2>
+
+      <h3>Interpretation</h3>
+      <p>Words with an initial capital letter have the meanings defined in this section. These definitions apply whether the terms appear in the singular or the plural.</p>
+
+      <h3>Definitions</h3>
+      <ul>
+        <li><strong>Company</strong> (referred to as "the Company", "We", "Us" or "Our") refers to SC KOLIBRI LLC, Ukraine, as identified in Section 1.</li>
+        <li><strong>Controller</strong> means the entity that determines the purposes and means of processing Personal Data — in this Policy, the Company.</li>
+        <li><strong>Cookies</strong> are small files placed on Your device by a website, which may record details of Your browsing activity on that site, among other uses.</li>
+        <li><strong>Country</strong> refers to Ukraine, unless otherwise indicated.</li>
+        <li><strong>Device</strong> means any device that can access the Service, such as a computer, smartphone, or tablet.</li>
+        <li><strong>Personal Data</strong> means any information relating to an identified or identifiable natural person.</li>
+        <li><strong>Special Category Data</strong> (GDPR Art. 9) or <strong>Sensitive Personal Information</strong> (under U.S. state laws) means data revealing racial or ethnic origin, health information, genetic or biometric data, or similar categories that receive heightened protection under applicable law.</li>
+        <li><strong>Processor</strong> / <strong>Service Provider</strong> means a natural or legal person who processes Personal Data on the Company's behalf, including the sub-processors listed in Section 7.</li>
+        <li><strong>Service</strong> refers to the JS PROMPT website and application.</li>
+        <li><strong>Supervisory Authority</strong> means an independent public authority responsible for monitoring application of data protection law, such as Your national Data Protection Authority in the EU/EEA.</li>
+        <li><strong>Usage Data</strong> means data collected automatically through use of the Service, or from the Service's own infrastructure (for example, page visit duration).</li>
+        <li><strong>Website</strong> refers to JS PROMPT, accessible from <a href="#" target="_blank">#</a>.</li>
+        <li><strong>You</strong> means the individual accessing or using the Service, or the entity on whose behalf such individual is acting.</li>
+      </ul>
+
+      <h2 id="data-we-collect">3. Data We Collect</h2>
+
+      <h3>Personal Data You Provide</h3>
+      <p>When You register or use the Service, We may ask You to provide:</p>
+      <ul>
+        <li>Email address</li>
+        <li>First and last name</li>
+        <li>Phone number (if You contact support by phone)</li>
+        <li>Billing details, if You purchase credits or a subscription in the future via a third-party payment processor (not currently in use — see Section 7)</li>
+      </ul>
+
+      <h3>Content You Upload (Test Results &amp; Documents)</h3>
+      <p>The core function of the Service is to analyze test results and documents that You upload or photograph, using AI/OCR technology. This content may include:</p>
+      <ul>
+        <li>Images, scans, or photographs of documents</li>
+        <li>Text extracted from those documents</li>
+        <li>Any personal information contained within the uploaded material itself (for example, a name printed on a test report)</li>
+      </ul>
+      <p>The documents You upload may contain health, medical, or biometric information (for example, laboratory test results or diagnostic reports), which is Special Category Data under Art. 9 GDPR. We process such data only with Your explicit, separate consent, obtained before upload. <strong>We do not store the files You upload, and We do not store the files generated as output by the Service</strong> — both are processed transiently and discarded once Your result has been returned to You, unless You choose to save the result to Your account history (see Section 9).</p>
+
+      <h3>Usage Data</h3>
+      <p>Usage Data is collected automatically and may include Your device's IP address, browser type and version, the pages of the Service You visit, the time and date of Your visit, time spent on those pages, unique device identifiers, operating system, and other diagnostic data.</p>
+
+      <h3>Tracking Technologies and Cookies</h3>
+      <p>We use Cookies and similar technologies (tags, pixels, local storage) to operate, secure, and improve the Service, and — where You consent — for analytics and advertising purposes. In line with the GDPR and the ePrivacy Directive, We request Your <strong>active, opt-in consent</strong> before placing any non-essential Cookies. Your preferences are managed through our Consent Management Platform, and You can change or withdraw them at any time via the cookie icon on the Service. We also honour the <strong>Global Privacy Control (GPC)</strong> signal as a valid opt-out request where applicable law requires it.</p>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Purpose</th><th>Requires consent?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Necessary</td><td>Core functionality, security, session management, remembering Your cookie choices</td><td>No — essential to the Service</td></tr>
+          <tr><td>Analytics</td><td>Understand how the Service is used (e.g. Google Tag Manager / Analytics) so We can improve it</td><td>Yes</td></tr>
+          <tr><td>Advertising</td><td>Personalize content and, where enabled, measure advertising</td><td>Yes</td></tr>
+        </tbody>
+      </table>
+      <p>For more detail, see Our <a href="#/cookie-policy" target="_blank">Cookie Policy</a>.</p>
+
+      <h2 id="ai-processing">4. How We Use AI to Process Your Data</h2>
+      <p>The Service uses artificial intelligence and machine learning, including third-party AI model providers, to extract text from Your uploaded documents (OCR) and to generate the analysis You request. This section explains what that means for Your data.</p>
+      <ul>
+        <li><strong>Third-party AI providers:</strong> Our AI service providers are DeepSeek (Hangzhou DeepSeek Artificial Intelligence Co., Ltd.) and Google LLC, which process data in accordance with their own corporate/API data-processing terms. Content You submit is sent to these providers solely to generate Your requested output.</li>
+        <li><strong>Model training:</strong> We work with Our AI providers in accordance with their respective Terms of Use, which govern whether and how submitted content may be used.</li>
+        <li><strong>Automated decision-making:</strong> The analysis the Service generates is intended to inform You, not to make decisions about You with legal or similarly significant effect without human involvement. If the result of Our software is ever used to automatically approve or reject something of importance to You without human verification, this triggers Your rights under Art. 22 GDPR. In case of disputes, We will require formal confirmation that the software's results have been reviewed and approved by a suitably qualified person.</li>
+        <li><strong>Accuracy:</strong> AI-generated analysis may contain errors. We encourage You to independently verify any output that informs an important decision.</li>
+      </ul>
+
+      <h2 id="legal-basis">5. Legal Basis for Processing (EU/EEA — GDPR)</h2>
+      <p>Under the GDPR, We only process Your Personal Data when We have a valid legal basis:</p>
+      <ul>
+        <li><strong>Contract performance:</strong> processing necessary to provide the Service You requested (e.g. account management, running Your analysis).</li>
+        <li><strong>Consent:</strong> for non-essential cookies, marketing communications, and any processing of Special Category Data — You may withdraw consent at any time without affecting the lawfulness of processing carried out before withdrawal.</li>
+        <li><strong>Legitimate interests:</strong> for fraud prevention, network and information security, and service improvement, balanced against Your rights and freedoms. You may object to processing based on this basis at any time (Section 12).</li>
+        <li><strong>Legal obligation:</strong> processing necessary to comply with a legal requirement (e.g. tax and accounting records, responding to lawful authority requests).</li>
+        <li><strong>Vital interests:</strong> in the rare case processing is necessary to protect someone's life.</li>
+      </ul>
+
+      <h2 id="how-we-use">6. How We Use Your Data</h2>
+      <p>We use Personal Data for the following purposes:</p>
+      <ul>
+        <li><strong>To provide and maintain the Service</strong> (Legal basis: Contract Performance)</li>
+        <li><strong>To process Your uploaded test results and return AI-generated analysis</strong> (Legal basis: Contract Performance; Consent, where Special Category Data is involved)</li>
+        <li><strong>To manage Your account</strong> (Legal basis: Contract Performance)</li>
+        <li><strong>To contact You</strong> about service-related updates (Legal basis: Contract Performance or Legitimate Interest)</li>
+        <li><strong>To send You marketing communications</strong>, where permitted, with an easy opt-out in every message (Legal basis: Consent or Legitimate Interest)</li>
+        <li><strong>To respond to Your requests and support inquiries</strong> (Legal basis: Legitimate Interest)</li>
+        <li><strong>To monitor, debug, and improve the Service</strong>, including model and product quality (Legal basis: Legitimate Interest)</li>
+        <li><strong>To detect, prevent, and address fraud, abuse, or security incidents</strong> (Legal basis: Legitimate Interest or Legal Obligation)</li>
+      </ul>
+
+      <h2 id="who-we-share">7. Who We Share Your Data With</h2>
+      <p>We do not sell Your Personal Data. We share it only with the categories of recipients below, each bound by a data processing agreement where required:</p>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Purpose</th><th>Examples</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cloud hosting &amp; infrastructure</td><td>Hosting the Service and storing Your data</td><td>Contabo GmbH</td></tr>
+          <tr><td>AI / OCR processing</td><td>Generating the analysis You request</td><td>Hangzhou DeepSeek Artificial Intelligence Co., Ltd.; Google LLC</td></tr>
+          <tr><td>Analytics</td><td>Understanding Service usage (only with Your consent)</td><td>Google Tag Manager / Google Analytics</td></tr>
+          <tr><td>Cookie consent management</td><td>Recording and honouring Your cookie choices</td><td>Silktide Consent Manager</td></tr>
+          <tr><td>Payments</td><td>Processing purchases of credits or subscriptions</td><td>Not applicable — the Service does not currently use a third-party payment processor</td></tr>
+          <tr><td>Email / communications</td><td>Sending account and support emails</td><td>Google LLC</td></tr>
+          <tr><td>Professional advisors</td><td>Legal, accounting, and audit purposes</td><td>As needed, under confidentiality obligations</td></tr>
+          <tr><td>Authorities</td><td>Where required by law (see Section 14)</td><td>Courts, regulators, law enforcement</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="transfers">8. International Data Transfers</h2>
+      <p>We are based in Ukraine. Because Ukraine does not currently benefit from a European Commission adequacy decision, when You are located in the EU/EEA, UK, or Switzerland, We rely on the <strong>Standard Contractual Clauses (SCCs)</strong> approved by the European Commission (and, where relevant, the UK International Data Transfer Addendum) as the legal mechanism authorizing the transfer of Your Personal Data to Us in Ukraine.</p>
+      <p>Our sub-processors are located outside Ukraine, and Your data may be transferred onward to them as follows:</p>
+      <ul>
+        <li><strong>Google LLC (United States)</strong> — used for AI/OCR processing and email services. We rely on the <strong>EU-U.S. Data Privacy Framework (DPF)</strong> where Google is self-certified for the relevant service, with Standard Contractual Clauses as a fallback, supported by a Transfer Impact Assessment.</li>
+        <li><strong>Hangzhou DeepSeek Artificial Intelligence Co., Ltd. (China)</strong> — used for AI processing. China does not benefit from an EU adequacy decision, so We rely on <strong>Standard Contractual Clauses</strong> together with a Transfer Impact Assessment evaluating Chinese law and practice, as the transfer mechanism for this provider.</li>
+        <li><strong>Contabo GmbH (Germany)</strong> — our hosting provider is based within the EU/EEA, so no additional international transfer mechanism is required for hosting.</li>
+      </ul>
+      <p>You may request a copy of the relevant safeguard (e.g. the SCCs We have executed with a given recipient) by contacting Us using the details in Section 17.</p>
+
+      <h2 id="retention">9. Data Retention</h2>
+      <p>We keep Personal Data only as long as necessary for the purposes set out in this Policy, applying the following defaults unless a longer period is required by law:</p>
+      <ul>
+        <li><strong>Account data:</strong> for as long as Your account is active, plus 10 days after closure to allow for reactivation and to comply with legal obligations.</li>
+        <li><strong>Uploaded documents and test results:</strong> not stored after processing. Files You upload and the results generated from them are automatically deleted once Your result has been returned, unless You choose to save the result to Your account history.</li>
+        <li><strong>Usage / analytics data:</strong> up to 1 month.</li>
+        <li><strong>Billing records:</strong> not applicable — the Service does not currently process or store billing records, as no payment processor is in use.</li>
+        <li><strong>Support correspondence:</strong> 1 year from the last interaction.</li>
+        <li><strong>Backups:</strong> We do not maintain backup retention beyond the periods stated above.</li>
+      </ul>
+      <p>Where We can no longer identify You, retained data is treated as anonymized and these limits no longer apply.</p>
+
+      <h2 id="security">10. Data Security &amp; Breach Notification</h2>
+      <p>We apply technical and organizational measures appropriate to the risk, including encryption of data in transit, access controls limiting staff access on a need-to-know basis, and regular review of our processors' security practices. No method of transmission or storage is 100% secure, and We cannot guarantee absolute security.</p>
+      <p>If a breach occurs that is likely to result in a risk to Your rights and freedoms, We will notify the competent supervisory authority within 72 hours of becoming aware of it, as required by Art. 33 GDPR, and will notify affected individuals without undue delay where the breach is likely to result in a high risk, in line with Art. 34 GDPR and applicable U.S. state breach-notification laws.</p>
+
+      <h2 id="children">11. Children's Privacy</h2>
+      <p>The Service is not directed at children and We do not knowingly collect Personal Data from children under 13 (the threshold under the U.S. Children's Online Privacy Protection Act, COPPA) or under the applicable age of digital consent in Your country (16 in the EU by default, though individual EU member states may set it as low as 13; equivalent thresholds apply under UK and various U.S. state children's privacy laws).</p>
+      <p>If You are a parent or guardian and believe Your child has provided Us with Personal Data without your consent, please contact Us using the details in Section 17 and We will take steps to delete it. If We become aware that We have collected a child's Personal Data without the required consent, We will delete it promptly.</p>
+
+      <h2 id="eu-rights">12. Your Rights (EU/EEA, UK &amp; Switzerland — GDPR)</h2>
+      <p>Subject to conditions and exceptions under applicable law, You have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — obtain a copy of the Personal Data We hold about You.</li>
+        <li><strong>Rectification</strong> — have inaccurate or incomplete data corrected.</li>
+        <li><strong>Erasure</strong> ("right to be forgotten") — have Your data deleted, under certain conditions.</li>
+        <li><strong>Restriction of processing</strong> — limit how We use Your data, under certain conditions.</li>
+        <li><strong>Object to processing</strong> — particularly processing based on legitimate interests or for direct marketing.</li>
+        <li><strong>Data portability</strong> — receive Your data in a structured, machine-readable format, or have it transmitted to another controller.</li>
+        <li><strong>Withdraw consent</strong> at any time, without affecting the lawfulness of prior processing.</li>
+        <li><strong>Not be subject to a decision based solely on automated processing</strong>, including profiling, that produces legal or similarly significant effects (Art. 22 GDPR) — see Section 4.</li>
+        <li><strong>Lodge a complaint with a supervisory authority</strong> — in particular in the EU/EEA member state of Your habitual residence, place of work, or the place of the alleged infringement. You may also contact the Ukrainian Parliament Commissioner for Human Rights, or Our EU representative listed in Section 1.</li>
+      </ul>
+      <p>Providing certain Personal Data (e.g. an email address to create an account) is necessary to use parts of the Service; where data is required to fulfil a contract, We will tell You at the point of collection and explain the consequence if You choose not to provide it.</p>
+      <p>To exercise any of these rights, contact Us using the details in Section 17. We will respond within one month, extendable by two further months for complex requests, as permitted under Art. 12 GDPR.</p>
+
+      <h2 id="us-rights">13. Your Rights (United States)</h2>
+      <p>More than twenty U.S. states — including California, Colorado, Connecticut, Virginia, Utah, Texas, Oregon, Montana, Delaware, Iowa, Nebraska, New Hampshire, New Jersey, Tennessee, Maryland, Minnesota, Indiana, Kentucky, and Rhode Island — now have comprehensive consumer privacy laws. Where these laws apply to You, You generally have the right to:</p>
+      <ul>
+        <li><strong>Confirm &amp; access</strong> the Personal Data We hold about You.</li>
+        <li><strong>Correct</strong> inaccurate Personal Data.</li>
+        <li><strong>Delete</strong> Personal Data We have collected about You.</li>
+        <li><strong>Data portability</strong> — receive Your data in a portable format.</li>
+        <li><strong>Opt out</strong> of the sale of Personal Data, targeted advertising, and profiling in furtherance of decisions producing legal or similarly significant effects.</li>
+        <li><strong>Non-discrimination</strong> for exercising any of these rights.</li>
+        <li><strong>Appeal</strong> a denied request — contact Us using the details in Section 17 to request an appeal; if we deny it, several states (e.g. Colorado, Virginia, Connecticut) entitle You to subsequently contact Your state Attorney General.</li>
+      </ul>
+      <p>We honour the <strong>Global Privacy Control (GPC)</strong> as a valid opt-out preference signal where required by applicable state law.</p>
+
+      <h3>California (CCPA/CPRA)</h3>
+      <ul>
+        <li><strong>Right to know &amp; access:</strong> including categories collected, sources, purposes, and recipients, covering the 12 months preceding Your request (and, on request, data collected since January 1, 2022).</li>
+        <li><strong>Right to delete</strong> and <strong>right to correct</strong> Your Personal Information.</li>
+        <li><strong>Right to opt out of "sale" or "sharing"</strong> (including cross-context behavioural advertising) of Your Personal Information.</li>
+        <li><strong>Right to limit use of Sensitive Personal Information</strong> to what is necessary to provide the Service.</li>
+        <li><strong>Right to non-discrimination</strong> for exercising any CCPA/CPRA right.</li>
+      </ul>
+      <p>You may exercise Your opt-out right by clicking the button below, which opens Our consent management panel:</p>
+      <p><em>JS PROMPT does not use cookies or advertising — this clause is not applicable.</em></p>
+
+      <h3>Verifying and Submitting Requests</h3>
+      <p>To protect Your data, We will verify Your identity before fulfilling access, correction, deletion, or portability requests, using information You have already provided to Us. You may designate an authorized agent to make a request on Your behalf where permitted by Your state's law; We may require proof of the agent's authority and may still need to verify Your identity directly.</p>
+
+      <h2 id="other-disclosures">14. Other Disclosures</h2>
+
+      <h3>Business Transactions</h3>
+      <p>If the Company is involved in a merger, acquisition, or asset sale, Your Personal Data may be transferred. We will provide notice before Your Personal Data becomes subject to a different privacy policy.</p>
+
+      <h3>Law Enforcement &amp; Legal Requirements</h3>
+      <p>We may disclose Your Personal Data where required by law or in response to valid requests by public authorities, or where We believe in good faith that disclosure is necessary to:</p>
+      <ul>
+        <li>Comply with a legal obligation</li>
+        <li>Protect and defend Our rights or property</li>
+        <li>Prevent or investigate possible wrongdoing in connection with the Service</li>
+        <li>Protect the personal safety of Users or the public</li>
+        <li>Protect against legal liability</li>
+      </ul>
+
+      <h2 id="links">15. Links to Other Websites</h2>
+      <p>The Service may contain links to third-party websites We do not operate. We encourage You to review the privacy policy of every site You visit; We are not responsible for the content or privacy practices of third-party sites.</p>
+
+      <h2 id="changes">16. Changes to this Privacy Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will post the revised version on this page and update the "Last updated" date above. Where changes are material, We will provide additional notice — for example by email or a prominent notice within the Service — before the change takes effect. We encourage You to review this Policy periodically.</p>
+
+      <h2 id="contact">17. Contact Us</h2>
+      <p>If You have questions about this Privacy Policy, or wish to exercise any of the rights described above, You can contact Us:</p>
+      <ul>
+        <li><strong>By email:</strong> <a href="mailto:bioluch@gmail.com">bioluch@gmail.com</a></li>
+        <li><strong>Data Protection Officer / privacy contact:</strong> please mark Your message "GDPR" or "Privacy Request" in the subject line so it reaches the right person promptly.</li>
+        <li><strong>EU Representative:</strong> see Section 1</li>
+      </ul>
+  </main>
+
+</div>
+
+<footer id="appFooter">
+  <div class="footer-inner">
+    <span style="color:var(--text-dim);font-size:13px;">
+      &copy; 2026 JS PROMPT. All rights reserved.
+    </span>
+    <a href="index.html" class="pp-back" style="margin-bottom:0;">&#8592; Back to App</a>
+  </div>
+</footer>
+
+</body>
+</html>
