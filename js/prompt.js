@@ -653,13 +653,16 @@ function initPromptPanel() {
 
     // No API key → still allow generation with the local engine, after an
     // (optionally dismissible) notice explaining how to add a key.
+    // Only relevant when the DeepSeek engine is selected — users who picked the
+    // local engine deliberately proceed without the notice.
     let forceLocal = false;
-    if (typeof DeepSeek === 'undefined' || !DeepSeek.hasKey()) {
+    const wantsAi = typeof DeepSeek !== 'undefined' && DeepSeek.getActiveEngine() !== 'local';
+    if (wantsAi && !DeepSeek.hasKey()) {
       if (!noKeyNoticeDismissed()) {
         const choice = await appNoKeyNotice();
         if (choice === 'add')    { openApiKeys(); return; }
         if (choice === 'cancel') return;
-      } else if (typeof DeepSeek !== 'undefined' && DeepSeek.getActiveEngine() !== 'local') {
+      } else {
         toast(window.Lang ? Lang.t('nokey.toastLocal') : 'No API key — using the local engine', '');
       }
       forceLocal = true;

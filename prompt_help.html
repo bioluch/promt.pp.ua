@@ -631,7 +631,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="steps">
     <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Get your key</h4><p>Visit <strong>platform.deepseek.com</strong> → API Keys → Create. The key starts with <code>sk-</code>.</p></div></div>
     <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Open the key dialog</h4><p>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. This reveals a hidden API Key button in the header and immediately opens the key entry dialog.</p></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Paste and save</h4><p>Paste your key into the input field and click <strong>Save</strong>. The key is stored in your browser's <code>localStorage</code> only — it is never sent to our servers and never shown after saving (the field shows a placeholder instead).</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Paste and save</h4><p>Paste your key into the input field and click <strong>Save</strong>. The key is stored in your browser's <code>localStorage</code>; if you are signed in, it is also saved to your account so scheduled jobs can use it. Requests made with your personal key go directly from your browser to DeepSeek. The key is never shown after saving (the field shows a placeholder instead).</p></div></div>
     <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Select DeepSeek engine</h4><p>In the Generation Engine selector on the main page, switch to <strong>DeepSeek</strong>. Your account balance appears in the app footer with a manual refresh button.</p></div></div>
   </div>
   <div class="callout callout-ok"><strong>Server-side key:</strong> on production (promt.pp.ua), the platform key is set in a server-side <code>.env</code> file — the key never appears in client code. Your personal key overrides it for your session.</div>
@@ -703,7 +703,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="callout callout-info" style="margin-top:12px;">
     <strong>Ctrl+Shift+K</strong> — reveals the hidden API Key button in the app header and <em>immediately</em> opens the key entry dialog. The API Key button automatically disappears again after the dialog is closed.
     <br><br>
-    <strong>Inside the dialog:</strong> paste your DeepSeek key (starts with <code>sk-</code>), click <strong>Save</strong>. The key is stored in <code>localStorage</code> only — never transmitted. If a server-side key is already configured (production mode), the input shows only a placeholder and your personal key overrides it for your current session. Press <kbd>Esc</kbd> or click outside to close without saving.
+    <strong>Inside the dialog:</strong> paste your DeepSeek key (starts with <code>sk-</code>), click <strong>Save</strong>. The key is stored in <code>localStorage</code> (and in your account when you are signed in, for scheduled jobs). With a personal key, requests go directly to DeepSeek. Without one, signed-in users can use the server-side key: their requests pass through this application's server (<code>/api/deepseek/chat</code>), which forwards them to DeepSeek; the server key itself is never sent to the browser. Press <kbd>Esc</kbd> or click outside to close without saving.
   </div>
 </section>
 
@@ -1052,7 +1052,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="steps">
     <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Отримайте ключ</h4><p>Зайдіть на <strong>platform.deepseek.com</strong> → API Keys → Create. Ключ починається з <code>sk-</code>.</p></div></div>
     <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Відкрийте діалог ключа</h4><p>Натисніть <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. Це відображає приховану кнопку API Key в хедері і одразу відкриває діалог введення ключа.</p></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Вставте і збережіть</h4><p>Вставте ключ у поле вводу і натисніть <strong>Зберегти</strong>. Ключ зберігається лише у вашому браузері (<code>localStorage</code>) — він ніколи не надсилається на наші сервери і не відображається після збереження.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Вставте і збережіть</h4><p>Вставте ключ у поле вводу і натисніть <strong>Зберегти</strong>. Ключ зберігається у вашому браузері (<code>localStorage</code>); якщо ви увійшли в акаунт — також в акаунті, щоб ним могли користуватися заплановані завдання. Запити з вашим особистим ключем ідуть із браузера напряму до DeepSeek. Після збереження ключ не відображається.</p></div></div>
     <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Оберіть рушій DeepSeek</h4><p>У селекторі рушія генерації на головній сторінці перейдіть на <strong>DeepSeek</strong>. Баланс акаунту з'явиться у футері застосунку з кнопкою оновлення.</p></div></div>
   </div>
   <div class="callout callout-ok"><strong>Серверний ключ:</strong> на продакшн-версії (promt.pp.ua) ключ платформи зберігається в серверному файлі <code>.env</code>. Ваш особистий ключ перекриває його для вашої сесії.</div>
@@ -1117,7 +1117,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="callout callout-info" style="margin-top:12px;">
     <strong>Ctrl+Shift+K</strong> — відображає приховану кнопку API Key у хедері застосунку і <em>одразу</em> відкриває діалог введення ключа. Кнопка автоматично зникає після закриття діалогу.
     <br><br>
-    <strong>Всередині діалогу:</strong> вставте свій DeepSeek-ключ (починається з <code>sk-</code>), натисніть <strong>Зберегти</strong>. Ключ зберігається лише в <code>localStorage</code> — не передається нікуди. Якщо серверний ключ вже налаштований (режим продакшн), поле показує лише заповнювач, а ваш особистий ключ перекриває його для поточної сесії. Натисніть <kbd>Esc</kbd> або клікніть поза діалогом, щоб закрити без збереження.
+    <strong>Всередині діалогу:</strong> вставте свій DeepSeek-ключ (починається з <code>sk-</code>), натисніть <strong>Зберегти</strong>. Ключ зберігається в <code>localStorage</code> (а якщо ви увійшли — і в акаунті, для запланованих завдань). З особистим ключем запити йдуть напряму до DeepSeek. Без нього залогінені користувачі можуть працювати із серверним ключем: їхні запити проходять через сервер застосунку (<code>/api/deepseek/chat</code>), який пересилає їх до DeepSeek; сам серверний ключ у браузер не передається. Натисніть <kbd>Esc</kbd> або клікніть поза діалогом, щоб закрити без збереження.
   </div>
 </section>
 
@@ -1427,7 +1427,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="steps">
     <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Obtenga su clave</h4><p>Visite <strong>platform.deepseek.com</strong> → API Keys → Create. La clave comienza con <code>sk-</code>.</p></div></div>
     <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Abra el diálogo de clave</h4><p>Presione <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>. Esto revela un botón oculto de API Key en el encabezado y abre inmediatamente el diálogo de entrada de clave.</p></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Pegue y guarde</h4><p>Pegue su clave en el campo de entrada y haga clic en <strong>Guardar</strong>. La clave se guarda únicamente en el <code>localStorage</code> de su navegador — nunca se transmite a nuestros servidores ni se muestra después de guardar.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Pegue y guarde</h4><p>Pegue su clave en el campo de entrada y haga clic en <strong>Guardar</strong>. La clave se guarda en el <code>localStorage</code> de su navegador; si ha iniciado sesión, también en su cuenta para que la usen las tareas programadas. Las solicitudes con su clave personal van directamente del navegador a DeepSeek. La clave no se muestra después de guardar.</p></div></div>
     <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Seleccione el motor DeepSeek</h4><p>En el selector de motor de generación en la página principal, cambie a <strong>DeepSeek</strong>. El saldo de su cuenta aparecerá en el pie de página de la app con un botón de actualización manual.</p></div></div>
   </div>
   <div class="callout callout-ok"><strong>Clave del servidor:</strong> en producción (promt.pp.ua), la clave de la plataforma está configurada en un archivo <code>.env</code> del lado del servidor. Su clave personal la reemplaza para su sesión.</div>
@@ -1491,7 +1491,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
   <div class="callout callout-info" style="margin-top:12px;">
     <strong>Ctrl+Shift+K</strong> — revela el botón oculto de API Key en el encabezado de la aplicación y <em>abre inmediatamente</em> el diálogo de entrada de clave. El botón de API Key desaparece automáticamente después de cerrar el diálogo.
     <br><br>
-    <strong>Dentro del diálogo:</strong> pegue su clave DeepSeek (comienza con <code>sk-</code>), haga clic en <strong>Guardar</strong>. La clave se guarda únicamente en <code>localStorage</code> — nunca se transmite. Si ya hay una clave del lado del servidor configurada (modo producción), el campo muestra solo un marcador de posición y su clave personal la reemplaza para la sesión actual. Presione <kbd>Esc</kbd> o haga clic fuera para cerrar sin guardar.
+    <strong>Dentro del diálogo:</strong> pegue su clave DeepSeek (comienza con <code>sk-</code>), haga clic en <strong>Guardar</strong>. La clave se guarda en <code>localStorage</code> (y en su cuenta si ha iniciado sesión, para las tareas programadas). Con una clave personal, las solicitudes van directamente a DeepSeek. Sin ella, los usuarios con sesión pueden usar la clave del servidor: sus solicitudes pasan por el servidor de esta aplicación (<code>/api/deepseek/chat</code>), que las reenvía a DeepSeek; la clave del servidor nunca se envía al navegador. Presione <kbd>Esc</kbd> o haga clic fuera para cerrar sin guardar.
   </div>
 </section>
 

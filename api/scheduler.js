@@ -204,11 +204,17 @@ async function runJob(job) {
     const attempts = (job.retry_count || 0) + 1;
     if (attempts <= MAX_TRANSIENT_RETRIES) {
       const retryAt = new Date(Date.now() + RETRY_DELAY_MS);
+      // A retry overwrites next_run_at; pin the original slot first so jobs
+      // without run_time / run_days keep their schedule after the retry.
+      const slot = scheduleAnchor(job);
       await pool.query(
         `UPDATE scheduled_jobs
-           SET status='pending', next_run_at=$2, retry_count=$3, last_run_at=now()
+           SET status='pending', next_run_at=$2, retry_count=$3, last_run_at=now(),
+               run_time = COALESCE(run_time, $4::time),
+               run_days = CASE WHEN run_days IS NULL OR cardinality(run_days) = 0
+                               THEN $5::int[] ELSE run_days END
          WHERE id=$1`,
-        [job.id, retryAt, attempts]
+        [job.id, retryAt, attempts, slot.runTime, slot.runDays]
       );
       console.warn(`[scheduler] Job ${job.id} overloaded — retry ${attempts}/${MAX_TRANSIENT_RETRIES} at ${retryAt.toISOString()}`);
       await sendJobPush(job, 'retry').catch(e =>
@@ -289,6 +295,21 @@ function zonedTimeToUtc(y, mo, d, h, mi, tz) {
     ts += wall - Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi);
   }
   return new Date(ts);
+}
+
+// The recurring slot (HH:MM and weekday / day-of-month) implied by the job's
+// original next_run_at, in the job's timezone. Used to pin the schedule before
+// a transient retry moves next_run_at.
+function scheduleAnchor(job) {
+  if (!job.next_run_at || job.schedule_type === 'once') return { runTime: null, runDays: null };
+  let tz = job.timezone || 'UTC';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch { tz = 'UTC'; }
+  const p = zonedParts(new Date(job.next_run_at), tz);
+  const pad = (n) => String(n).padStart(2, '0');
+  const runDays = job.schedule_type === 'weekly' ? [p.wd]
+                : job.schedule_type === 'monthly' ? [p.d]
+                : null;
+  return { runTime: `${pad(p.h)}:${pad(p.mi)}`, runDays };
 }
 
 function computeNextRun(job) {

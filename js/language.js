@@ -182,6 +182,7 @@
     /* ── API key error messages ── */
     'apikey.err.noKey':     { en: 'Enter DeepSeek API Key',        uk: 'Введіть DeepSeek API Key',          es: 'Ingrese la API Key de DeepSeek' },
     'apikey.err.invalid':   { en: 'Invalid API Key — check and update', uk: 'Невірний API Key — перевірте та оновіть', es: 'API Key inválida — verifique y actualice' },
+    'apikey.err.session':   { en: 'Your session has expired — please sign in again', uk: 'Сесія завершилася — увійдіть знову', es: 'Su sesión ha caducado: inicie sesión de nuevo' },
     'apikey.err.quota':     { en: 'DeepSeek quota exceeded — top up balance', uk: 'Вичерпано ліміт DeepSeek — поповніть баланс', es: 'Cuota de DeepSeek agotada — recargue su saldo' },
     'apikey.err.rateLimit': { en: 'Too many requests — wait a minute', uk: 'Забагато запитів — зачекайте хвилину', es: 'Demasiadas solicitudes — espere un minuto' },
 

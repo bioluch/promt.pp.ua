@@ -32,20 +32,27 @@ const DeepSeek = (() => {
   async function fetchKeyFromEnv() {
     try {
       const token = sessionStorage.getItem('_jsat') || '';
-      if (!token) return; // Not logged in — use localStorage key
+      if (!token) { _serverKey = false; return; } // Not logged in — personal key only
+      const epoch = _sessionEpoch;   // ignore this response if a logout happens meanwhile
       const resp = await fetch('/api/env', {
         method: 'GET',
         cache: 'no-store',
         headers: { Accept: 'application/json', Authorization: 'Bearer ' + token }
       });
-      if (!resp.ok) return; // Silently fall back to localStorage
+      if (epoch !== _sessionEpoch) return;
+      if (!resp.ok) { _serverKey = false; return; } // Fall back to the personal key
       const data = await resp.json();
+      if (epoch !== _sessionEpoch) return;
       _serverKey = !!(data && data.deepseekConfigured);
       if (_serverKey) console.info('[DeepSeek] server-side key available via proxy');
     } catch (err) {
       console.info('[DeepSeek] /api/env not reachable — using localStorage key');
     }
   }
+
+  // The server key is only usable within a signed-in session
+  let _sessionEpoch = 0;   // bumped on logout to invalidate in-flight key checks
+  window.addEventListener('jsprompt:logout', () => { _sessionEpoch++; _serverKey = false; });
 
   function getKey()   { return localStorage.getItem(LS_KEY) || ''; }
   function setKey(k)  { localStorage.setItem(LS_KEY, k.trim()); }
@@ -1041,7 +1048,7 @@ Write the Claude prompt for this task now, in ${langWord}, following <prompt_str
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       const msg = err?.error?.message || `HTTP ${resp.status}`;
-      if (resp.status === 401) throw new Error('INVALID_KEY');
+      if (resp.status === 401) throw new Error(getKey() ? 'INVALID_KEY' : 'SESSION_EXPIRED');  // proxy 401 = session
       if (resp.status === 402) throw new Error('QUOTA_EXCEEDED');
       if (resp.status === 429) throw new Error('RATE_LIMIT');
       throw new Error(`DeepSeek API: ${msg}`);
@@ -1666,6 +1673,7 @@ Write the Claude prompt for this task now, in ${langWord}, following <prompt_str
     const map = {
       'NO_API_KEY':     T('apikey.err.noKey',    'Enter DeepSeek API Key'),
       'INVALID_KEY':    T('apikey.err.invalid',  'Invalid API Key — please check and update'),
+      'SESSION_EXPIRED': T('apikey.err.session', 'Your session has expired — please sign in again'),
       'QUOTA_EXCEEDED': T('apikey.err.quota',    'DeepSeek quota exceeded — top up your balance'),
       'RATE_LIMIT':     T('apikey.err.rateLimit','Too many requests — wait a minute'),
     };
@@ -1885,7 +1893,7 @@ Write the Claude prompt for this task now, in ${langWord}, following <prompt_str
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       const msg = err?.error?.message || `HTTP ${resp.status}`;
-      if (resp.status === 401) throw new Error('INVALID_KEY');
+      if (resp.status === 401) throw new Error(getKey() ? 'INVALID_KEY' : 'SESSION_EXPIRED');  // proxy 401 = session
       if (resp.status === 429) throw new Error('RATE_LIMIT');
       if (resp.status === 402) throw new Error('QUOTA_EXCEEDED');
       throw new Error(`DeepSeek translate: ${msg}`);
