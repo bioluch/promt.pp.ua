@@ -345,66 +345,6 @@
   }
 
   // ── Login modal ───────────────────────────────────────────────
-  // ── Minimal .docx builder (Office Open XML via JSZip) ─────────
-  function escXml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-  async function buildSimpleDocx(text) {
-    const lines = text.split('\n');
-    const paragraphs = lines.map(line => {
-      let content = line;
-      let style = '';
-      if (/^### /.test(line)) { content = line.slice(4); style = '<w:pStyle w:val="Heading3"/>'; }
-      else if (/^## /.test(line)) { content = line.slice(3); style = '<w:pStyle w:val="Heading2"/>'; }
-      else if (/^# /.test(line)) { content = line.slice(2); style = '<w:pStyle w:val="Heading1"/>'; }
-      content = content.replace(/[*_`]/g, '');
-      const runText = escXml(content);
-      return `<w:p>${style?`<w:pPr>${style}</w:pPr>`:''}<w:r><w:t xml:space="preserve">${runText}</w:t></w:r></w:p>`;
-    }).join('');
-
-    const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-<w:body>${paragraphs}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417"/></w:sectPr></w:body>
-</w:document>`;
-
-    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
-</Types>`;
-
-    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`;
-
-    const docRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>`;
-
-    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:pPr><w:spacing w:before="240" w:after="120"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>
-<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:pPr><w:spacing w:before="200" w:after="100"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>
-<w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:pPr><w:spacing w:before="160" w:after="80"/></w:pPr><w:rPr><w:b/><w:sz w:val="24"/></w:rPr></w:style>
-</w:styles>`;
-
-    const zip = new window.JSZip();
-    zip.file('[Content_Types].xml', contentTypesXml);
-    zip.file('_rels/.rels', relsXml);
-    zip.file('word/document.xml', documentXml);
-    zip.file('word/styles.xml', stylesXml);
-    zip.file('word/_rels/document.xml.rels', docRelsXml);
-
-    return zip.generateAsync({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
-  }
-
   function showResetPasswordModal(token) {
     const overlay = document.createElement('div');
     overlay.className = 'auth-modal-overlay';
@@ -1248,7 +1188,7 @@
                     <button class="btn-xs" data-res-action="download-docx" data-idx="${i}" title="${T('sched.downloadDocx')}">⬇ .docx</button>
                   </div>
                 </div>
-                <div style="font-size:12px;color:#e3f2fd;white-space:pre-wrap;max-height:250px;overflow-y:auto;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;">${escHtml(r.result_text || (r.error_message && r.error_message.startsWith('job.err.') ? T(r.error_message) : r.error_message) || T('sched.noContent'))}</div>
+                <div style="font-size:12px;color:#e3f2fd;white-space:pre-wrap;max-height:250px;overflow-y:auto;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;">${escHtml((r.result_text && window.MdExport ? MdExport.normalize(r.result_text) : r.result_text) || (r.error_message && r.error_message.startsWith('job.err.') ? T(r.error_message) : r.error_message) || T('sched.noContent'))}</div>
               </div>`).join('')}
           </div>`;
           document.body.appendChild(d);
@@ -1258,7 +1198,9 @@
             rb.addEventListener('click', async () => {
               const idx = parseInt(rb.dataset.idx);
               const errMsg = results[idx].error_message || '';
-              const text = results[idx].result_text || (errMsg.startsWith('job.err.') ? T(errMsg) : errMsg) || '';
+              const raw  = results[idx].result_text || (errMsg.startsWith('job.err.') ? T(errMsg) : errMsg) || '';
+              // Repair emphasis the model broke ("** text**") before copying / exporting
+              const text = window.MdExport ? MdExport.normalize(raw) : raw;
               const dateStr = new Date(results[idx].ran_at).toISOString().slice(0,10);
               const act = rb.dataset.resAction;
 
@@ -1281,26 +1223,15 @@
                 downloadBlob(new Blob([text], { type: 'text/markdown' }), `result_${dateStr}.md`);
               }
               if (act === 'download-txt') {
-                // Strip markdown formatting for plain text
-                const plain = text
-                  .replace(/```[\s\S]*?```/g, m => m.replace(/```\w*\n?/g, ''))
-                  .replace(/[#*_`>]/g, '')
-                  .replace(/\[(.*?)\]\(.*?\)/g, '$1');
+                const plain = window.MdExport ? MdExport.toPlainText(text) : text;
                 downloadBlob(new Blob([plain], { type: 'text/plain' }), `result_${dateStr}.txt`);
               }
               if (act === 'download-docx') {
                 rb.disabled = true;
                 rb.textContent = '…';
                 try {
-                  if (!window.JSZip) {
-                    await new Promise((resolve, reject) => {
-                      const s = document.createElement('script');
-                      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                      s.onload = resolve; s.onerror = () => reject(new Error('Failed to load JSZip'));
-                      document.head.appendChild(s);
-                    });
-                  }
-                  const blob = await buildSimpleDocx(text);
+                  if (!window.MdExport) throw new Error('export module not loaded');
+                  const blob = await MdExport.toDocx(text, { title: `Result ${dateStr}` });
                   downloadBlob(blob, `result_${dateStr}.docx`);
                 } catch (err) {
                   if (window.toast) toast(T('sched.docxFailed', { error: err.message }), 'error');

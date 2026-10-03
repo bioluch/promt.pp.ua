@@ -3,7 +3,7 @@
  * Network-first for Pyodide CDN; cache-first for local assets.
  */
 
-const CACHE_NAME = 'js-prompt-v2.0.1';
+const CACHE_NAME = 'js-prompt-v2.0.3';
 
 const PRECACHE = [
   './index.html',
@@ -19,6 +19,8 @@ const PRECACHE = [
   './js/prompt.js',
   './js/language.js',
   './js/spinner.js',
+  './js/md-export.js',
+  './js/vendor/jszip.min.js',
   './png/js-promt-192x192.png',
   './png/js-promt-512x512.png',
   './png/js-promt-152x152.png',
@@ -80,6 +82,11 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
+  // Other third-party origins (fonts, analytics, cdnjs …) — let the browser
+  // handle them. A fetch() from this worker would be subject to the page CSP's
+  // connect-src and fail for hosts that are only allowed in script-src.
+  if (url.origin !== self.location.origin) return;
 
   // API calls — never cache, always network
   if (url.pathname.startsWith('/api/')) {
