@@ -1028,10 +1028,12 @@ app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) =>
      SET is_active=COALESCE($2,is_active),
          role=COALESCE($3,role),
          display_name=COALESCE($4,display_name)
-     WHERE id=$1 RETURNING *`,
-    [req.params.id, is_active, role, display_name]
+     WHERE id=$1
+     RETURNING id, email, display_name, role, is_active, email_verified, created_at, last_login_at, login_count`,
+    [req.params.id, is_active, role == null ? null : (role === 'admin' ? 'admin' : 'user'), display_name]
   );
-  res.json(rows[0]);
+  if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+  res.json(rows[0]);   // never expose password_hash
 });
 
 // ── ADMIN: User API Keys management ─────────────────────────
@@ -1155,7 +1157,7 @@ const SALT_ROUNDS = 12;
 
 
 // POST /api/auth/register
-app.post('/api/auth/register', authLimiter, async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, password, display_name } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email address' });
@@ -1234,7 +1236,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', authLimiter, async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   const emailClean = email.trim().toLowerCase();
@@ -1285,7 +1287,7 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
 });
 
 // POST /api/auth/forgot-password — request a password reset email
-app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
+app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
   const emailClean = email.trim().toLowerCase();
@@ -1334,7 +1336,7 @@ app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
 });
 
 // POST /api/auth/reset-password — consume reset token and set new password
-app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
+app.post('/api/auth/reset-password', async (req, res) => {
   const { token, new_password } = req.body;
   if (!token || !new_password) return res.status(400).json({ error: 'Token and new password required' });
   if (new_password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });

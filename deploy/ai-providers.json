@@ -1,0 +1,133 @@
+{
+  "providers": [
+    {
+      "provider_key": "claude",
+      "label": "Claude",
+      "endpoint_url": "https://api.anthropic.com/v1/messages",
+      "model_name": "claude-sonnet-4-6",
+      "auth_header": "x-api-key",
+      "auth_prefix": "",
+      "is_builtin": true,
+      "is_active": true,
+      "provider_options": {
+        "tools": [
+          {
+            "name": "web_search",
+            "type": "web_search_20260209",
+            "max_uses": 5
+          }
+        ]
+      }
+    },
+    {
+      "provider_key": "deepseek",
+      "label": "DeepSeek",
+      "endpoint_url": "https://api.deepseek.com/v1/chat/completions",
+      "model_name": "deepseek-chat",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": true,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "gemini",
+      "label": "Gemini",
+      "endpoint_url": "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+      "model_name": "gemini-2.5-flash",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": true,
+      "is_active": true,
+      "provider_options": {
+        "tools": [
+          {
+            "google_search": {}
+          }
+        ],
+        "use_v1beta": true
+      }
+    },
+    {
+      "provider_key": "gpt4",
+      "label": "GPT-4",
+      "endpoint_url": "https://api.openai.com/v1/chat/completions",
+      "model_name": "gpt-4o",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "groq",
+      "label": "Groq",
+      "endpoint_url": "https://api.groq.com/openai/v1/chat/completions",
+      "model_name": "llama-3.3-70b-versatile",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "mistral",
+      "label": "Mistral",
+      "endpoint_url": "https://api.mistral.ai/v1/chat/completions",
+      "model_name": "mistral-large-latest",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "openrouter",
+      "label": "OpenRouter",
+      "endpoint_url": "https://openrouter.ai/api/v1/chat/completions",
+      "model_name": "openai/gpt-4o",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "perplexity",
+      "label": "Perplexity",
+      "endpoint_url": "https://api.perplexity.ai/chat/completions",
+      "model_name": "sonar-pro",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {
+        "return_citations": true,
+        "search_recency_filter": "week"
+      }
+    },
+    {
+      "provider_key": "qwen",
+      "label": "Qwen",
+      "endpoint_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "model_name": "qwen-plus",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    },
+    {
+      "provider_key": "together",
+      "label": "Together AI",
+      "endpoint_url": "https://api.together.xyz/v1/chat/completions",
+      "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "auth_header": "Authorization",
+      "auth_prefix": "Bearer ",
+      "is_builtin": false,
+      "is_active": true,
+      "provider_options": {}
+    }
+  ],
+  "note": "AI provider map for Admin Panel -> AI Providers -> Import. Contains no API keys."
+}
