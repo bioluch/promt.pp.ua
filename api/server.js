@@ -81,8 +81,37 @@ const pool = new Pool({
 pool.on('error', (err) => console.error('[PG] Unexpected error:', err.message));
 
 // ── Backup storage ─────────────────────────────────────────────
-const BACKUP_DIR = path.resolve(__dirname, '../backups');
-if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+// Backups must live OUTSIDE the web root: nginx runs as the same user as this
+// API, so a dump inside /var/www/… could be downloaded by anyone who guesses
+// its (timestamp-based) name. Override with BACKUP_DIR in .env.
+const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || '/var/lib/jsprompt/backups');
+const WEB_ROOT   = path.resolve(__dirname, '..');
+
+/** Returns null when the backup directory is usable, otherwise a human-readable reason. */
+function backupDirProblem() {
+  if (BACKUP_DIR === WEB_ROOT || BACKUP_DIR.startsWith(WEB_ROOT + path.sep)) {
+    return `BACKUP_DIR (${BACKUP_DIR}) is inside the web root — move it outside ${WEB_ROOT}`;
+  }
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true, mode: 0o750 });
+    fs.accessSync(BACKUP_DIR, fs.constants.R_OK | fs.constants.W_OK | fs.constants.X_OK);
+    return null;
+  } catch (err) {
+    return `Backup directory ${BACKUP_DIR} is not writable by the API (${err.code || err.message}). ` +
+           `Create it with: sudo install -d -o www-data -g www-data -m 750 ${BACKUP_DIR}`;
+  }
+}
+{
+  const problem = backupDirProblem();
+  if (problem) console.warn('[api] Backups disabled until fixed:', problem);
+}
+
+// Route guard: answer with the concrete reason instead of a generic 500
+function requireBackupDir(req, res, next) {
+  const problem = backupDirProblem();
+  if (problem) return res.status(503).json({ error: problem });
+  next();
+}
 const BACKUP_FILENAME_RE = /^(jsprompt|uploaded)_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}\.sql\.gz$/;
 
 // ── Mail transporter (Mailcow SMTP) ───────────────────────────
@@ -1542,7 +1571,7 @@ function stripExtensionStatements(sqlPath) {
 }
 
 // POST /api/admin/backup/create — run pg_dump and store a compressed backup on the server
-app.post('/api/admin/backup/create', requireAuth, requireAdmin, async (req, res) => {
+app.post('/api/admin/backup/create', requireAuth, requireAdmin, requireBackupDir, async (req, res) => {
   const filename = `jsprompt_${backupTimestamp()}.sql.gz`;
   const filepath = path.join(BACKUP_DIR, filename);
   const dumpPath = filepath.replace(/\.gz$/, '');
@@ -1591,7 +1620,7 @@ app.post('/api/admin/backup/create', requireAuth, requireAdmin, async (req, res)
 });
 
 // GET /api/admin/backup/list — list backups stored on the server
-app.get('/api/admin/backup/list', requireAuth, requireAdmin, async (req, res) => {
+app.get('/api/admin/backup/list', requireAuth, requireAdmin, requireBackupDir, async (req, res) => {
   try {
     const files = fs.readdirSync(BACKUP_DIR)
       .filter(f => BACKUP_FILENAME_RE.test(f))
@@ -1608,7 +1637,7 @@ app.get('/api/admin/backup/list', requireAuth, requireAdmin, async (req, res) =>
 });
 
 // GET /api/admin/backup/download/:filename — download a backup file
-app.get('/api/admin/backup/download/:filename', requireAuth, requireAdmin, async (req, res) => {
+app.get('/api/admin/backup/download/:filename', requireAuth, requireAdmin, requireBackupDir, async (req, res) => {
   const { filename } = req.params;
   if (!BACKUP_FILENAME_RE.test(filename)) {
     return res.status(400).json({ error: 'Invalid filename' });
@@ -1621,7 +1650,7 @@ app.get('/api/admin/backup/download/:filename', requireAuth, requireAdmin, async
 });
 
 // DELETE /api/admin/backup/:filename — remove a backup file from the server
-app.delete('/api/admin/backup/:filename', requireAuth, requireAdmin, async (req, res) => {
+app.delete('/api/admin/backup/:filename', requireAuth, requireAdmin, requireBackupDir, async (req, res) => {
   const { filename } = req.params;
   if (!BACKUP_FILENAME_RE.test(filename)) {
     return res.status(400).json({ error: 'Invalid filename' });
@@ -1641,12 +1670,32 @@ app.delete('/api/admin/backup/:filename', requireAuth, requireAdmin, async (req,
 // quoted identifiers, dollar-quoted bodies, comments and COPY data are ignored.
 // Only the \restrict / \unrestrict lines emitted by recent pg_dump versions are allowed.
 const ALLOWED_META_RE = /^\\(restrict|unrestrict)\s+[A-Za-z0-9]+\s*$/;
+// PostgreSQL identifier characters: letters of any script, digits, '_' and '$'.
+// Using JS \w (ASCII only) here would let "price$tag$" look like a dollar quote.
+const PG_IDENT_CHAR = /[\p{L}\p{N}_$]/u;
+// With standard_conforming_strings off, psql treats backslashes in '…' as escapes,
+// which this lexer does not model — such dumps are rejected instead.
+const SCS_OFF_RE = /standard_conforming_strings[^;]*?(?:=|\bto\b|,)\s*'?(?:off|false|0)\b/i;
 async function validateRestoreSql(sqlPath) {
+  // psql takes its string-escaping mode from the server: this lexer assumes the
+  // standard behaviour (backslashes in '…' are literal), so refuse otherwise.
+  const { rows: [scs] } = await pool.query('SHOW standard_conforming_strings');
+  if (String(scs?.standard_conforming_strings).toLowerCase() !== 'on') {
+    throw new Error('Restore refused: the database server has standard_conforming_strings disabled');
+  }
   const readline = require('readline');
   const rl = readline.createInterface({ input: fs.createReadStream(sqlPath, 'utf8'), crlfDelay: Infinity });
   let inCopy = false;
   let state = null;       // null | "'" | "E'" | '"' | '/*' | '$tag$'
   let lineNo = 0;
+  let stmt = '';          // current statement without comments (strings and $-bodies kept:
+                          // set_config('standard_conforming_strings', …) or a DO block can change it)
+  const endStatement = () => {
+    if (SCS_OFF_RE.test(stmt.replace(/\s+/g, ' '))) {
+      throw new Error(`Backup rejected: standard_conforming_strings must stay on (statement ending at line ${lineNo})`);
+    }
+    stmt = '';
+  };
   for await (const line of rl) {
     lineNo++;
     if (inCopy) { if (line === '\\.') inCopy = false; continue; }
@@ -1655,31 +1704,43 @@ async function validateRestoreSql(sqlPath) {
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
       if (state === "'" || state === "E'") {
-        if (state === "E'" && c === '\\') { i++; continue; }
-        if (c === "'") { if (line[i + 1] === "'") i++; else state = null; }
+        stmt += c;
+        if (state === "E'" && c === '\\') { stmt += line[i + 1] || ''; i++; continue; }
+        if (c === "'") { if (line[i + 1] === "'") { stmt += "'"; i++; } else state = null; }
       } else if (state === '"') {
-        if (c === '"') { if (line[i + 1] === '"') i++; else state = null; }
+        stmt += c;
+        if (c === '"') { if (line[i + 1] === '"') { stmt += '"'; i++; } else state = null; }
       } else if (state === '/*') {
-        if (c === '*' && line[i + 1] === '/') { i++; state = null; }
+        if (c === '*' && line[i + 1] === '/') { i++; state = null; stmt += ' '; }
       } else if (state !== null) {                        // dollar quote
-        if (line.startsWith(state, i)) { i += state.length - 1; state = null; }
+        if (line.startsWith(state, i)) { stmt += state; i += state.length - 1; state = null; }
+        else stmt += c;
       } else if (c === '-' && line[i + 1] === '-') {
         break;                                            // line comment
       } else if (c === '/' && line[i + 1] === '*') {
         i++; state = '/*';
       } else if (c === "'") {
-        state = /[eE]/.test(line[i - 1] || '') && !/\w/.test(line[i - 2] || '') ? "E'" : "'";
+        state = /[eE]/.test(line[i - 1] || '') && !PG_IDENT_CHAR.test(line[i - 2] || '') ? "E'" : "'";
+        stmt += c;
       } else if (c === '"') {
-        state = '"';
+        state = '"'; stmt += c;
       } else if (c === '$') {
-        const m = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(line.slice(i));
-        if (m && !/\w/.test(line[i - 1] || '')) { state = m[0]; i += m[0].length - 1; }
+        const m = /^\$([\p{L}_][\p{L}\p{N}_]*)?\$/u.exec(line.slice(i));
+        if (m && !PG_IDENT_CHAR.test(line[i - 1] || '')) { state = m[0]; stmt += m[0]; i += m[0].length - 1; }
+        else stmt += c;
       } else if (c === '\\') {
         throw new Error(`Backup rejected: psql meta-command at line ${lineNo}`);
+      } else if (c === ';') {
+        endStatement();
+      } else {
+        stmt += c;
       }
     }
+    if (state !== '/*') stmt += '\n';
     if (state === null && /^COPY\s.+\sFROM\s+stdin;\s*$/i.test(line)) inCopy = true;
+    if (stmt.length > 1_000_000) stmt = stmt.slice(-200_000);   // bound memory on huge function bodies
   }
+  endStatement();
 }
 
 // Shared restore logic: gunzip a .sql.gz file into the database, then clean up the temp .sql
@@ -1749,7 +1810,7 @@ async function runRestore(gzPath) {
 }
 
 // POST /api/admin/backup/restore/:filename — restore the database from a backup already on the server
-app.post('/api/admin/backup/restore/:filename', requireAuth, requireAdmin, async (req, res) => {
+app.post('/api/admin/backup/restore/:filename', requireAuth, requireAdmin, requireBackupDir, async (req, res) => {
   const { filename } = req.params;
   const { confirm } = req.body || {};
   if (!BACKUP_FILENAME_RE.test(filename)) {
@@ -1804,7 +1865,7 @@ function streamBodyToFile(req, filePath, maxBytes) {
 
 app.post(
   '/api/admin/backup/upload-restore',
-  requireAuth, requireAdmin,
+  requireAuth, requireAdmin, requireBackupDir,
   async (req, res) => {
     if (req.query.confirm !== 'RESTORE_DATABASE') {
       return res.status(400).json({ error: 'Must pass ?confirm=RESTORE_DATABASE to proceed' });
@@ -1835,6 +1896,200 @@ app.post(
   }
 );
 
+// ══════════════════════════════════════════════════════════════
+//  ADMIN — RELEASE ANNOUNCEMENT E-MAILS
+// ══════════════════════════════════════════════════════════════
+// The admin UI generates the message (subject + HTML + text). Mode "test"
+// sends it only to the admin; mode "all" (with an explicit confirmation)
+// sends it to every active, verified user — one message per recipient, in
+// the background, throttled. Campaigns and per-recipient deliveries are stored
+// in the database: only one campaign can run at a time (unique index), and an
+// unfinished campaign resumes after a restart without re-sending to anyone.
+
+const ANNOUNCE_DELAY_MS = 400;           // ~150 messages/minute — gentle on the SMTP server
+const announceDelivering = new Set();    // campaign ids being delivered by this process
+const announceRetries    = new Map();    // campaign id → consecutive retry count
+const ANNOUNCE_MAX_RETRIES = 5;
+// Transient database / network failures worth retrying (node-pg + PostgreSQL connection codes)
+const isConnectionError = (err) =>
+  ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE', '57P01', '57P02', '57P03', '08000', '08001', '08003', '08006']
+    .includes(err?.code) || /Connection terminated|timeout exceeded when trying to connect/i.test(err?.message || '');
+// Mail-transport failures (SMTP server unreachable) — not the recipient's fault
+const isMailTransportError = (err) => ['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'ECONNREFUSED', 'ECONNRESET'].includes(err?.code);
+
+const ANNOUNCE_SCHEMA = `
+  CREATE TABLE IF NOT EXISTS announcement_campaigns (
+    id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    subject     varchar(200) NOT NULL,
+    html        text NOT NULL,
+    body_text   text NOT NULL,
+    created_by  uuid REFERENCES users(id) ON DELETE SET NULL,
+    status      varchar(20) NOT NULL DEFAULT 'running',     -- running | done
+    total       integer NOT NULL DEFAULT 0,
+    sent        integer NOT NULL DEFAULT 0,
+    failed      integer NOT NULL DEFAULT 0,
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    finished_at timestamptz
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS uq_announcement_one_running
+    ON announcement_campaigns ((true)) WHERE status = 'running';
+  CREATE TABLE IF NOT EXISTS announcement_deliveries (
+    campaign_id uuid NOT NULL REFERENCES announcement_campaigns(id) ON DELETE CASCADE,
+    user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status      varchar(10) NOT NULL,                       -- pending | sent | failed
+    error       text,
+    sent_at     timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (campaign_id, user_id)
+  );`;
+
+const ANNOUNCE_RECIPIENTS_SQL =
+  `SELECT id, email FROM users WHERE is_active AND email_verified ORDER BY created_at`;
+
+function validateAnnouncement(body) {
+  const subject = String(body?.subject || '').trim();
+  const html    = String(body?.html || '');
+  const text    = String(body?.text || '');
+  if (!subject || subject.length > 200) return { error: 'Subject is required (max 200 characters)' };
+  if (!html.trim() || html.length > 200_000) return { error: 'HTML body is required (max 200 KB)' };
+  if (!text.trim() || text.length > 100_000) return { error: 'Text body is required (max 100 KB)' };
+  return { subject, html, text };
+}
+
+const campaignView = (c) => c ? {
+  id: c.id, subject: c.subject, total: c.total, sent: c.sent, failed: c.failed,
+  running: c.status === 'running', startedAt: c.created_at, finishedAt: c.finished_at,
+} : { running: false };
+
+/** Deliver a campaign to every recipient that has no delivery row yet. */
+async function deliverCampaign(campaignId) {
+  if (announceDelivering.has(campaignId)) return;
+  announceDelivering.add(campaignId);
+  try {
+    const { rows: [c] } = await pool.query(`SELECT * FROM announcement_campaigns WHERE id=$1`, [campaignId]);
+    if (!c || c.status !== 'running') return;
+    const { rows: todo } = await pool.query(
+      `SELECT u.id, u.email FROM users u
+        WHERE u.is_active AND u.email_verified
+          AND NOT EXISTS (SELECT 1 FROM announcement_deliveries d WHERE d.campaign_id=$1 AND d.user_id=u.id)
+        ORDER BY u.created_at`, [campaignId]);
+    await pool.query(`UPDATE announcement_campaigns SET total = sent + failed + $2 WHERE id=$1`, [campaignId, todo.length]);
+
+    for (const r of todo) {
+      // Claim the recipient BEFORE sending (at-most-once): if the process dies after
+      // this point the row stays 'pending' and the resume skips it, so nobody ever
+      // receives the announcement twice.
+      const claim = await pool.query(
+        `INSERT INTO announcement_deliveries (campaign_id, user_id, status)
+         VALUES ($1,$2,'pending') ON CONFLICT DO NOTHING`, [campaignId, r.id]);
+      if (!claim.rowCount) continue;
+      let ok = true, error = null;
+      try {
+        await mailer.sendMail({ from: MAIL_FROM, to: r.email, subject: c.subject, html: c.html, text: c.body_text });
+      } catch (err) {
+        if (isMailTransportError(err)) {
+          // SMTP server is down: release this recipient and stop — the outer retry
+          // resumes later instead of marking every remaining recipient as failed.
+          await pool.query(`DELETE FROM announcement_deliveries WHERE campaign_id=$1 AND user_id=$2 AND status='pending'`,
+            [campaignId, r.id]);
+          throw err;
+        }
+        ok = false; error = String(err.message).slice(0, 500);
+        console.error(`[announcements] ${r.email}: ${err.message}`);
+      }
+      await pool.query(
+        `UPDATE announcement_deliveries SET status=$3, error=$4, sent_at=now() WHERE campaign_id=$1 AND user_id=$2`,
+        [campaignId, r.id, ok ? 'sent' : 'failed', error]);
+      await pool.query(`UPDATE announcement_campaigns SET ${ok ? 'sent = sent + 1' : 'failed = failed + 1'} WHERE id=$1`, [campaignId]);
+      await new Promise(resolve => setTimeout(resolve, ANNOUNCE_DELAY_MS));
+    }
+
+    const { rows: [done] } = await pool.query(
+      `UPDATE announcement_campaigns SET status='done', finished_at=now() WHERE id=$1 RETURNING *`, [campaignId]);
+    announceRetries.delete(campaignId);
+    if (!done) return;                     // campaign row was removed meanwhile
+    console.log(`[announcements] "${done.subject}": sent ${done.sent}/${done.total}, failed ${done.failed}`);
+    await pool.query(
+      `INSERT INTO usage_events (user_id, event_type, metadata) VALUES ($1, 'announcement_sent', $2)`,
+      [done.created_by, JSON.stringify({ campaign: done.id, subject: done.subject, total: done.total, sent: done.sent, failed: done.failed })]
+    ).catch(e => console.error('[announcements] log failed:', e.message));
+  } catch (err) {
+    // A brief database outage is retried a few times; anything else (or too many
+    // retries) leaves the campaign 'running' so it resumes on the next restart.
+    const attempt = (announceRetries.get(campaignId) || 0) + 1;
+    if ((isConnectionError(err) || isMailTransportError(err)) && attempt <= ANNOUNCE_MAX_RETRIES) {
+      announceRetries.set(campaignId, attempt);
+      console.error(`[announcements] delivery interrupted (${err.message}); retry ${attempt}/${ANNOUNCE_MAX_RETRIES} in 60 s`);
+      setTimeout(() => deliverCampaign(campaignId), 60_000);
+    } else {
+      announceRetries.delete(campaignId);
+      console.error('[announcements] delivery stopped; it will resume after a restart:', err.message);
+    }
+  } finally {
+    announceDelivering.delete(campaignId);
+  }
+}
+
+/** Create the tables if needed and resume campaigns left running by a restart. */
+async function initAnnouncements() {
+  await pool.query(ANNOUNCE_SCHEMA);
+  const { rows } = await pool.query(`SELECT id FROM announcement_campaigns WHERE status='running'`);
+  for (const r of rows) {
+    console.log(`[announcements] resuming campaign ${r.id}`);
+    deliverCampaign(r.id);
+  }
+}
+
+// GET /api/admin/announcements/recipients — how many users would receive it
+app.get('/api/admin/announcements/recipients', requireAuth, requireAdmin, async (req, res) => {
+  const { rows } = await pool.query(`SELECT COUNT(*)::int AS n FROM (${ANNOUNCE_RECIPIENTS_SQL}) r`);
+  res.json({ count: rows[0].n });
+});
+
+// GET /api/admin/announcements/status — progress of the current / last campaign
+app.get('/api/admin/announcements/status', requireAuth, requireAdmin, async (req, res) => {
+  const { rows } = await pool.query(`SELECT * FROM announcement_campaigns ORDER BY created_at DESC LIMIT 1`);
+  res.json(campaignView(rows[0]));
+});
+
+// POST /api/admin/announcements/send — { subject, html, text, mode: 'test'|'all', confirm }
+app.post('/api/admin/announcements/send', requireAuth, requireAdmin, async (req, res) => {
+  const msg = validateAnnouncement(req.body);
+  if (msg.error) return res.status(400).json({ error: msg.error });
+  const mode = req.body.mode === 'all' ? 'all' : 'test';
+
+  if (mode === 'test') {
+    try {
+      await mailer.sendMail({ from: MAIL_FROM, to: req.user.email, subject: '[TEST] ' + msg.subject, html: msg.html, text: msg.text });
+      return res.json({ ok: true, mode, sentTo: req.user.email });
+    } catch (err) {
+      console.error('[admin/announcements/test]', err.message);
+      return res.status(502).json({ error: 'Mail server error — see the server log for details' });
+    }
+  }
+
+  if (req.body.confirm !== 'SEND_TO_ALL') {
+    return res.status(400).json({ error: 'Must send { confirm: "SEND_TO_ALL" } to e-mail every user' });
+  }
+  let campaign;
+  try {
+    // The partial unique index admits only one 'running' campaign — this INSERT is the atomic claim
+    ({ rows: [campaign] } = await pool.query(
+      `INSERT INTO announcement_campaigns (subject, html, body_text, created_by, status)
+       VALUES ($1,$2,$3,$4,'running') RETURNING *`,
+      [msg.subject, msg.html, msg.text, req.user.id]));
+  } catch (err) {
+    if (err.code === '23505') {
+      const { rows } = await pool.query(`SELECT * FROM announcement_campaigns WHERE status='running' LIMIT 1`);
+      return res.status(409).json({ error: 'Another announcement is still being sent', status: campaignView(rows[0]) });
+    }
+    throw err;
+  }
+  const { rows } = await pool.query(`SELECT COUNT(*)::int AS n FROM (${ANNOUNCE_RECIPIENTS_SQL}) r`);
+  await pool.query(`UPDATE announcement_campaigns SET total=$2 WHERE id=$1`, [campaign.id, rows[0].n]);
+  res.status(202).json(campaignView({ ...campaign, total: rows[0].n }));
+  deliverCampaign(campaign.id);          // background; progress via /status
+});
+
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
   try {
@@ -1861,6 +2116,7 @@ process.on('unhandledRejection', (reason) => {
 // ── Start ─────────────────────────────────────────────────────
 const PORT_NUM = parseInt(PORT);
 app.listen(PORT_NUM, '127.0.0.1', () => {
+  initAnnouncements().catch(err => console.error('[announcements] init failed:', err.message));
   console.log(`[api] JS PROMPT v2 API running on 127.0.0.1:${PORT_NUM}`);
   console.log(`[api] DB: ${PG_USER}@${PG_HOST}:${PG_PORT}/${PG_DB}`);
   console.log(`[api] Mail: ${MAIL_HOST}:${MAIL_PORT} (from: ${MAIL_FROM})`);

@@ -90,6 +90,7 @@
     users:     { titleKey: 'section.users.title',     subKey: 'section.users.sub',     render: renderUsers },
     prompts:   { titleKey: 'section.prompts.title',   subKey: 'section.prompts.sub',   render: renderPrompts },
     providers: { titleKey: 'section.providers.title', subKey: 'section.providers.sub', render: renderProviders },
+    announce:  { titleKey: 'section.announce.title',  subKey: 'section.announce.sub',  render: renderAnnouncements },
     danger:    { titleKey: 'section.danger.title',    subKey: 'section.danger.sub',    render: renderDanger },
   };
 
@@ -820,6 +821,274 @@
   // ════════════════════════════════════════════════════════════
   //  5) DANGER ZONE
   // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  //  RELEASE ANNOUNCEMENT E-MAIL
+  // ════════════════════════════════════════════════════════════
+  const APP_URL = 'https://promt.pp.ua/';
+  const EMAIL_I18N = {
+    uk: {
+      subject: 'JS PROMPT {v}: що нового',
+      heading: 'Вийшла нова версія JS PROMPT {v}',
+      intro: 'Вітаємо! Ми оновили JS PROMPT. Нижче — головні зміни цієї версії.',
+      whatsNew: 'Що нового',
+      how: 'Оновлення вже доступне: просто відкрийте застосунок або перезавантажте сторінку. Встановлений застосунок (PWA) оновиться автоматично.',
+      cta: 'Відкрити JS PROMPT',
+      thanks: 'Дякуємо, що користуєтеся JS PROMPT!',
+      footer: 'Ви отримали цей лист, бо маєте акаунт у JS PROMPT (promt.pp.ua). Це сервісне повідомлення про оновлення застосунку.',
+      notes: [
+        'Новий генератор промтів за сучасними рекомендаціями Anthropic: повний текст завдання, чітка структура, критерії успіху',
+        'Для звітів у форматі .docx і .md — вимоги до стильного оформлення без емодзі',
+        'Професійний конвертер DOCX → Markdown: списки, таблиці, посилання, виноски, формули',
+        'Експорт результатів у .docx у професійному стилі',
+        'Точніша перевірка тексту: менше хибних помилок, справжня перевірка англійської орфографії',
+        'Кнопка «API-ключі» в меню та детальна довідка щодо ключів різних провайдерів',
+        'Довгі звіти більше не обриваються: автоматичне продовження відповіді',
+        'Адаптований інтерфейс для телефонів і планшетів, підвищена безпека',
+      ],
+    },
+    en: {
+      subject: 'JS PROMPT {v}: what’s new',
+      heading: 'JS PROMPT {v} is here',
+      intro: 'Hello! We have updated JS PROMPT. Here are the main changes in this version.',
+      whatsNew: 'What’s new',
+      how: 'The update is already live: just open the app or reload the page. The installed app (PWA) updates automatically.',
+      cta: 'Open JS PROMPT',
+      thanks: 'Thank you for using JS PROMPT!',
+      footer: 'You are receiving this e-mail because you have a JS PROMPT account (promt.pp.ua). This is a service message about an application update.',
+      notes: [
+        'A new prompt generator built on Anthropic’s current guidance: full task text, clear structure, success criteria',
+        'Polished, emoji-free design requirements for .docx and .md reports',
+        'A professional DOCX → Markdown converter: lists, tables, links, footnotes, equations',
+        'Export of results to professionally styled .docx files',
+        'More accurate text checking: fewer false alarms and real English spell checking',
+        'An “API Keys” menu button and detailed help for keys from different providers',
+        'Long reports are no longer cut off: responses are continued automatically',
+        'A layout adapted for phones and tablets, plus security improvements',
+      ],
+    },
+    es: {
+      subject: 'JS PROMPT {v}: novedades',
+      heading: 'Ya está disponible JS PROMPT {v}',
+      intro: '¡Hola! Hemos actualizado JS PROMPT. Estos son los cambios principales de esta versión.',
+      whatsNew: 'Novedades',
+      how: 'La actualización ya está disponible: abra la aplicación o recargue la página. La aplicación instalada (PWA) se actualiza automáticamente.',
+      cta: 'Abrir JS PROMPT',
+      thanks: '¡Gracias por usar JS PROMPT!',
+      footer: 'Recibe este correo porque tiene una cuenta en JS PROMPT (promt.pp.ua). Es un mensaje de servicio sobre una actualización de la aplicación.',
+      notes: [
+        'Un nuevo generador de prompts basado en las recomendaciones actuales de Anthropic: texto completo de la tarea, estructura clara y criterios de éxito',
+        'Requisitos de diseño cuidado y sin emojis para informes .docx y .md',
+        'Un conversor profesional DOCX → Markdown: listas, tablas, enlaces, notas al pie y ecuaciones',
+        'Exportación de resultados a .docx con estilo profesional',
+        'Revisión de texto más precisa: menos falsos errores y corrección ortográfica real en inglés',
+        'Botón «Claves API» en el menú y ayuda detallada sobre las claves de cada proveedor',
+        'Los informes largos ya no se cortan: la respuesta continúa automáticamente',
+        'Interfaz adaptada a teléfonos y tabletas, y mejoras de seguridad',
+      ],
+    },
+  };
+
+  /** Build { subject, html, text } for the chosen languages. */
+  function buildAnnouncement(version, langs, notesByLang, subjectOverride) {
+    const fmt = (s) => s.split('{v}').join(version);
+    const blocks = langs.map(l => ({ l, t: EMAIL_I18N[l], notes: notesByLang[l] || [] }));
+    const subject = subjectOverride ||
+      (langs.length === 1 ? fmt(EMAIL_I18N[langs[0]].subject)
+                          : `JS PROMPT ${version}: ` + ['оновлення', 'update', 'actualización'].join(' / '));
+    const e = escHtml;
+    const blockHtml = ({ t, notes }, i) => `
+      ${i ? '<tr><td style="padding:8px 40px;"><hr style="border:none;border-top:1px solid #E3E8EF;margin:8px 0;"></td></tr>' : ''}
+      <tr><td style="padding:28px 40px 4px;">
+        <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#1F3864;font-family:Segoe UI,Arial,sans-serif;">${e(fmt(t.heading))}</h1>
+        <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333333;">${e(t.intro)}</p>
+        <h2 style="margin:0 0 10px;font-size:16px;color:#1F3864;font-family:Segoe UI,Arial,sans-serif;">${e(t.whatsNew)}</h2>
+        <ul style="margin:0 0 18px;padding-left:20px;font-size:14px;line-height:1.6;color:#333333;">
+          ${notes.map(n => `<li style="margin:0 0 6px;">${e(n)}</li>`).join('')}
+        </ul>
+        <p style="margin:0 0 22px;font-size:14px;line-height:1.6;color:#555555;">${e(t.how)}</p>
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+          <td style="border-radius:6px;background:#1F3864;">
+            <a href="${APP_URL}" style="display:inline-block;padding:12px 26px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;font-family:Segoe UI,Arial,sans-serif;">${e(t.cta)}</a>
+          </td></tr></table>
+        <p style="margin:22px 0 0;font-size:14px;color:#333333;">${e(t.thanks)}</p>
+      </td></tr>`;
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F2F4F7;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#F2F4F7;"><tr><td align="center" style="padding:24px 12px;">
+  <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#FFFFFF;border-radius:10px;overflow:hidden;font-family:Segoe UI,Arial,sans-serif;">
+    <tr><td style="background:#1F3864;padding:22px 40px;">
+      <span style="font-size:20px;font-weight:bold;letter-spacing:1px;color:#FFFFFF;">JS PROMPT</span>
+      <span style="float:right;font-size:13px;color:#C9D6EC;line-height:28px;">v${e(version)}</span>
+    </td></tr>
+    ${blocks.map(blockHtml).join('')}
+    <tr><td style="padding:26px 40px 30px;">
+      ${blocks.map(({ t }) => `<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#8A94A6;">${e(t.footer)}</p>`).join('')}
+      <p style="margin:8px 0 0;font-size:12px;color:#8A94A6;"><a href="${APP_URL}" style="color:#2E74B5;">promt.pp.ua</a></p>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+
+    const text = blocks.map(({ t, notes }) => [
+      fmt(t.heading), '', t.intro, '', t.whatsNew + ':', ...notes.map(n => '- ' + n), '', t.how, '',
+      t.cta + ': ' + APP_URL, '', t.thanks,
+    ].join('\n')).join('\n\n----------------------------------------\n\n') +
+      '\n\n' + blocks.map(({ t }) => t.footer).join('\n');
+
+    return { subject, html, text };
+  }
+
+  async function renderAnnouncements(content) {
+    let recipients = null;            // null = lookup failed / not loaded (never treated as 0)
+    const L = ['uk', 'en', 'es'];
+    content.innerHTML = `
+      <div class="admin-card" style="margin-bottom:20px;">
+        <div class="ann-grid">
+          <label class="ann-field"><span>${AT('ann.version')}</span>
+            <input class="admin-input" id="annVersion" value="2.0.0" maxlength="20"></label>
+          <label class="ann-field"><span>${AT('ann.lang')}</span>
+            <select class="admin-select" id="annLang">
+              <option value="uk">Українська</option><option value="en">English</option><option value="es">Español</option>
+              <option value="multi">${AT('ann.lang.multi')}</option>
+            </select></label>
+        </div>
+        ${L.map(l => `
+          <label class="ann-field ann-notes" data-lang="${l}"><span>${AT('ann.notes')} — ${l.toUpperCase()}</span>
+            <textarea class="admin-input" id="annNotes-${l}" rows="7">${escHtml(EMAIL_I18N[l].notes.join('\n'))}</textarea></label>`).join('')}
+        <label class="ann-field"><span>${AT('ann.subject')}</span>
+          <input class="admin-input" id="annSubject" maxlength="200"></label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+          <button class="admin-btn admin-btn-primary" id="btnAnnGenerate">${AT('ann.generate')}</button>
+        </div>
+      </div>
+
+      <div class="admin-card" id="annPreviewCard" style="margin-bottom:20px;display:none;">
+        <h2 style="margin-bottom:10px;">${AT('ann.preview')}</h2>
+        <iframe id="annPreview" title="${AT('ann.preview')}" sandbox="" style="width:100%;height:560px;border:1px solid var(--border-color,#ccd);border-radius:8px;background:#fff;"></iframe>
+        <details style="margin-top:12px;"><summary style="cursor:pointer;">${AT('ann.plain')}</summary>
+          <pre id="annText" style="white-space:pre-wrap;font-size:12px;margin-top:8px;"></pre></details>
+      </div>
+
+      <div class="admin-card">
+        <label class="ann-check">
+          <input type="checkbox" id="annSendAll">
+          <span>${AT('ann.sendAll')}</span>
+        </label>
+        <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 14px;" id="annRecipients">${AT('common.loading')}</p>
+        <button class="admin-btn admin-btn-primary" id="btnAnnSend">${AT('ann.btnTest')}</button>
+        <div id="annProgress" style="margin-top:14px;font-size:13px;"></div>
+      </div>`;
+
+    const $ = (sel) => content.querySelector(sel);
+    let generated = null;
+
+    // Any change to the source fields makes the generated e-mail stale: it must be
+    // generated again before sending, so a bulk send never uses outdated content.
+    function invalidate() {
+      generated = null;
+      $('#annPreviewCard').style.display = 'none';
+    }
+    function syncLang() {
+      const v = $('#annLang').value;
+      content.querySelectorAll('.ann-notes').forEach(el => {
+        el.style.display = (v === 'multi' || el.dataset.lang === v) ? '' : 'none';
+      });
+      $('#annSubject').value = '';
+      invalidate();
+    }
+    function syncSendButton() {
+      const all = $('#annSendAll').checked;
+      $('#btnAnnSend').textContent = all ? AT('ann.btnAll', { n: recipients ?? '?' }) : AT('ann.btnTest');
+      $('#btnAnnSend').classList.toggle('admin-btn-danger', all);
+      $('#btnAnnSend').classList.toggle('admin-btn-primary', !all);
+    }
+    async function loadRecipients() {
+      const el = $('#annRecipients');
+      try {
+        recipients = (await window.API.adminAnnouncementRecipients()).count;
+        el.textContent = AT('ann.recipients', { n: recipients });
+      } catch (err) {
+        recipients = null;
+        el.innerHTML = '';
+        const msg = document.createElement('span');
+        msg.style.color = 'var(--error)';
+        msg.textContent = '✗ ' + err.message + ' ';
+        const retry = document.createElement('button');
+        retry.className = 'admin-btn admin-btn-sm';
+        retry.textContent = '↻';
+        retry.addEventListener('click', loadRecipients);
+        el.append(msg, retry);
+      }
+      syncSendButton();
+    }
+    function generate() {
+      const v = $('#annLang').value;
+      const langs = v === 'multi' ? L : [v];
+      const notes = {};
+      langs.forEach(l => {
+        notes[l] = $('#annNotes-' + l).value.split('\n').map(x => x.trim()).filter(Boolean);
+      });
+      const version = $('#annVersion').value.trim() || '2.0.0';
+      generated = buildAnnouncement(version, langs, notes, $('#annSubject').value.trim());
+      $('#annSubject').value = generated.subject;
+      $('#annPreviewCard').style.display = '';
+      $('#annPreview').srcdoc = generated.html;
+      $('#annText').textContent = generated.text;
+    }
+    function showProgress(st) {
+      const key = st.running ? 'ann.progress' : 'ann.done';
+      $('#annProgress').textContent = AT(key, { sent: st.sent, total: st.total, failed: st.failed });
+    }
+    async function pollStatus() {
+      try {
+        const st = await window.API.adminAnnouncementStatus();
+        if (!st || st.total === undefined) return;
+        showProgress(st);
+        if (st.running) setTimeout(pollStatus, 2000);
+      } catch {}
+    }
+
+    $('#annLang').addEventListener('change', syncLang);
+    $('#annSendAll').addEventListener('change', syncSendButton);
+    $('#annSubject').addEventListener('input', () => { if (generated) generated.subject = $('#annSubject').value.trim(); });
+    $('#annVersion').addEventListener('input', invalidate);
+    content.querySelectorAll('[id^="annNotes-"]').forEach(t => t.addEventListener('input', invalidate));
+    $('#btnAnnGenerate').addEventListener('click', generate);
+    $('#btnAnnSend').addEventListener('click', async () => {
+      if (!generated) { toast(AT('ann.needGenerate'), 'error'); return; }
+      const btn = $('#btnAnnSend');
+      const all = $('#annSendAll').checked;
+      try {
+        if (!all) {
+          btn.disabled = true;
+          const r = await window.API.adminSendAnnouncement({ ...generated, mode: 'test' });
+          toast(AT('ann.testSent', { email: r.sentTo }), 'ok');
+          return;
+        }
+        if (recipients === null) { await loadRecipients(); if (recipients === null) return; }
+        if (!recipients) { toast(AT('ann.noRecipients'), 'error'); return; }
+        const ok = await confirmDialog(AT('ann.confirmTitle'),
+          AT('ann.confirmBody', { subject: generated.subject, n: recipients }), AT('ann.confirmBtn'));
+        if (!ok) return;
+        btn.disabled = true;
+        const st = await window.API.adminSendAnnouncement({ ...generated, mode: 'all', confirm: 'SEND_TO_ALL' });
+        showProgress(st);
+        setTimeout(pollStatus, 1500);
+      } catch (err) {
+        toast('✗ ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    syncLang();
+    syncSendButton();
+    loadRecipients();
+    pollStatus();   // show the last campaign's result, if any
+  }
+
   async function renderDanger(content) {
     content.innerHTML = `
       <div class="admin-card" style="margin-bottom:20px;">
