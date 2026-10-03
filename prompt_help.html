@@ -261,10 +261,10 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
 
 <section id="converter-en">
   <h2>PDF / DOCX Converter</h2>
-  <p>Convert PDF and DOCX files to clean Markdown — preserving headings, lists, tables, inline formatting. Runs offline via Pyodide + pdfminer.six + python-docx.</p>
-  <div class="callout callout-warn"><strong>First use:</strong> Phase 2 packages (pypdf, pdfminer.six, python-docx, Pillow ~12 MB) are downloaded on first conversion. Watch the spinner. After the first session, packages are cached offline.</div>
+  <p>Convert PDF and DOCX files to clean Markdown — preserving headings, lists, tables, inline formatting. Runs offline via Pyodide (PDF: pdfminer.six; DOCX: built-in OOXML converter).</p>
+  <div class="callout callout-warn"><strong>First use:</strong> Phase 2 packages (pypdf, pdfminer.six, python-docx, Pillow ~12 MB) are downloaded on the first <em>PDF</em> conversion — DOCX needs no extra packages. Watch the spinner. After the first session, packages are cached offline.</div>
   <h3>PDF conversion pipeline</h3>
-  <p>PDF files use a two-engine approach: <strong>pdf2md</strong> (primary, @opendocsg) for quality output, with <strong>pdfminer.six</strong> as automatic fallback. DOCX uses python-docx with full paragraph and table support.</p>
+  <p>PDF files use a two-engine approach: <strong>pdf2md</strong> (primary, @opendocsg) for quality output, with <strong>pdfminer.six</strong> as automatic fallback. DOCX is parsed directly from its OOXML: headings (incl. numbering), real list numbering and nesting, bold/italic/strike, sub/superscript, hyperlinks, table of contents as links, footnotes, tables (layout tables are linearized), code blocks, quotes, equations (as LaTeX) and image placeholders (<code>media/…</code>).</p>
   <h3>Output options</h3>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
     <span class="badge badge-blue">Copy to clipboard</span>
@@ -725,7 +725,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
     <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Why does it take long to load on first visit? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Pyodide (~8 MB) downloads on first load and is cached by the Service Worker. PDF/DOCX packages (~12 MB) download only when you first use the Converter. All subsequent sessions are instant.</div></div>
     <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Do I need a DeepSeek API key? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">No. The local Python engine generates prompts without any key. DeepSeek is optional and provides higher quality for complex domains.</div></div>
     <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Is my text sent to any server? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">Local engine: no — all processing in your browser. DeepSeek engine: your text is sent to api.deepseek.com only. No data goes to our servers.</div></div>
-    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">What file formats does the converter support? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body"><strong>.pdf</strong> — pdf2md (primary) and pdfminer.six (fallback).<br><strong>.docx</strong> — python-docx.<br>Output is always clean Markdown (.md).</div></div>
+    <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">What file formats does the converter support? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body"><strong>.pdf</strong> — pdf2md (primary) and pdfminer.six (fallback).<br><strong>.docx</strong> — built-in OOXML converter (no extra packages).<br>Output is always clean Markdown (.md).</div></div>
     <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">How does the Probability Yardstick work? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">For analytical domains (intelligence, risk, financial, medical, legal), generated prompts include a standardised Probability Yardstick — a scale from "Almost certainly (&gt;95%)" to "Almost certainly not (&lt;5%)". Every probability claim must reference this scale and cite its source.</div></div>
     <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">How do I reset the app? <span class="accordion-icon">&#9660;</span></div><div class="accordion-body">DevTools → Application → Storage → Clear site data. This removes localStorage (saved files, API key, language) and Service Worker cache.</div></div>
   </div>
@@ -799,7 +799,8 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
 <section id="converter-uk">
   <h2>Конвертер PDF / DOCX</h2>
   <p>Конвертуйте PDF і DOCX-файли у чистий Markdown — зі збереженням заголовків, списків, таблиць та форматування. Працює офлайн через Pyodide.</p>
-  <div class="callout callout-warn"><strong>Перший раз:</strong> пакети Фази 2 (pypdf, pdfminer.six, python-docx, Pillow ~12 МБ) завантажуються при першій конвертації. Після першої сесії кешуються офлайн.</div>
+  <div class="callout callout-warn"><strong>Перший раз:</strong> пакети Фази 2 (pypdf, pdfminer.six, python-docx, Pillow ~12 МБ) завантажуються при першій конвертації <em>PDF</em>. Після першої сесії кешуються офлайн. DOCX не потребує додаткових пакетів.</div>
+  <p>DOCX розбирається напряму з OOXML: заголовки (з нумерацією), справжня нумерація та вкладеність списків, жирний/курсив/закреслений, верхні/нижні індекси, гіперпосилання, зміст як посилання, виноски, таблиці (таблиці-макети розгортаються в текст), блоки коду, цитати, формули (LaTeX) та заглушки зображень (<code>media/…</code>).</p>
   <h3>Опції після конвертації</h3>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
     <span class="badge badge-blue">Скопіювати</span>
@@ -1197,6 +1198,7 @@ h2 { margin-top: 30px !important; font-size: 17px !important; }
 <section id="converter-es">
   <h2>Conversor PDF / DOCX</h2>
   <p>Convierta archivos PDF y DOCX a Markdown limpio — conservando encabezados, listas, tablas y formato. Funciona sin conexión a través de Pyodide.</p>
+  <p>DOCX se analiza directamente desde OOXML (sin paquetes adicionales): encabezados con numeración, listas numeradas y anidadas, negrita/cursiva/tachado, sub/superíndices, hipervínculos, índice como enlaces, notas al pie, tablas, bloques de código, citas, ecuaciones (LaTeX) y marcadores de imagen (<code>media/…</code>).</p>
   <div class="callout callout-warn"><strong>Primer uso:</strong> los paquetes de la Fase 2 (~12 MB) se descargan en la primera conversión. Se almacenan en caché para uso sin conexión.</div>
 </section>
 

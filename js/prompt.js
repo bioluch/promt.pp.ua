@@ -47,7 +47,7 @@ function appPrompt(message, defaultValue = '') {
           </form>
         </div>
         <div class="app-dialog-footer">
-          <button class="btn btn-ghost app-dialog-cancel">' + (window.Lang ? Lang.t('dialog.cancel') : 'Cancel') + '</button>
+          <button class="btn btn-ghost app-dialog-cancel">${escapeHtml(window.Lang ? Lang.t('dialog.cancel') : 'Cancel')}</button>
           <button class="btn btn-primary app-dialog-ok">OK</button>
         </div>
       </div>`;
@@ -57,8 +57,12 @@ function appPrompt(message, defaultValue = '') {
     const btnOk  = overlay.querySelector('.app-dialog-ok');
     const btnCnl = overlay.querySelector('.app-dialog-cancel');
 
-    // Фокус і виділення тексту
-    requestAnimationFrame(() => { input.focus(); input.select(); });
+    // Показ діалогу, фокус і виділення тексту
+    requestAnimationFrame(() => {
+      overlay.classList.add('app-dialog-visible');
+      input.focus();
+      input.select();
+    });
 
     function finish(value) {
       overlay.classList.add('app-dialog-closing');
@@ -360,12 +364,12 @@ async function ensureConverterPackages() {
   updateHourglassText(T('status.installingAdv', 'Installing PDF/DOCX packages…'), 20);
   setStatus(T('status.installingAdv', 'Installing PDF/DOCX packages…'));
   showHourglassSpinner(T('status.installingAdv', 'Installing PDF/DOCX packages…'));
+  try {
+    await micropip.install(['pypdf', 'pdfminer.six', 'python-docx', 'Pillow']);
 
-  await micropip.install(['pypdf', 'pdfminer.six', 'python-docx', 'Pillow']);
-
-  // Re-run the import block so Python flags (_PYPDF_OK, _DOCX_OK, etc.)
-  // are set to True now that the packages are actually installed.
-  await pyodide.runPythonAsync(`
+    // Re-run the import block so Python flags (_PYPDF_OK, _DOCX_OK, etc.)
+    // are set to True now that the packages are actually installed.
+    await pyodide.runPythonAsync(`
 try:
     from pypdf import PdfReader
     _PYPDF_OK = True
@@ -394,10 +398,12 @@ try:
     _DOCX_OK = True
 except ImportError:
     _DOCX_OK = False
-`);
+  `);
 
-  _pkgConverterReady = true;
-  hideHourglassSpinner();
+    _pkgConverterReady = true;
+  } finally {
+    hideHourglassSpinner();
+  }
   console.info('[Pyodide] Phase 2 complete — converter packages ready');
   console.info('[Pyodide] Flags:', await pyodide.runPythonAsync(
     'str({"pypdf": _PYPDF_OK, "pdfminer": _PDFMINER_OK, "pillow": _PILLOW_OK, "docx": _DOCX_OK})'
@@ -420,7 +426,11 @@ async function ensureCheckerPackages() {
   setStatus(T('status.installingPkgs', 'Installing spell checker…'));
   showHourglassSpinner(T('status.installingPkgs', 'Installing spell checker…'));
 
-  await micropip.install(['pyspellchecker']);
+  try {
+    await micropip.install(['pyspellchecker']);
+  } finally {
+    hideHourglassSpinner();
+  }
   // Встановлюємо безпосередньо з wheel-файлу на CDN
   /*
   await micropip.install(
@@ -429,7 +439,6 @@ async function ensureCheckerPackages() {
   );
 */
   _pkgCheckerReady = true;
-  hideHourglassSpinner();
   console.info('[Pyodide] Phase 3 complete — checker packages ready');
 }
 
@@ -453,32 +462,6 @@ function detectLang(text) {
   const uk = (text.match(/[а-яіїєґ]/gi) || []).length;
   const en = (text.match(/[a-z]/gi) || []).length;
   return uk >= en ? 'uk' : 'en';
-}
-
-/**
- * Fallback: переклад через Anthropic API (якщо локальні моделі недоступні).
- * Використовує claude-sonnet-4-6 — не потребує окремого ключа у браузері,
- * запит проходить через стандартний проксі-сервер застосунку.
- */
-async function _translateViaClaude(text, lang) {
-  const langName = lang === 'uk' ? 'Ukrainian' : 'Spanish';
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `Translate the following ${langName} text to English. Return ONLY the translated text, no explanations, no quotes, no preamble.\n\nText to translate:\n${text}`
-      }]
-    })
-  });
-  if (!response.ok) throw new Error('Claude API HTTP ' + response.status);
-  const data = await response.json();
-  const block = (data.content || []).find(b => b.type === 'text');
-  if (!block) throw new Error('No text in Claude API response');
-  return block.text.trim();
 }
 
 /**
@@ -600,8 +583,7 @@ function initPromptPanel() {
       // Priority chain (first success wins):
       //   1. DeepSeek API      — highest quality, requires API key
       //   2. Helsinki-NLP/Xenova (local WebAssembly model) — no key needed
-      //   3. Claude API        — fallback if local model also fails
-      //   4. Original text     — last resort, user is warned
+      //   3. Original text     — last resort, user is warned
       //
       let textForPrompt = rawText;
       let detectedLang = 'en';
@@ -642,24 +624,16 @@ function initPromptPanel() {
             translated = true;
             toast(T('toast.translated') || 'Text translated to English', 'success');
           } catch (localErr) {
-            console.warn('[translate] Local model failed, falling back to Claude API:', localErr.message);
+            console.warn('[translate] Local model failed:', localErr.message);
           }
         }
 
-        // ── Priority 3: Claude API fallback ──────────────────────
+        // ── Priority 3: Original text — user is warned ───────────
+        // (No browser-side Claude fallback: it would need an API key in the page.)
         if (!translated) {
-          setStatus(T('status.localUnavTrans') || 'Local model unavailable. Translating via Claude API…');
-          toast(T('toast.localUnavailable') || 'Translating via Claude API…', '');
-          try {
-            console.info('[translate] Using Claude API fallback…');
-            textForPrompt = await _translateViaClaude(rawText, detectedLang);
-            translated = true;
-            toast(T('toast.translatedApi') || 'Text translated (Claude API)', 'success');
-          } catch (apiErr) {
-            console.warn('[translate] All translation methods failed:', apiErr.message);
-            toast(T('toast.translateFailed') || 'Translation failed — using original text', 'error');
-            textForPrompt = rawText;  // Priority 4: use original
-          }
+          console.warn('[translate] All translation methods failed — using original text');
+          toast(T('toast.translateFailed') || 'Translation failed — using original text', 'error');
+          textForPrompt = rawText;
         }
 
         if (translated) {
@@ -797,14 +771,15 @@ function renderPromptOutput(mdText) {
   // Raw завжди зберігаємо
   if (rawEl) rawEl.value = mdText;
 
-  // Rendered через marked.js якщо доступний
+  // Rendered через marked.js якщо доступний; HTML завжди санітизується DOMPurify
+  // (текст промту може містити довільну розмітку від користувача або AI).
   if (rendered) {
-    if (typeof marked !== 'undefined') {
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
       marked.setOptions({
         breaks: true,
         gfm:    true,
       });
-      rendered.innerHTML = marked.parse(mdText);
+      rendered.innerHTML = DOMPurify.sanitize(marked.parse(mdText));
       rendered.querySelectorAll('pre code').forEach(block => {
         block.style.display = 'block';
       });
@@ -840,9 +815,12 @@ function initConverterPanel() {
 }
 
 async function handleFiles(files) {
-  // Phase 2: ensure PDF/DOCX packages are installed before first conversion
+  // DOCX is converted by the pure-Python (stdlib) converter in PYTHON_CORE, so only
+  // PDFs need the Phase 2 packages (pypdf, pdfminer.six, Pillow …).
+  const needsPdfPkgs = Array.from(files).some(f => f.name.toLowerCase().endsWith('.pdf'));
   try {
-    await ensureConverterPackages();
+    if (needsPdfPkgs) await ensureConverterPackages();
+    else              await initPyodide();
   } catch (e) {
     toast((window.Lang ? Lang.t('toast.errorGeneric') : 'Error:') + ' ' + e.message, 'error');
     return;
@@ -892,8 +870,8 @@ async function handleFiles(files) {
         toast(window.Lang ? Lang.t('toast.copied') : 'Copied!', 'success');
       };
       btnRow.children[1].onclick = () => {
+        // appSaveFile shows its own success toast once the file is actually saved
         appSaveFile(file.name.replace(/\.(pdf|docx)$/i, '.md'), md, 'text/markdown');
-        toast(window.Lang ? Lang.t('toast.fileSaved') : 'File saved!', 'success');
       };
       btnRow.children[2].onclick = () => {
         $('#mdEditor').value = md;
@@ -997,14 +975,9 @@ async function _convertPdfPdfminer(arrayBuf, filename) {
 
   updateHourglassText(steps[0].label, steps[0].pct);
 
-  const bytes = new Uint8Array(arrayBuf);
-  const CHUNK = 50000;
-  let expr = '';
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    expr += Array.from(bytes.slice(i, i + CHUNK)).join(',') + ',';
-    if (i % (CHUNK * 4) === 0) await new Promise(r => setTimeout(r, 0));
-  }
-  pyodide.globals.set('_bytes', pyodide.runPython(`bytes([${expr}])`));
+  // Pass the buffer straight to Pyodide (no serialization into Python source)
+  pyodide.globals.set('_js_bytes', new Uint8Array(arrayBuf));
+  pyodide.runPython('_bytes = _js_bytes.to_bytes()\ndel _js_bytes');
   pyodide.globals.set('_fname', filename);
 
   for (let s = 1; s < steps.length; s++) {
@@ -1031,14 +1004,9 @@ async function _convertDocx(file, card) {
   showHourglassSpinner(steps[0].label);
   updateHourglassText(steps[1].label, steps[1].pct);
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const CHUNK = 50000;
-  let expr = '';
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    expr += Array.from(bytes.slice(i, i + CHUNK)).join(',') + ',';
-    if (i % (CHUNK * 4) === 0) await new Promise(r => setTimeout(r, 0));
-  }
-  pyodide.globals.set('_bytes', pyodide.runPython(`bytes([${expr}])`));
+  // Pass the buffer straight to Pyodide (no serialization into Python source)
+  pyodide.globals.set('_js_bytes', new Uint8Array(await file.arrayBuffer()));
+  pyodide.runPython('_bytes = _js_bytes.to_bytes()\ndel _js_bytes');
   pyodide.globals.set('_fname', file.name);
 
   for (let s = 2; s < steps.length; s++) {
@@ -1055,8 +1023,14 @@ function initEditorPanel() {
   const mdEditor = $('#mdEditor');
 
   function updatePreview() {
-    if (!pyodide) { $('#mdPreview').textContent = window.Lang ? Lang.t('status.processing') : 'Processing…'; return; }
     const md = mdEditor.value;
+    // Full GFM (tables, links, nested lists, <sup>/<sub>) via marked, sanitized by DOMPurify
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+      $('#mdPreview').innerHTML = DOMPurify.sanitize(marked.parse(md, { gfm: true, breaks: true }));
+      return;
+    }
+    // Fallback: minimal Python renderer (escapes HTML except a safe inline-tag whitelist)
+    if (!pyodide) { $('#mdPreview').textContent = window.Lang ? Lang.t('status.processing') : 'Processing…'; return; }
     pyodide.globals.set('_md', md);
     pyodide.runPythonAsync(`_html = md_to_html(_md)`).then(() => {
       $('#mdPreview').innerHTML = pyodide.globals.get('_html');
@@ -1162,6 +1136,7 @@ function initCheckerPanel() {
     try {
       await ensureCheckerPackages();
     } catch (e) {
+      hideHourglassSpinner();
       toast((window.Lang ? Lang.t('toast.errorGeneric') : 'Error:') + ' ' + e.message, 'error');
       return;
     }
@@ -1243,7 +1218,7 @@ function initCheckerPanel() {
   });
 
   $('#btnApplyFixes').addEventListener('click', async () => {
-    if (!currentErrors.length) { toast(window.Lang ? Lang.t('toast.noErrors') : 'No errors', 'error'); return; }
+    if (!currentErrors.length) { toast(window.Lang ? Lang.t('toast.noErrorsToFix') : 'No errors to fix', 'error'); return; }
     showHourglassSpinner(window.Lang ? Lang.t('status.applyingFixes') : 'Applying fixes…');
     try {
       pyodide.globals.set('_fix_text',   currentText);
@@ -1292,6 +1267,7 @@ function initCheckerPanel() {
     $('#checkResult').innerHTML = '';
     ['statWords', 'statSent', 'statErr', 'statTokens'].forEach(id => $('#' + id).textContent = '0');
     $('#statQual').textContent = '—';
+    delete $('#statQual').dataset.quality;
     currentErrors = [];
     currentText   = '';
     fixedText     = '';
@@ -1313,15 +1289,17 @@ function renderCheckResults(result) {
   const tokens = pyodide.runPython(`count_claude_tokens(_check_text)`);
   $('#statTokens').textContent = tokens.toLocaleString();
 
-  let quality = window.Lang ? Lang.t('quality.excellent') : 'Excellent', qColor = 'var(--ok)';
+  let quality = window.Lang ? Lang.t('quality.excellent') : 'Excellent', qColor = 'var(--ok)', qKey = 'excellent';
   const ratio = errors.length / Math.max(words, 1);
-  if (ratio > 0.1) { quality = window.Lang ? Lang.t('quality.needsWork') : 'Needs improvement'; qColor = 'var(--error)'; }
-  else if (ratio > 0.05) { quality = window.Lang ? Lang.t('quality.satisf') : 'Satisfactory'; qColor = 'var(--warn)'; }
-  else if (ratio > 0.02) { quality = window.Lang ? Lang.t('quality.good') : 'Good'; qColor = 'var(--accent-2)'; }
-  else if (errors.length === 0) { quality = window.Lang ? Lang.t('quality.flawless') : 'Flawless'; }
+  if (ratio > 0.1) { quality = window.Lang ? Lang.t('quality.needsWork') : 'Needs improvement'; qColor = 'var(--error)'; qKey = 'needsWork'; }
+  else if (ratio > 0.05) { quality = window.Lang ? Lang.t('quality.satisf') : 'Satisfactory'; qColor = 'var(--warn)'; qKey = 'satisf'; }
+  else if (ratio > 0.02) { quality = window.Lang ? Lang.t('quality.good') : 'Good'; qColor = 'var(--accent-2)'; qKey = 'good'; }
+  else if (errors.length === 0) { quality = window.Lang ? Lang.t('quality.flawless') : 'Flawless'; qKey = 'flawless'; }
 
   $('#statQual').textContent = quality;
   $('#statQual').style.color = qColor;
+  // Language-neutral key saved as prompts.quality_score (VARCHAR(20))
+  $('#statQual').dataset.quality = qKey;
 
   let highlighted = '';
   let last = 0;
@@ -1414,10 +1392,22 @@ function renderCheckResults(result) {
 function applySuggestion(idx, sugg) {
   const e = currentErrors[idx];
   if (!e) return;
-  const before = currentText.slice(0, e.pos);
+  // Markers mirror apply_all_fixes() in python_core.js: advisory hints never
+  // replace text, '(видалити)' removes the word plus one preceding space.
+  if (sugg === '(спростити)' || sugg === '(активний стан)') {
+    toast(window.Lang ? Lang.t('toast.adviceOnly') : 'This is a style hint — edit the text manually', '');
+    return;
+  }
+  let start = e.pos;
+  let replacement = sugg;
+  if (sugg === '(видалити)') {
+    replacement = '';
+    if (start > 0 && currentText[start - 1] === ' ') start -= 1;
+  }
+  const before = currentText.slice(0, start);
   const after = currentText.slice(e.end);
-  currentText = before + sugg + after;
-  const diff = sugg.length - (e.end - e.pos);
+  currentText = before + replacement + after;
+  const diff = replacement.length - (e.end - start);
   for (let i = idx + 1; i < currentErrors.length; i++) {
     currentErrors[i].pos += diff;
     currentErrors[i].end += diff;

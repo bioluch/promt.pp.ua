@@ -124,28 +124,28 @@
       "sizes": "1366x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help &amp; Documentation (1366x768)"
+      "label": "JS PROMPT — Help & Documentation (1366x768)"
     },
     {
       "src": "screenshots/help-1280x720.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help &amp; Documentation (1280x720)"
+      "label": "JS PROMPT — Help & Documentation (1280x720)"
     },
     {
       "src": "screenshots/help-1024x500.png",
       "sizes": "1024x500",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help &amp; Documentation (1024x500)"
+      "label": "JS PROMPT — Help & Documentation (1024x500)"
     },
     {
       "src": "screenshots/help-640x480.png",
       "sizes": "640x480",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "JS PROMPT — Help &amp; Documentation (640x480)"
+      "label": "JS PROMPT — Help & Documentation (640x480)"
     }
   ],
   "categories": [

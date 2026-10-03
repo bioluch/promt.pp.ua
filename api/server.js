@@ -97,6 +97,25 @@ const mailer = nodemailer.createTransport({
 // ── Express app ────────────────────────────────────────────────
 const app = express();
 
+// Express 4 does not catch rejected promises from async handlers: the request
+// hangs and the rejection can crash the process. Wrap every route handler so
+// async errors are forwarded to the error middleware registered below.
+function wrapAsync(fn) {
+  if (typeof fn !== 'function' || fn.length >= 4) return fn;  // keep error handlers as-is
+  return function (req, res, next) {
+    const ret = fn(req, res, next);
+    if (ret && typeof ret.catch === 'function') ret.catch(next);
+    return ret;
+  };
+}
+for (const method of ['get', 'post', 'put', 'patch', 'delete']) {
+  const orig = app[method].bind(app);
+  app[method] = (route, ...handlers) =>
+    (method === 'get' && handlers.length === 0)
+      ? orig(route)                        // app.get('setting') getter
+      : orig(route, ...handlers.flat().map(wrapAsync));
+}
+
 app.use(helmet({ contentSecurityPolicy: false }));  // CSP handled by nginx
 app.use(express.json({ limit: '2mb' }));
 app.use(cors({
@@ -380,7 +399,7 @@ app.get('/api/sources', requireAuth, async (req, res) => {
   const { domain, q, limit=50, offset=0 } = req.query;
   let sql = `SELECT * FROM source_texts WHERE user_id=$1 AND NOT is_deleted`;
   const params = [req.user.id];
-  if (domain) { params.push(domain); sql += ` AND p.domain=$${params.length}`; }
+  if (domain) { params.push(domain); sql += ` AND domain=$${params.length}`; }
   if (q) {
     params.push(q);
     sql += ` AND (original_text ILIKE '%'||$${params.length}||'%' OR translated_text ILIKE '%'||$${params.length}||'%')`;
@@ -725,11 +744,10 @@ app.post('/api/admin/provider-endpoints', requireAuth, requireAdmin, async (req,
   }
 });
 
-// DELETE /api/admin/provider-endpoints/:key — remove a non-builtin provider
+// DELETE /api/admin/provider-endpoints/:key — remove a provider.
+// Built-ins may be deleted too: is_builtin only raises the UI warning level (see admin_help.html).
 app.delete('/api/admin/provider-endpoints/:key', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { rows } = await pool.query(`SELECT is_builtin FROM ai_provider_endpoints WHERE provider_key=$1`, [req.params.key]);
-    if (rows[0]?.is_builtin) return res.status(403).json({ error: 'Cannot delete a built-in provider' });
     await pool.query(`DELETE FROM ai_provider_endpoints WHERE provider_key=$1`, [req.params.key]);
     res.status(204).end();
   } catch (err) {
@@ -759,13 +777,16 @@ app.post('/api/admin/provider-endpoints/import', requireAuth, requireAdmin, asyn
       if (!p.provider_key || !p.label || !p.endpoint_url || !p.model_name) continue;
       await pool.query(
         `INSERT INTO ai_provider_endpoints
-           (provider_key, label, endpoint_url, model_name, auth_header, auth_prefix, is_builtin, is_active, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now())
+           (provider_key, label, endpoint_url, model_name, auth_header, auth_prefix, is_builtin, is_active,
+            provider_options, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())
          ON CONFLICT (provider_key) DO UPDATE SET
-           label=$2, endpoint_url=$3, model_name=$4, auth_header=$5, auth_prefix=$6, is_active=$8, updated_at=now()`,
+           label=$2, endpoint_url=$3, model_name=$4, auth_header=$5, auth_prefix=$6, is_active=$8,
+           provider_options=COALESCE($9,ai_provider_endpoints.provider_options), updated_at=now()`,
         [p.provider_key, p.label, p.endpoint_url, p.model_name,
          p.auth_header || 'Authorization', p.auth_prefix ?? 'Bearer ',
-         !!p.is_builtin, p.is_active !== false]
+         !!p.is_builtin, p.is_active !== false,
+         p.provider_options ? JSON.stringify(p.provider_options) : null]
       );
       count++;
     }
@@ -1052,13 +1073,51 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (req, res) => {
   });
 });
 
-// ── DeepSeek key endpoint (replaces env-server.js) ────────────
-// Only for authenticated users — replaces unauthenticated /env
+// ── Client config endpoint (replaces env-server.js) ───────────
+// Never returns the DeepSeek key itself — only whether the server has one.
+// Clients without a personal key use the /api/deepseek/chat proxy below.
 app.get('/api/env', requireAuth, (req, res) => {
   res.json({
-    DEEPSEEK_API_KEY: DEEPSEEK_API_KEY || '',
+    deepseekConfigured: !!DEEPSEEK_API_KEY,
     APP_URL,
   });
+});
+
+// POST /api/deepseek/chat — proxy chat completions using the server-side key
+const deepseekLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => String(req.user.id),   // runs after requireAuth
+  message: { error: { message: 'Rate limit exceeded.' } },
+  standardHeaders: true, legacyHeaders: false,
+});
+app.post('/api/deepseek/chat', requireAuth, deepseekLimiter, async (req, res) => {
+  if (!DEEPSEEK_API_KEY) return res.status(503).json({ error: { message: 'DeepSeek key not configured' } });
+  const { messages, temperature, max_tokens } = req.body || {};
+  const validMessages = Array.isArray(messages) && messages.length > 0 && messages.length <= 20 &&
+    messages.every(m => m && ['system', 'user', 'assistant'].includes(m.role) && typeof m.content === 'string');
+  if (!validMessages) return res.status(400).json({ error: { message: 'Invalid messages' } });
+
+  const t = Number(temperature);
+  const mt = parseInt(max_tokens, 10);
+  try {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model:       'deepseek-chat',
+        temperature: Number.isFinite(t) ? Math.min(Math.max(t, 0), 2) : 0.2,
+        max_tokens:  Number.isFinite(mt) ? Math.min(Math.max(mt, 1), 4000) : 2000,
+        messages:    messages.map(({ role, content }) => ({ role, content })),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    // Don't relay 401 from DeepSeek as-is: the client would treat it as a bad personal key
+    res.status(response.status === 401 ? 502 : response.status).json(data);
+  } catch (err) {
+    console.error('[deepseek/chat]', err.message);
+    res.status(502).json({ error: { message: 'DeepSeek API unreachable' } });
+  }
 });
 
 // ── Password auth ──────────────────────────────────────────
@@ -1577,12 +1636,59 @@ app.delete('/api/admin/backup/:filename', requireAuth, requireAdmin, async (req,
   }
 });
 
+// Reject psql meta-commands (\!, \copy … program, \i, \o …) in a dump before it is
+// fed to psql. Scans SQL with a small lexer so backslashes inside string literals,
+// quoted identifiers, dollar-quoted bodies, comments and COPY data are ignored.
+// Only the \restrict / \unrestrict lines emitted by recent pg_dump versions are allowed.
+const ALLOWED_META_RE = /^\\(restrict|unrestrict)\s+[A-Za-z0-9]+\s*$/;
+async function validateRestoreSql(sqlPath) {
+  const readline = require('readline');
+  const rl = readline.createInterface({ input: fs.createReadStream(sqlPath, 'utf8'), crlfDelay: Infinity });
+  let inCopy = false;
+  let state = null;       // null | "'" | "E'" | '"' | '/*' | '$tag$'
+  let lineNo = 0;
+  for await (const line of rl) {
+    lineNo++;
+    if (inCopy) { if (line === '\\.') inCopy = false; continue; }
+    if (state === null && ALLOWED_META_RE.test(line)) continue;
+
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (state === "'" || state === "E'") {
+        if (state === "E'" && c === '\\') { i++; continue; }
+        if (c === "'") { if (line[i + 1] === "'") i++; else state = null; }
+      } else if (state === '"') {
+        if (c === '"') { if (line[i + 1] === '"') i++; else state = null; }
+      } else if (state === '/*') {
+        if (c === '*' && line[i + 1] === '/') { i++; state = null; }
+      } else if (state !== null) {                        // dollar quote
+        if (line.startsWith(state, i)) { i += state.length - 1; state = null; }
+      } else if (c === '-' && line[i + 1] === '-') {
+        break;                                            // line comment
+      } else if (c === '/' && line[i + 1] === '*') {
+        i++; state = '/*';
+      } else if (c === "'") {
+        state = /[eE]/.test(line[i - 1] || '') && !/\w/.test(line[i - 2] || '') ? "E'" : "'";
+      } else if (c === '"') {
+        state = '"';
+      } else if (c === '$') {
+        const m = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(line.slice(i));
+        if (m && !/\w/.test(line[i - 1] || '')) { state = m[0]; i += m[0].length - 1; }
+      } else if (c === '\\') {
+        throw new Error(`Backup rejected: psql meta-command at line ${lineNo}`);
+      }
+    }
+    if (state === null && /^COPY\s.+\sFROM\s+stdin;\s*$/i.test(line)) inCopy = true;
+  }
+}
+
 // Shared restore logic: gunzip a .sql.gz file into the database, then clean up the temp .sql
 async function runRestore(gzPath) {
   const sqlPath = gzPath.replace(/\.gz$/, '');
   try {
     // Decompress to a temp .sql file (keep the original .gz intact with -k)
     await execFileAsync('gunzip', ['-k', '-f', gzPath]);
+    await validateRestoreSql(sqlPath);
 
     // Restore inside a single transaction: if ANY statement fails, PostgreSQL
     // rolls back the entire restore, leaving the database exactly as it was
@@ -1665,17 +1771,45 @@ app.post('/api/admin/backup/restore/:filename', requireAuth, requireAdmin, async
 });
 
 // POST /api/admin/backup/upload-restore — upload a .sql.gz file and restore directly from it
-// Body must be raw application/gzip bytes. The confirm code is sent as a query param
-// since this is a raw-body route (no JSON parsing here).
+// Body must be raw application/gzip bytes; it is streamed to disk, not buffered in memory.
+// The confirm code is sent as a query param since this is a raw-body route.
+const UPLOAD_RESTORE_MAX_BYTES = 500 * 1024 * 1024;
+
+function streamBodyToFile(req, filePath, maxBytes) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    let settled = false;
+    const out = fs.createWriteStream(filePath);
+    const onData = (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) fail(Object.assign(new Error('File too large'), { status: 413 }));
+    };
+    // Settle once; on failure close the file before rejecting so the caller can unlink it
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      req.off('data', onData);
+      req.unpipe(out);
+      req.resume();                       // drain the rest of the upload
+      out.once('close', () => reject(err));
+      out.destroy();
+    };
+    req.on('data', onData);
+    req.on('error', fail);
+    out.on('error', fail);
+    out.on('finish', () => { if (!settled) { settled = true; resolve(size); } });
+    req.pipe(out);
+  });
+}
+
 app.post(
   '/api/admin/backup/upload-restore',
   requireAuth, requireAdmin,
-  express.raw({ type: 'application/gzip', limit: '500mb' }),
   async (req, res) => {
     if (req.query.confirm !== 'RESTORE_DATABASE') {
       return res.status(400).json({ error: 'Must pass ?confirm=RESTORE_DATABASE to proceed' });
     }
-    if (!Buffer.isBuffer(req.body) || !req.body.length) {
+    if (!req.is('application/gzip')) {
       return res.status(400).json({ error: 'No file data received (expected application/gzip body)' });
     }
 
@@ -1683,11 +1817,19 @@ app.post(
     const tmpPath = path.join(BACKUP_DIR, tmpName);
 
     try {
-      fs.writeFileSync(tmpPath, req.body);
+      const size = await streamBodyToFile(req, tmpPath, UPLOAD_RESTORE_MAX_BYTES);
+      if (!size) {
+        fs.unlinkSync(tmpPath);
+        return res.status(400).json({ error: 'No file data received (expected application/gzip body)' });
+      }
       await runRestore(tmpPath);
       res.json({ ok: true, message: `Database restored from uploaded file (saved as ${tmpName}).`, filename: tmpName });
     } catch (err) {
       console.error('[admin/backup/upload-restore]', err.message);
+      if (err.status === 413) {
+        try { fs.unlinkSync(tmpPath); } catch {}
+        return res.status(413).json({ error: 'File too large (max 500 MB)' });
+      }
       res.status(500).json({ error: 'Restore failed: ' + err.message });
     }
   }
@@ -1701,6 +1843,19 @@ app.get('/api/health', async (req, res) => {
   } catch {
     res.status(503).json({ status: 'error', db: 'error' });
   }
+});
+
+// ── Error handler (receives errors forwarded by wrapAsync) ────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(`[api] ${req.method} ${req.originalUrl}:`, err.message);
+  if (res.headersSent) return;
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[api] Unhandled rejection:', reason);
 });
 
 // ── Start ─────────────────────────────────────────────────────

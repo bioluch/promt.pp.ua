@@ -4,7 +4,8 @@
  * Parity with python_core.js: full domain classification, expert roles,
  * domain-specific methodologies, Probability Yardstick, Examples Clause,
  * anti-hallucination controls, CoT scratchpad enforcement.
- * API key stored in localStorage (never sent to any server except api.deepseek.com).
+ * Personal API key stored in localStorage (sent only to api.deepseek.com); without one,
+ * requests go through the authenticated server proxy, which keeps its key server-side.
  */
 'use strict';
 /* updated: 2026-06-26 — hard-reload browser (Ctrl+Shift+R) if you see cached 404 errors */
@@ -17,18 +18,19 @@ const DeepSeek = (() => {
   const ENV_URL  = '/env';                // nginx proxies this → env-server.js:3099
 
   /* ── Key management ──────────────────────────────────────────── */
-  // _envKey caches the key fetched from server /env endpoint (env-server.js).
-  // Priority: server .env > localStorage (manual entry fallback).
-  let _envKey = '';
+  // The server never exposes its own DeepSeek key. /api/env only reports whether
+  // one is configured; if so, requests without a personal key go through the
+  // authenticated server proxy /api/deepseek/chat.
+  // Priority: personal key in localStorage > server proxy.
+  let _serverKey = false;
+  const PROXY_ENDPOINT = '/api/deepseek/chat';
 
   /**
-   * fetchKeyFromEnv() — fetch DEEPSEEK_API_KEY from /env endpoint once on init.
-   * nginx proxies /env → env-server.js:3099 which reads the server-side .env file.
-   * Falls back silently to localStorage if endpoint is unavailable.
+   * fetchKeyFromEnv() — ask the server once whether it has a DeepSeek key configured.
+   * Falls back silently to the localStorage key if the endpoint is unavailable.
    */
   async function fetchKeyFromEnv() {
     try {
-      // Use /api/env (auth-gated) if user is logged in, otherwise skip silently
       const token = sessionStorage.getItem('_jsat') || '';
       if (!token) return; // Not logged in — use localStorage key
       const resp = await fetch('/api/env', {
@@ -38,21 +40,40 @@ const DeepSeek = (() => {
       });
       if (!resp.ok) return; // Silently fall back to localStorage
       const data = await resp.json();
-      const k = data && data.DEEPSEEK_API_KEY;
-      if (typeof k === 'string' && k.startsWith('sk-')) {
-        _envKey = k;
-        const masked = k.slice(0, 6) + '…' + k.slice(-4);
-        console.info('[DeepSeek] API key loaded from /api/env:', masked);
-      }
+      _serverKey = !!(data && data.deepseekConfigured);
+      if (_serverKey) console.info('[DeepSeek] server-side key available via proxy');
     } catch (err) {
       console.info('[DeepSeek] /api/env not reachable — using localStorage key');
     }
   }
 
-  function getKey()   { return localStorage.getItem(LS_KEY) || _envKey || ''; }
+  function getKey()   { return localStorage.getItem(LS_KEY) || ''; }
   function setKey(k)  { localStorage.setItem(LS_KEY, k.trim()); }
-  function clearKey() { localStorage.removeItem(LS_KEY); _envKey = ''; }
-  function hasKey()   { return !!getKey(); }
+  function clearKey() { localStorage.removeItem(LS_KEY); }
+  function hasKey()   { return !!getKey() || _serverKey; }
+
+  /**
+   * chatRequest(body) — POST a chat completion either directly to DeepSeek with the
+   * personal key, or through the server proxy (server key) when no personal key is set.
+   */
+  async function chatRequest(body) {
+    const key = getKey();
+    if (key) {
+      return fetch(ENDPOINT, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body:    JSON.stringify(body),
+      });
+    }
+    // Refresh an expired access token first so the proxy call doesn't 401
+    try { await window.API?.ensureSession?.(); } catch {}
+    const token = sessionStorage.getItem('_jsat') || '';
+    return fetch(PROXY_ENDPOINT, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body:    JSON.stringify(body),
+    });
+  }
 
 
 
@@ -1019,8 +1040,7 @@ ${examples}
 
   /* ── Main API call ───────────────────────────────────────────── */
   async function generatePrompt({ userText, style = 'detailed', lang = 'uk', onStatus }) {
-    const key = getKey();
-    if (!key) throw new Error('NO_API_KEY');
+    if (!hasKey()) throw new Error('NO_API_KEY');
 
     const domain   = detectDomain(userText);
     // An explicit output-language request inside the task text overrides the dropdown.
@@ -1042,13 +1062,7 @@ Generate a professional Claude prompt for this task now. Follow all structural r
 
     if (onStatus) onStatus((window.Lang ? Lang.t('status.deepseekAnalyzing') : 'DeepSeek: analyzing domain') + ` «${domain}»…`);
 
-    const resp = await fetch(ENDPOINT, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${key}`,
-      },
-      body: JSON.stringify({
+    const resp = await chatRequest({
         model:       MODEL,
         temperature: 0.20,
         max_tokens:  2400,
@@ -1056,7 +1070,6 @@ Generate a professional Claude prompt for this task now. Follow all structural r
           { role: 'system', content: system },
           { role: 'user',   content: userMsg },
         ],
-      }),
     });
 
     if (!resp.ok) {
@@ -1241,8 +1254,8 @@ Generate a professional Claude prompt for this task now. Follow all structural r
         const cfg = PROVIDERS[p];
         // Check localStorage (already synced from DB via syncKeysFromServer on modal open)
         const hasLocal = !!localStorage.getItem(cfg.lsKey);
-        // For DeepSeek also check _envKey from server
-        const hasEnv = p === 'deepseek' && !!_envKey;
+        // For DeepSeek also check whether the server proxy key is available
+        const hasEnv = p === 'deepseek' && _serverKey;
         const has = hasLocal || hasEnv;
         const tab = document.createElement('button');
         tab.className = '_akTab';
@@ -1705,7 +1718,7 @@ Generate a professional Claude prompt for this task now. Follow all structural r
    */
   async function fetchBalance() {
     const key = getKey();
-    if (!key) return null;
+    if (!hasKey()) return null;
 
     // Return cached result if still fresh
     if (_balanceCache && (Date.now() - _balanceCache.ts) < BALANCE_CACHE_MS) {
@@ -1881,19 +1894,12 @@ Generate a professional Claude prompt for this task now. Follow all structural r
    * @param {string} targetLang  - BCP-47 code or full name (default: 'en')
    */
   async function translateText(text, sourceLang = 'uk', targetLang = 'en') {
-    const key = getKey();
-    if (!key) throw new Error('NO_API_KEY');
+    if (!hasKey()) throw new Error('NO_API_KEY');
 
     const srcName = LANG_NAMES[sourceLang] || sourceLang;
     const tgtName = LANG_NAMES[targetLang] || targetLang;
 
-    const resp = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${key}`,
-      },
-      body: JSON.stringify({
+    const resp = await chatRequest({
         model:       MODEL,
         temperature: 0.1,
         max_tokens:  2000,
@@ -1907,7 +1913,6 @@ Generate a professional Claude prompt for this task now. Follow all structural r
             content: text,
           },
         ],
-      }),
     });
 
     if (!resp.ok) {

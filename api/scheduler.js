@@ -124,11 +124,9 @@ async function runJob(job) {
   const startMs = Date.now();
   console.log(`[scheduler] Running job ${job.id} (${job.target_ai}) prompt: ${job.prompt_id}`);
 
-  // Mark running
-  await pool.query(
-    `UPDATE scheduled_jobs SET status='running', last_run_at=now() WHERE id=$1`,
-    [job.id]
-  );
+  // The job was already claimed (status='running') by pollAndRun; refresh
+  // last_run_at so stale detection measures this job's run, not the batch claim.
+  await pool.query(`UPDATE scheduled_jobs SET last_run_at=now() WHERE id=$1`, [job.id]);
 
   let resultText  = null;
   let errorMsg    = null;
@@ -237,12 +235,23 @@ async function runJob(job) {
     );
   } else {
     const nextRun = computeNextRun(job);
-    await pool.query(
-      `UPDATE scheduled_jobs
-       SET status='pending', next_run_at=$2, run_count=$3, retry_count=0, last_run_at=now()
-       WHERE id=$1`,
-      [job.id, nextRun, newRunCount]
-    );
+    if (!nextRun) {
+      // No remaining date (e.g. custom schedule exhausted) — deactivate instead of
+      // storing a NULL next_run_at.
+      await pool.query(
+        `UPDATE scheduled_jobs
+         SET status='done', is_active=false, run_count=$2, retry_count=0, last_run_at=now()
+         WHERE id=$1`,
+        [job.id, newRunCount]
+      );
+    } else {
+      await pool.query(
+        `UPDATE scheduled_jobs
+         SET status='pending', next_run_at=$2, run_count=$3, retry_count=0, last_run_at=now()
+         WHERE id=$1`,
+        [job.id, nextRun, newRunCount]
+      );
+    }
   }
 
   console.log(`[scheduler] Job ${job.id} ${status} in ${durationMs}ms`);
@@ -254,38 +263,76 @@ async function runJob(job) {
 }
 
 // ── Compute next run time ────────────────────────────────────
+// All schedule maths happens in the job's own timezone, not the server's.
+
+// Calendar parts of `date` as seen in `tz`.
+function zonedParts(date, tz) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hourCycle: 'h23',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', weekday: 'short',
+  }).formatToParts(date);
+  const get = (t) => parts.find(p => p.type === t).value;
+  return {
+    y: +get('year'), mo: +get('month'), d: +get('day'),
+    h: +get('hour'), mi: +get('minute'),
+    wd: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday')),
+  };
+}
+
+// UTC instant for wall-clock y-mo-d h:mi in `tz` (handles DST by re-checking the offset).
+function zonedTimeToUtc(y, mo, d, h, mi, tz) {
+  const wall = Date.UTC(y, mo - 1, d, h, mi);
+  let ts = wall;
+  for (let i = 0; i < 2; i++) {
+    const p = zonedParts(new Date(ts), tz);
+    ts += wall - Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi);
+  }
+  return new Date(ts);
+}
+
 function computeNextRun(job) {
   const now = new Date();
-  const tz  = job.timezone || 'UTC';
+  let tz = job.timezone || 'UTC';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch { tz = 'UTC'; }
+
+  // Fall back to the job's original next_run_at for a missing time / days,
+  // so a job created with only next_run_at keeps its original slot.
+  const anchor = zonedParts(job.next_run_at ? new Date(job.next_run_at) : now, tz);
+  const [h, m] = job.run_time
+    ? String(job.run_time).split(':').map(Number)
+    : [anchor.h, anchor.mi];
+
+  // First day (in tz) from today onward, matching `matches`, whose h:m is still in the future.
+  const nextMatchingDay = (matches, maxDays) => {
+    const today = zonedParts(now, tz);
+    for (let i = 0; i <= maxDays; i++) {
+      const day = new Date(Date.UTC(today.y, today.mo - 1, today.d + i));
+      if (!matches(day)) continue;
+      const at = zonedTimeToUtc(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), h, m, tz);
+      if (at > now) return at;
+    }
+    return null;
+  };
 
   switch (job.schedule_type) {
     case 'weekly': {
-      // run_days: [0..6], run_time: 'HH:MM'
-      const [h, m] = (job.run_time || '09:00').split(':').map(Number);
-      const days   = job.run_days || [1]; // default Monday
-      let next = new Date(now);
-      next.setHours(h, m, 0, 0);
-      for (let i = 1; i <= 8; i++) {
-        next = new Date(next.getTime() + 24 * 3600 * 1000);
-        if (days.includes(next.getDay())) break;
-      }
-      return next;
+      // run_days: [0..6] (Sun=0)
+      const days = job.run_days?.length ? job.run_days : [anchor.wd];
+      return nextMatchingDay(day => days.includes(day.getUTCDay()), 8);
     }
     case 'monthly': {
-      const [h, m] = (job.run_time || '09:00').split(':').map(Number);
-      const days   = job.run_days || [1]; // day of month
-      let next = new Date(now);
-      for (let i = 1; i <= 32; i++) {
-        next = new Date(next.getTime() + 24 * 3600 * 1000);
-        if (days.includes(next.getDate())) break;
-      }
-      next.setHours(h, m, 0, 0);
-      return next;
+      // run_days: [1..31] day of month
+      const days = job.run_days?.length ? job.run_days : [anchor.d];
+      return nextMatchingDay(day => days.includes(day.getUTCDate()), 366);
     }
     case 'custom': {
-      // run_dates: ['2026-08-15', ...]
+      // run_dates: DATE[] — node-pg parses DATE as local midnight, so read local parts
       const remaining = (job.run_dates || [])
-        .map(d => new Date(d))
+        .map(d => {
+          const dt = d instanceof Date ? d : new Date(`${d}T00:00:00`);
+          return zonedTimeToUtc(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), h, m, tz);
+        })
         .filter(d => d > now)
         .sort((a, b) => a - b);
       return remaining[0] || null;
@@ -694,14 +741,39 @@ async function callOpenAICompatible(prompt, job) {
 
 // ── Main poll loop ────────────────────────────────────────────
 
+// Guard against overlapping ticks: a slow batch must not let the next
+// setInterval tick start while jobs are still being processed.
+let pollInProgress = false;
+const STALE_RUNNING_MINUTES = 60;   // a 'running' job older than this is considered abandoned
+
 async function pollAndRun() {
+  if (pollInProgress) return;
+  pollInProgress = true;
   try {
-    const { rows: dueJobs } = await pool.query(
-      `SELECT * FROM scheduled_jobs
-       WHERE is_active=true AND status='pending' AND next_run_at <= now()
-       ORDER BY next_run_at ASC
-       LIMIT 10`
+    // Reclaim jobs stuck in 'running' (scheduler crashed or restarted mid-run).
+    // No poll of this process is in flight here, so these rows belong to a dead run.
+    const { rowCount: reclaimed } = await pool.query(
+      `UPDATE scheduled_jobs SET status='pending'
+       WHERE is_active=true AND status='running'
+         AND (last_run_at IS NULL OR last_run_at < now() - make_interval(mins => $1))`,
+      [STALE_RUNNING_MINUTES]
     );
+    if (reclaimed) console.warn(`[scheduler] Reclaimed ${reclaimed} stale running job(s)`);
+
+    // Atomically claim due jobs: SKIP LOCKED + the status flip in the same
+    // statement means no other poller (or overlapping tick) can claim them too.
+    const { rows: dueJobs } = await pool.query(
+      `UPDATE scheduled_jobs SET status='running', last_run_at=now()
+       WHERE id IN (
+         SELECT id FROM scheduled_jobs
+         WHERE is_active=true AND status='pending' AND next_run_at <= now()
+         ORDER BY next_run_at ASC
+         LIMIT 10
+         FOR UPDATE SKIP LOCKED
+       )
+       RETURNING *`
+    );
+    dueJobs.sort((a, b) => a.next_run_at - b.next_run_at);
 
     for (const job of dueJobs) {
       // Run sequentially to avoid thundering herd
@@ -711,6 +783,8 @@ async function pollAndRun() {
     }
   } catch (err) {
     console.error('[scheduler] Poll error:', err.message);
+  } finally {
+    pollInProgress = false;
   }
 }
 

@@ -29,6 +29,19 @@
 
   <link rel="manifest" href="manifest.json">
 
+  <!-- Google Consent Mode: everything denied until the user opts in via the cookie banner -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('consent', 'default', {
+      analytics_storage:  'denied',
+      ad_storage:         'denied',
+      ad_user_data:       'denied',
+      ad_personalization: 'denied',
+      wait_for_update:    500,
+    });
+  </script>
+
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -83,27 +96,14 @@
               id: "analytics",
               name: "Analytics",
               description: "<p>These cookies help us improve the site by tracking which pages are most popular and how visitors move around the site.</p>",
-              defaultValue: true,
+              defaultValue: false,
+              // gtag() is dataLayer-backed and defined before GTM loads (see Consent Mode block)
               onAccept: function() {
-                // Використовуємо dataLayer, якщо gtag ще не завантажений
-                if (typeof gtag !== 'undefined') {
-                  gtag('consent', 'update', {
-                    analytics_storage: 'granted',
-                  });
-                }
-                // Завжди пушимо подію в dataLayer
-                if (typeof dataLayer !== 'undefined') {
-                  dataLayer.push({
-                    'event': 'consent_accepted_analytics',
-                  });
-                }
+                gtag('consent', 'update', { analytics_storage: 'granted' });
+                dataLayer.push({ 'event': 'consent_accepted_analytics' });
               },
               onReject: function() {
-                if (typeof gtag !== 'undefined') {
-                  gtag('consent', 'update', {
-                    analytics_storage: 'denied',
-                  });
-                }
+                gtag('consent', 'update', { analytics_storage: 'denied' });
               }
             },
             {
@@ -111,33 +111,25 @@
               name: "Advertising",
               description: "<p>These cookies provide extra features and personalization to improve your experience. They may be set by us or by partners whose services we use.</p>",
               onAccept: function() {
-                if (typeof gtag !== 'undefined') {
-                  gtag('consent', 'update', {
-                    ad_storage: 'granted',
-                    ad_user_data: 'granted',
-                    ad_personalization: 'granted',
-                  });
-                }
-                if (typeof dataLayer !== 'undefined') {
-                  dataLayer.push({
-                    'event': 'consent_accepted_advertising',
-                  });
-                }
+                gtag('consent', 'update', {
+                  ad_storage: 'granted',
+                  ad_user_data: 'granted',
+                  ad_personalization: 'granted',
+                });
+                dataLayer.push({ 'event': 'consent_accepted_advertising' });
               },
               onReject: function() {
-                if (typeof gtag !== 'undefined') {
-                  gtag('consent', 'update', {
-                    ad_storage: 'denied',
-                    ad_user_data: 'denied',
-                    ad_personalization: 'denied',
-                  });
-                }
+                gtag('consent', 'update', {
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied',
+                });
               }
             }
           ],
           text: {
             banner: {
-              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://idea4rs.pp.ua/cookie-policy\" target=\"_blank\">Cookie Policy.</a></p>",
+              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://promt.pp.ua/pp.html#cookies\" target=\"_blank\">Cookie Policy.</a></p>",
               acceptAllButtonText: "Accept all",
               acceptAllButtonAccessibleLabel: "Accept all cookies",
               rejectNonEssentialButtonText: "Reject non-essential",
@@ -887,6 +879,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ── Scripts ──────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
 <script src="js/spinner.js"></script>
 <script src="js/language.js"></script>
 <script src="js/python_core.js"></script>

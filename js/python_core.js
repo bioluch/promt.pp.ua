@@ -1632,9 +1632,11 @@ def _build_tasks(text: str, domain: str, lang: str) -> str:
     task1 = tasks.get('uk' if uk else 'en', default_task.get('uk' if uk else 'en', default_task['en']))
     
     t = template.get('uk' if uk else 'en', template.get('en', ''))
-    return t.format(task1=task1, 
-                    task2='Застосувати методологію для отримання доказових висновків.',
-                    task3='Документувати всі джерела, припущення та обмеження.')
+    task2 = ('Застосувати методологію для отримання доказових висновків.' if uk
+             else 'Apply the methodology to reach evidence-based conclusions.')
+    task3 = ('Документувати всі джерела, припущення та обмеження.' if uk
+             else 'Document all sources, assumptions and limitations.')
+    return t.format(task1=task1, task2=task2, task3=task3)
 
 def _build_deliverables(domain: str, lang: str) -> str:
     """Build deliverables section."""
@@ -2523,154 +2525,1038 @@ def pdf_to_md(file_bytes, filename):
     except Exception as e:
         return f'# PDF Conversion Error\\n\\n> Error: {str(e)}\\n\\nPlease try again with a different PDF file.'
 
-def _run_to_md(run):
-    try:
-        t = run.text or ''
-        if not t:
-            return ''
-        try:
-            strike = run.font.strike
-        except Exception:
-            strike = False
-        try:
-            font_name = (run.font.name or '').lower()
-        except Exception:
-            font_name = ''
-        is_code = any(m in font_name for m in
-                      ('courier', 'consol', 'mono', 'code', 'lucida console'))
-        if is_code:
-            return _BT + t + _BT
-        if run.bold and run.italic: t = f'***{t}***'
-        elif run.bold: t = f'**{t}**'
-        elif run.italic: t = f'*{t}*'
-        if run.underline: t = f'__{t}__'
-        if strike: t = f'~~{t}~~'
-        return t
-    except Exception:
-        return ''
+# ══════════════════════════════════════════════════════════════
+# DOCX → Markdown converter
+# Parses the OOXML package directly (zipfile + ElementTree, stdlib only):
+# headings (styles + outline levels), real list numbering, inline formatting
+# with run merging, hyperlinks (incl. field hyperlinks), internal anchors,
+# footnotes/endnotes, tables (GFM, or linearized for layout tables), code
+# blocks, quotes, images, text boxes, equations (OMML → LaTeX), tracked changes.
+# ══════════════════════════════════════════════════════════════
+import zipfile as _dx_zip
+import posixpath as _dx_pp
+import xml.etree.ElementTree as _dx_ET
 
-def _para_to_md(para):
-    try:
-        style = (para.style.name or '').strip()
-        text = para.text.strip()
-        if not text:
-            return ''
-        hn = _safe_re_match(r'[Hh]eading\\s*(\\d)', style)
-        if hn:
-            return '#' * min(int(hn.group(1)), 4) + f' {text}'
-        if 'Title' in style: return f'# {text}'
-        if 'Subtitle' in style: return f'## {text}'
-        if 'Caption' in style: return f'*{text}*'
+_DX_NS = {
+    'w':   'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+    'r':   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+    'm':   'http://schemas.openxmlformats.org/officeDocument/2006/math',
+    'wp':  'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+    'a':   'http://schemas.openxmlformats.org/drawingml/2006/main',
+    'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
+    'mc':  'http://schemas.openxmlformats.org/markup-compatibility/2006',
+    'v':   'urn:schemas-microsoft-com:vml',
+    'pr':  'http://schemas.openxmlformats.org/package/2006/relationships',
+    'dc':  'http://purl.org/dc/elements/1.1/',
+}
+
+def _dx(tag):
+    p, n = tag.split(':')
+    return '{%s}%s' % (_DX_NS[p], n)
+
+def _dx_local(el):
+    t = el.tag
+    return t.split('}', 1)[1] if isinstance(t, str) and '}' in t else t
+
+def _dx_ns(el):
+    t = el.tag
+    return t[1:].split('}', 1)[0] if isinstance(t, str) and t.startswith('{') else ''
+
+def _dx_val(el, attr='w:val'):
+    return None if el is None else el.get(_dx(attr))
+
+def _dx_on(el):
+    """Toggle property (w:b, w:i, …): present and not explicitly false."""
+    if el is None:
+        return None
+    v = el.get(_dx('w:val'))
+    return v is None or v.lower() not in ('0', 'false', 'off', 'none')
+
+_DX_MONO = ('courier', 'consol', 'mono', 'menlo', 'monaco', 'lucida console',
+            'source code', 'fira code', 'jetbrains', 'inconsolata', 'cascadia')
+_DX_SYM = {'F0B7': '•', 'F0A7': '▪', 'F0FC': '✓', 'F0E0': '→', 'F0DF': '←',
+           'F0DE': '⇒', 'F0AE': '→', 'F0D8': '⇒', 'F0A8': '•', 'F06C': '●',
+           'F06E': '■', 'F0B0': '°', 'F0B1': '±', 'F0A3': '≤', 'F0B3': '≥'}
+
+_DX_TEX = {'Δ': '\\\\Delta ', 'δ': '\\\\delta ', 'α': '\\\\alpha ', 'β': '\\\\beta ', 'γ': '\\\\gamma ',
+           'Γ': '\\\\Gamma ', 'ε': '\\\\varepsilon ', 'θ': '\\\\theta ', 'λ': '\\\\lambda ', 'μ': '\\\\mu ',
+           'π': '\\\\pi ', 'ρ': '\\\\rho ', 'σ': '\\\\sigma ', 'Σ': '\\\\Sigma ', 'τ': '\\\\tau ', 'φ': '\\\\varphi ',
+           'ω': '\\\\omega ', 'Ω': '\\\\Omega ', '×': '\\\\times ', '·': '\\\\cdot ', '⋅': '\\\\cdot ', '≤': '\\\\le ',
+           '≥': '\\\\ge ', '≠': '\\\\ne ', '±': '\\\\pm ', '→': '\\\\to ', '∞': '\\\\infty ', '≈': '\\\\approx ',
+           '−': '-', '∑': '\\\\sum ', '√': '\\\\sqrt '}
+
+def _dx_slug(text):
+    s = re.sub(r'[^\\w\\- ]', '', text.strip().lower())
+    return re.sub(r' ', '-', s)
+
+def _dx_esc(text, table=False):
+    """Escape Markdown-significant characters in plain text."""
+    if not text:
+        return text
+    text = text.replace('\\\\', '\\\\\\\\')
+    text = re.sub('([*' + _BT + r'\\[\\]])', r'\\\\\\1', text)
+    # underscores only where they could open/close emphasis (not snake_case)
+    text = re.sub(r'(?<!\\w)_|_(?!\\w)', r'\\\\_', text)
+    text = re.sub(r'<(?=[A-Za-z/!?])', '&lt;', text)
+    if table:
+        text = text.replace('|', '\\\\|')
+    return text
+
+def _dx_esc_line_start(line):
+    """Escape a leading token that would turn a text line into a block element."""
+    if re.match(r'(#{1,6}\\s|>|[-+*]\\s|\\d{1,9}[.)]\\s|={3,}\\s*$|-{3,}\\s*$|\\s{4})', line):
+        if line.startswith('    '):
+            return line.lstrip()
+        m = re.match(r'(\\d{1,9})([.)])(\\s.*)', line, re.S)
+        if m:
+            return m.group(1) + '\\\\' + m.group(2) + m.group(3)
+        return '\\\\' + line
+    return line
+
+def _dx_roman(n):
+    vals = ((1000, 'm'), (900, 'cm'), (500, 'd'), (400, 'cd'), (100, 'c'), (90, 'xc'),
+            (50, 'l'), (40, 'xl'), (10, 'x'), (9, 'ix'), (5, 'v'), (4, 'iv'), (1, 'i'))
+    out = ''
+    for v, r in vals:
+        while n >= v:
+            out += r
+            n -= v
+    return out
+
+def _dx_num(n, fmt):
+    if fmt == 'lowerLetter':
+        return chr(ord('a') + (n - 1) % 26) * ((n - 1) // 26 + 1)
+    if fmt == 'upperLetter':
+        return chr(ord('A') + (n - 1) % 26) * ((n - 1) // 26 + 1)
+    if fmt == 'lowerRoman':
+        return _dx_roman(n)
+    if fmt == 'upperRoman':
+        return _dx_roman(n).upper()
+    if fmt == 'decimalZero':
+        return '%02d' % n
+    return str(n)
+
+_DX_SUP = dict(zip('0123456789+-=()ni', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ'))
+_DX_SUB = dict(zip('0123456789+-=()aeoxhklmnpst', '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ'))
+
+def _dx_script(text, sup):
+    """Superscript/subscript as Unicode (x², H₂O, ref¹,²) when every character has a
+    Unicode form; otherwise fall back to <sup>/<sub> HTML."""
+    table = _DX_SUP if sup else _DX_SUB
+    core = text.strip()
+    if core and all(c in table or c in ', ' for c in core) and any(c in table for c in core):
+        return ''.join(table.get(c, c) for c in text)
+    tag = 'sup' if sup else 'sub'
+    return '<%s>%s</%s>' % (tag, text, tag)
+
+_DX_MD = {'s': ('~~', '<del>', '</del>'), 'b': ('**', '<strong>', '</strong>'), 'i': ('*', '<em>', '</em>')}
+
+def _dx_punct(c):
+    import unicodedata
+    return unicodedata.category(c)[0] in 'PS'
+
+def _dx_resolve_marks(text):
+    """Turn \\\\x00O<k>\\\\x00 / \\\\x00C<k>\\\\x00 tokens into Markdown delimiters, or into HTML tags
+    where CommonMark flanking rules would make the delimiter inert (e.g. **a -**b)."""
+    parts = re.split('(\\x00[OC][sbi]\\x00)', text)
+    real = lambda i, step: next((p[0] if step > 0 else p[-1] for p in
+                                 (parts[j] for j in range(i + step, len(parts) if step > 0 else -1, step))
+                                 if p and not p.startswith('\\x00')), ' ')
+    ok = {}
+    stack = []
+    for i, p in enumerate(parts):
+        if not p.startswith('\\x00'):
+            continue
+        prev, nxt = real(i, -1), real(i, 1)
+        if p[1] == 'O':
+            # left-flanking: next not space, and (next not punct or prev is space/punct)
+            good = not nxt.isspace() and (not _dx_punct(nxt) or prev.isspace() or _dx_punct(prev))
+            stack.append((i, good))
+        elif stack:
+            j, good_open = stack.pop()
+            good = not prev.isspace() and (not _dx_punct(prev) or nxt.isspace() or _dx_punct(nxt))
+            ok[i] = ok[j] = good_open and good
+    out = []
+    for i, p in enumerate(parts):
+        if p.startswith('\\x00'):
+            md, o, c = _DX_MD[p[2]]
+            out.append(md if ok.get(i, True) else (o if p[1] == 'O' else c))
+        else:
+            out.append(p)
+    return ''.join(out)
+
+def _dx_code_span(text):
+    ticks = max((len(m) for m in re.findall(_BT + '+', text)), default=0)
+    fence = _BT * (ticks + 1)
+    pad = ' ' if text.startswith(_BT) or text.endswith(_BT) else ''
+    return fence + pad + text + pad + fence
+
+
+class _DocxToMarkdown:
+    def __init__(self, data, filename='document.docx', images='placeholder'):
+        self.zip = _dx_zip.ZipFile(io.BytesIO(data))
+        self.names = set(self.zip.namelist())
+        self.filename = filename
+        self.images = images
+        self.doc_path = self._main_part()
+        self.rels = self._read_rels(self.doc_path)
+        self._read_styles()
+        self._read_numbering()
+        self.notes = {'footnote': self._read_notes('footnotes'),
+                      'endnote':  self._read_notes('endnotes')}
+        self.note_order = []          # [(kind, id)] in reference order
+        self.note_num = {}
+        self.list_counters = {}       # numId → {ilvl: current number}
+        self.field_stack = []         # complex fields: {'instr', 'phase', 'link'}
+        self.anchors = {}             # bookmark name → heading slug
+        self.slug_count = {}
+        self.image_count = 0
+
+    # ── package ──────────────────────────────────────────────
+    def _xml(self, path):
+        if path not in self.names:
+            return None
+        return _dx_ET.fromstring(self.zip.read(path))
+
+    def _main_part(self):
+        root = self._xml('_rels/.rels')
+        if root is not None:
+            for rel in root:
+                if rel.get('Type', '').endswith('/officeDocument'):
+                    return rel.get('Target').lstrip('/')
+        return 'word/document.xml'
+
+    def _read_rels(self, part):
+        d, b = _dx_pp.split(part)
+        root = self._xml(_dx_pp.join(d, '_rels', b + '.rels'))
+        rels = {}
+        if root is None:
+            return rels
+        for rel in root:
+            tgt = rel.get('Target', '')
+            ext = rel.get('TargetMode') == 'External'
+            if not ext:
+                tgt = _dx_pp.normpath(_dx_pp.join(d, tgt)) if not tgt.startswith('/') else tgt.lstrip('/')
+            rels[rel.get('Id')] = (rel.get('Type', ''), tgt, ext)
+        return rels
+
+    def _rel_part(self, suffix):
+        for typ, tgt, ext in self.rels.values():
+            if typ.endswith('/' + suffix) and not ext:
+                return tgt
+        return None
+
+    # ── styles ───────────────────────────────────────────────
+    def _read_styles(self):
+        self.styles, self.default_pstyle = {}, None
+        root = self._xml(self._rel_part('styles') or 'word/styles.xml')
+        if root is None:
+            return
+        for st in root.findall(_dx('w:style')):
+            sid = st.get(_dx('w:styleId'))
+            name_el = st.find(_dx('w:name'))
+            based = st.find(_dx('w:basedOn'))
+            self.styles[sid] = {
+                'type':  st.get(_dx('w:type')),
+                'name':  (_dx_val(name_el) or sid or '').strip().lower(),
+                'based': _dx_val(based),
+                'pPr':   st.find(_dx('w:pPr')),
+                'rPr':   st.find(_dx('w:rPr')),
+            }
+            if st.get(_dx('w:type')) == 'paragraph' and st.get(_dx('w:default')) in ('1', 'true'):
+                self.default_pstyle = sid
+
+    def _chain(self, sid):
+        seen = set()
+        while sid and sid in self.styles and sid not in seen:
+            seen.add(sid)
+            yield self.styles[sid]
+            sid = self.styles[sid]['based']
+
+    def _pstyle(self, p):
+        ppr = p.find(_dx('w:pPr'))
+        return _dx_val(ppr.find(_dx('w:pStyle'))) if ppr is not None and ppr.find(_dx('w:pStyle')) is not None \\
+            else self.default_pstyle
+
+    def _style_names(self, sid):
+        return [s['name'] for s in self._chain(sid)]
+
+    # ── numbering ────────────────────────────────────────────
+    def _read_numbering(self):
+        self.nums, self.abstract = {}, {}
+        root = self._xml(self._rel_part('numbering') or 'word/numbering.xml')
+        if root is None:
+            return
+        for an in root.findall(_dx('w:abstractNum')):
+            lv = {}
+            for l in an.findall(_dx('w:lvl')):
+                lv[int(l.get(_dx('w:ilvl'), 0))] = {
+                    'fmt':   _dx_val(l.find(_dx('w:numFmt'))) or 'decimal',
+                    'start': int(_dx_val(l.find(_dx('w:start'))) or 1),
+                    'text':  _dx_val(l.find(_dx('w:lvlText'))) or '',
+                    'ind':   self._ind_of(l.find(_dx('w:pPr'))),
+                }
+            link = an.find(_dx('w:numStyleLink'))
+            self.abstract[an.get(_dx('w:abstractNumId'))] = {'lvls': lv, 'link': _dx_val(link)}
+        for n in root.findall(_dx('w:num')):
+            over = {}
+            for o in n.findall(_dx('w:lvlOverride')):
+                so = o.find(_dx('w:startOverride'))
+                if so is not None:
+                    over[int(o.get(_dx('w:ilvl'), 0))] = int(_dx_val(so) or 1)
+            self.nums[n.get(_dx('w:numId'))] = {'abs': _dx_val(n.find(_dx('w:abstractNumId'))), 'over': over}
+
+    @staticmethod
+    def _ind_of(ppr):
+        ind = ppr.find(_dx('w:ind')) if ppr is not None else None
+        if ind is None:
+            return None
+        v = ind.get(_dx('w:left')) or ind.get(_dx('w:start'))
         try:
-            numPr = para._element.find(qn('w:numPr'))
-        except Exception:
-            numPr = None
-        if numPr is not None or 'List' in style:
-            try:
-                ilvl_el = numPr.find(qn('w:ilvl')) if numPr is not None else None
-                indent = int(ilvl_el.get(qn('w:val'), 0)) if ilvl_el is not None else 0
-            except Exception:
-                indent = 0
-            return '  ' * indent + '- ' + text
-        if 'Quote' in style: return '> ' + text
-        if 'Intense Quo' in style: return '> **' + text + '**'
-        if 'Code' in style or 'Preformatted' in style:
-            return _BT*3 + '\\n' + text + '\\n' + _BT*3
-        inline = ''.join(_run_to_md(r) for r in para.runs)
-        return inline if inline.strip() else text
-    except Exception:
-        return ''
+            return int(v) if v is not None else None
+        except ValueError:
+            return None
 
-def _table_docx_to_md(table):
-    try:
-        if not table.rows:
-            return []
-        rows = []
-        for row in table.rows:
-            cells = []
-            seen_ids = set()
-            for cell in row.cells:
-                try:
-                    cid = id(cell._tc)
-                except Exception:
-                    cid = None
-                if cid in seen_ids:
-                    cells.append('')
-                else:
-                    if cid is not None:
-                        seen_ids.add(cid)
-                    try:
-                        ct = ' '.join(p.text.strip() for p in cell.paragraphs
-                                      if p.text.strip()).replace('|', '/')
-                    except Exception:
-                        ct = ''
-                    cells.append(ct)
-            rows.append(cells)
-        if not rows:
-            return []
-        w = max(len(r) for r in rows)
-        rows = [r + [''] * (w - len(r)) for r in rows]
-        out = ['', '| ' + ' | '.join(rows[0]) + ' |',
-                    '| ' + ' | '.join('---' for _ in range(w)) + ' |']
-        for row in rows[1:]:
-            out.append('| ' + ' | '.join(row) + ' |')
-        out.append('')
-        return out
-    except Exception:
-        return []
+    def _indent(self, p, sid, lvl):
+        """Effective left indent in twips: paragraph > numbering level > style chain."""
+        v = self._ind_of(p.find(_dx('w:pPr')))
+        if v is None and lvl:
+            v = lvl.get('ind')
+        if v is None:
+            for st in self._chain(sid):
+                v = self._ind_of(st['pPr'])
+                if v is not None:
+                    break
+        return v
 
-def _get_ordered_body_elements(doc):
-    try:
-        body = doc.element.body
-        for child in body:
-            try:
-                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
-                if tag == 'p':
-                    from docx.text.paragraph import Paragraph
-                    yield 'para', Paragraph(child, doc)
-                elif tag == 'tbl':
-                    from docx.table import Table
-                    yield 'table', Table(child, doc)
-            except Exception:
+    def _lvl(self, num_id, ilvl):
+        num = self.nums.get(num_id)
+        if not num:
+            return None
+        ab = self.abstract.get(num['abs'])
+        if ab and not ab['lvls'] and ab['link']:
+            # numStyleLink → the numbering style's own numId
+            for s in self._chain(ab['link']):
+                np_ = s['pPr'].find(_dx('w:numPr')) if s['pPr'] is not None else None
+                if np_ is not None:
+                    return self._lvl(_dx_val(np_.find(_dx('w:numId'))), ilvl)
+        if not ab:
+            return None
+        lvl = dict(ab['lvls'].get(ilvl) or {'fmt': 'bullet', 'start': 1, 'text': ''})
+        if ilvl in num['over']:
+            lvl['start'] = num['over'][ilvl]
+        return lvl
+
+    def _count(self, num_id, ilvl, lvl):
+        c = self.list_counters.setdefault(num_id, {})
+        for deeper in [k for k in c if k > ilvl]:
+            del c[deeper]
+        c[ilvl] = c.get(ilvl, lvl['start'] - 1) + 1
+        return c
+
+    def _label(self, num_id, ilvl, counters):
+        """Expand lvlText like '%1.%2.' using the current counters."""
+        lvl = self._lvl(num_id, ilvl) or {}
+        def rep(m):
+            k = int(m.group(1)) - 1
+            lk = self._lvl(num_id, k) or {'fmt': 'decimal', 'start': 1}
+            return _dx_num(counters.get(k, lk['start']), lk['fmt'])
+        return re.sub(r'%(\\d)', rep, lvl.get('text', '')).strip()
+
+    def _numpr(self, p, sid):
+        ppr = p.find(_dx('w:pPr'))
+        src = ppr.find(_dx('w:numPr')) if ppr is not None else None
+        if src is None:
+            for s in self._chain(sid):
+                if s['pPr'] is not None and s['pPr'].find(_dx('w:numPr')) is not None:
+                    src = s['pPr'].find(_dx('w:numPr'))
+                    break
+        if src is None:
+            return None
+        num_id = _dx_val(src.find(_dx('w:numId')))
+        if not num_id or num_id == '0':
+            return None
+        ilvl = int(_dx_val(src.find(_dx('w:ilvl'))) or 0)
+        return num_id, ilvl
+
+    # ── notes ────────────────────────────────────────────────
+    def _read_notes(self, kind):
+        root = self._xml(self._rel_part(kind) or 'word/%s.xml' % kind)
+        notes = {}
+        if root is None:
+            return notes
+        for n in root:
+            if n.get(_dx('w:type')) in ('separator', 'continuationSeparator', 'continuationNotice'):
                 continue
-    except Exception:
-        return
+            notes[n.get(_dx('w:id'))] = n
+        return notes
 
-def docx_to_md(file_bytes, filename):
-    if not _DOCX_OK:
-        return "**Error**: python-docx package not installed. Please use the Converter tab to trigger installation."
-    try:
-        doc = Document(io.BytesIO(file_bytes))
-        base_name = _safe_re_sub(r'\\.docx$', '', filename, flags=re.IGNORECASE)
-        md_out = [
-            f'# {base_name}', '',
-            f'> Converted from DOCX  •  {datetime.now().strftime("%Y-%m-%d %H:%M")}', '',
-        ]
-        try:
-            props = doc.core_properties
-            if props.author:
-                md_out.append(f'> Author: {props.author}')
-            if props.created:
-                md_out.append(f'> Created: {props.created.strftime("%Y-%m-%d")}')
-            if props.author or props.created:
-                md_out.append('')
-        except Exception:
-            pass
-        prev_empty = False
-        for kind, el in _get_ordered_body_elements(doc):
-            if kind == 'para':
-                line = _para_to_md(el)
-                if not line:
-                    if not prev_empty:
-                        md_out.append('')
-                        prev_empty = True
+    # ── paragraph classification ─────────────────────────────
+    def _heading_level(self, p, sid):
+        names = self._style_names(sid)
+        for n in names:
+            m = re.match(r'(heading|заголовок|überschrift|titre|título|nagłówek)\\s*(\\d)$', n)
+            if m:
+                return min(int(m.group(2)), 6)
+            if n in ('title', 'назва'):
+                return 1
+        ppr = p.find(_dx('w:pPr'))
+        cands = [ppr] + [s['pPr'] for s in self._chain(sid)]
+        for c in cands:
+            if c is not None and c.find(_dx('w:outlineLvl')) is not None:
+                lv = int(_dx_val(c.find(_dx('w:outlineLvl'))) or 9)
+                return lv + 1 if lv < 6 else None
+        return None
+
+    def _style_has(self, sid, *keys):
+        return any(k in n for n in self._style_names(sid) for k in keys)
+
+    # ── run properties ───────────────────────────────────────
+    def _rprop(self, r, sid, tag):
+        rpr = r.find(_dx('w:rPr'))
+        if rpr is not None:
+            el = rpr.find(_dx(tag))
+            if el is not None:
+                return el
+            rs = rpr.find(_dx('w:rStyle'))
+            for s in self._chain(_dx_val(rs)) if rs is not None else ():
+                if s['rPr'] is not None and s['rPr'].find(_dx(tag)) is not None:
+                    return s['rPr'].find(_dx(tag))
+        for s in self._chain(sid):
+            if s['rPr'] is not None and s['rPr'].find(_dx(tag)) is not None:
+                return s['rPr'].find(_dx(tag))
+        return None
+
+    def _run_fmt(self, r, sid):
+        g = lambda t: _dx_on(self._rprop(r, sid, t))
+        fonts = self._rprop(r, sid, 'w:rFonts')
+        fname = ' '.join(filter(None, [fonts.get(_dx('w:ascii')), fonts.get(_dx('w:hAnsi'))])).lower() \\
+            if fonts is not None else ''
+        rs = r.find(_dx('w:rPr'))
+        rstyle = _dx_val(rs.find(_dx('w:rStyle'))) if rs is not None and rs.find(_dx('w:rStyle')) is not None else None
+        va = _dx_val(self._rprop(r, sid, 'w:vertAlign'))
+        code = any(m in fname for m in _DX_MONO) or \\
+            any(k in n for n in self._style_names(rstyle) for k in ('code', 'html', 'verbatim'))
+        return {
+            'b': bool(g('w:b')), 'i': bool(g('w:i')),
+            's': bool(g('w:strike') or g('w:dstrike')),
+            'code': code, 'sup': va == 'superscript', 'sub': va == 'subscript',
+            'caps': bool(g('w:caps')), 'hidden': bool(g('w:vanish') or g('w:webHidden')),
+        }
+
+    # ── inline content → segments ────────────────────────────
+    def _collect(self, el, sid, ctx, link=None):
+        """Walk inline markup; append segments {t, fmt, link} / {img} / {raw} to ctx['segs']."""
+        for ch in el:
+            ln, ns = _dx_local(ch), _dx_ns(ch)
+            if ns == _DX_NS['m'] and ln in ('oMath', 'oMathPara'):
+                tex = self._omml(ch).strip()
+                if tex:
+                    ctx['segs'].append({'raw': '$' + tex + '$', 'math': True})
+                continue
+            if ns == _DX_NS['mc'] and ln == 'AlternateContent':
+                choice = ch.find(_dx('mc:Choice'))
+                self._collect(choice if choice is not None else ch, sid, ctx, link)
+                continue
+            if ns != _DX_NS['w']:
+                continue
+            if ln == 'r':
+                self._run(ch, sid, ctx, link)
+            elif ln == 'hyperlink':
+                href = None
+                rid = ch.get(_dx('r:id'))
+                if rid and rid in self.rels:
+                    href = self.rels[rid][1]
+                    if ch.get(_dx('w:anchor')):
+                        href += '#' + ch.get(_dx('w:anchor'))
+                elif ch.get(_dx('w:anchor')):
+                    href = ('anchor', ch.get(_dx('w:anchor')))
+                self._collect(ch, sid, ctx, href or link)
+            elif ln == 'fldSimple':
+                instr = (ch.get(_dx('w:instr')) or '').strip()
+                kind = instr.split(' ', 1)[0].upper() if instr else ''
+                if kind in ('PAGEREF', 'PAGE', 'NUMPAGES', 'SECTIONPAGES'):
+                    continue
+                self._collect(ch, sid, ctx, self._field_link(instr) or link)
+            elif ln in ('ins', 'moveTo', 'smartTag', 'customXml', 'dir', 'bdo'):
+                self._collect(ch, sid, ctx, link)
+            elif ln == 'sdt':
+                c = ch.find(_dx('w:sdtContent'))
+                if c is not None:
+                    self._collect(c, sid, ctx, link)
+            # w:del, w:moveFrom, bookmarks, proofErr, comments → skipped
+
+    def _field_link(self, instr):
+        m = re.match(r'\\s*HYPERLINK\\s+(?:\\\\l\\s+)?"([^"]+)"', instr or '')
+        if not m:
+            return None
+        if re.search(r'\\\\l\\s', instr) and not re.search(r'HYPERLINK\\s+"', instr.split('\\\\l')[0] + ' '):
+            return ('anchor', m.group(1))
+        return m.group(1)
+
+    def _in_hidden_field(self):
+        return any(f['phase'] == 'instr' or f['skip'] for f in self.field_stack)
+
+    def _run(self, r, sid, ctx, link):
+        fmt = self._run_fmt(r, sid)
+        for ch in r:
+            ln = _dx_local(ch)
+            if _dx_ns(ch) == _DX_NS['mc'] and ln == 'AlternateContent':
+                choice = ch.find(_dx('mc:Choice'))
+                self._run_children(choice if choice is not None else ch, sid, ctx, link, fmt)
+                continue
+            self._run_child(ch, ln, sid, ctx, link, fmt)
+
+    def _run_children(self, el, sid, ctx, link, fmt):
+        for ch in el:
+            self._run_child(ch, _dx_local(ch), sid, ctx, link, fmt)
+
+    def _run_child(self, ch, ln, sid, ctx, link, fmt):
+        if ln == 'fldChar':
+            t = ch.get(_dx('w:fldCharType'))
+            if t == 'begin':
+                self.field_stack.append({'instr': '', 'phase': 'instr', 'skip': False, 'link': None})
+            elif t == 'separate' and self.field_stack:
+                f = self.field_stack[-1]
+                f['phase'] = 'result'
+                kind = f['instr'].strip().split(' ', 1)[0].upper() if f['instr'].strip() else ''
+                f['skip'] = kind in ('PAGEREF', 'PAGE', 'NUMPAGES', 'SECTIONPAGES')
+                f['link'] = self._field_link(f['instr'])
+            elif t == 'end' and self.field_stack:
+                self.field_stack.pop()
+            return
+        if ln == 'instrText':
+            if self.field_stack and self.field_stack[-1]['phase'] == 'instr':
+                self.field_stack[-1]['instr'] += ch.text or ''
+            return
+        if self._in_hidden_field() or fmt['hidden']:
+            return
+        flink = next((f['link'] for f in reversed(self.field_stack) if f['link']), None)
+        lk = link or flink
+        if ln == 't':
+            txt = ch.text or ''
+            if fmt['caps']:
+                txt = txt.upper()
+            self._push(ctx, txt, fmt, lk)
+        elif ln == 'tab' or ln == 'ptab':
+            self._push(ctx, '\\t', fmt, lk)
+        elif ln in ('br', 'cr'):
+            if ch.get(_dx('w:type')) in ('page', 'column'):
+                return
+            self._push(ctx, '\\n', fmt, lk)
+        elif ln == 'noBreakHyphen':
+            self._push(ctx, '-', fmt, lk)
+        elif ln == 'sym':
+            c = (ch.get(_dx('w:char')) or '').upper()
+            self._push(ctx, _DX_SYM.get(c, chr(int(c, 16)) if c and not c.startswith('F0') else ''), fmt, lk)
+        elif ln in ('drawing', 'pict', 'object'):
+            self._image(ch, ctx, lk)
+        elif ln in ('footnoteReference', 'endnoteReference'):
+            kind = 'footnote' if ln.startswith('foot') else 'endnote'
+            nid = ch.get(_dx('w:id'))
+            key = (kind, nid)
+            if nid in self.notes[kind]:
+                if key not in self.note_num:
+                    self.note_order.append(key)
+                    self.note_num[key] = len(self.note_order)
+                ctx['segs'].append({'raw': '[^%d]' % self.note_num[key]})
+
+    def _push(self, ctx, text, fmt, link):
+        if text:
+            ctx['segs'].append({'t': text, 'fmt': fmt, 'link': link})
+
+    def _image(self, el, ctx, link):
+        # text boxes inside shapes → separate blocks after this paragraph
+        for tb in el.iter(_dx('w:txbxContent')):
+            ctx['textboxes'].append(tb)
+        alt, target = '', None
+        for dp in el.iter(_dx('wp:docPr')):
+            alt = (dp.get('descr') or dp.get('title') or '').strip()
+            break
+        for blip in el.iter(_dx('a:blip')):
+            rid = blip.get(_dx('r:embed')) or blip.get(_dx('r:link'))
+            if rid in self.rels:
+                target = self.rels[rid][1]
+            break
+        if target is None:
+            for im in el.iter(_dx('v:imagedata')):
+                rid = im.get(_dx('r:id'))
+                if rid in self.rels:
+                    target = self.rels[rid][1]
+                    alt = alt or im.get('{urn:schemas-microsoft-com:office:office}title') or ''
+                break
+        if target is None:
+            return
+        self.image_count += 1
+        alt = alt.replace('\\n', ' ').replace('[', '(').replace(']', ')')
+        src = target
+        if self.images == 'embed':
+            src = self._data_uri(target) or target
+        elif not str(target).startswith(('http://', 'https://')):
+            src = 'media/' + _dx_pp.basename(target)
+        ctx['segs'].append({'raw': '![%s](%s)' % (alt, src.replace(' ', '%20'))})
+
+    def _data_uri(self, path):
+        if path not in self.names:
+            return None
+        import base64
+        ext = path.rsplit('.', 1)[-1].lower()
+        mime = {'jpg': 'jpeg', 'jpeg': 'jpeg', 'png': 'png', 'gif': 'gif', 'svg': 'svg+xml',
+                'webp': 'webp', 'bmp': 'bmp'}.get(ext)
+        if not mime:
+            return None
+        return 'data:image/%s;base64,%s' % (mime, base64.b64encode(self.zip.read(path)).decode())
+
+    # ── segments → Markdown ──────────────────────────────────
+    def _render(self, segs, table=False, no_bold=False, code=False):
+        if code:
+            return ''.join(s.get('t', '') for s in segs if 't' in s)
+        nl = '<br>' if table else '  \\n'
+        # 1) merge adjacent text segments with identical formatting + link;
+        #    whitespace-only text joins the previous segment (avoids marker churn)
+        items = []
+        for s in segs:
+            if 'raw' in s:
+                items.append(dict(s))
+                continue
+            f = dict(s['fmt'])
+            if no_bold:
+                f['b'] = False
+            key = (f['b'], f['i'], f['s'], f['code'], f['sup'], f['sub'])
+            prev = items[-1] if items and 't' in items[-1] else None
+            if prev and (prev['key'] == key or not s['t'].strip()) and prev['link'] == s['link']:
+                prev['t'] += s['t']
+            elif prev and not prev['t'].strip() and prev['link'] == s['link']:
+                prev.update({'t': prev['t'] + s['t'], 'key': key, 'f': f})
+            else:
+                items.append({'t': s['t'], 'key': key, 'f': f, 'link': s['link']})
+        # 2) group by link, render emphasis with a marker stack inside each group
+        out, i = [], 0
+        while i < len(items):
+            it = items[i]
+            if 'raw' in it:
+                raw = it['raw']
+                if it.get('math'):
+                    # Word spaces equations visually; the text around them often has no spaces
+                    if out and out[-1] and not out[-1][-1].isspace() and out[-1][-1] not in '([{"\\'«':
+                        raw = ' ' + raw
+                    nxt = items[i + 1] if i + 1 < len(items) else None
+                    if nxt and 't' in nxt and nxt['t'][:1].isalnum():
+                        raw += ' '
+                out.append(raw)
+                i += 1
+                continue
+            j = i
+            while j < len(items) and 't' in items[j] and items[j]['link'] == it['link']:
+                j += 1
+            body = self._emph(items[i:j], table, nl)
+            href = self._href(it['link']) if it['link'] else None
+            if href and body.strip():
+                lead = body[:len(body) - len(body.lstrip())]
+                trail = body[len(body.rstrip()):]
+                label = body.strip()
+                if label in (href, _dx_esc(href, table)) and re.match(r'(https?://|mailto:)', href):
+                    out.append(lead + '<' + href + '>' + trail)
                 else:
-                    md_out.append(line)
-                    prev_empty = False
-            elif kind == 'table':
-                md_out += _table_docx_to_md(el)
-                prev_empty = False
-        return postprocess_text('\\n'.join(md_out))
+                    out.append(lead + '[' + label + '](' + href.replace(' ', '%20').replace(')', '%29') + ')' + trail)
+            else:
+                out.append(body)
+            i = j
+        return ''.join(out).replace('\\t', ' ')
+
+    def _emph(self, items, table, nl):
+        out, stack = [], []
+        order = (('s', '~~'), ('b', '**'), ('i', '*'))
+
+        def close_to(keep):
+            # pop markers until every remaining one is wanted; move trailing spaces outside
+            while stack and (stack[-1] not in keep or any(m not in keep for m in stack)):
+                txt = ''.join(out)
+                stripped = txt.rstrip()          # incl. NBSP and other Unicode spaces
+                ws = txt[len(stripped):]
+                out[:] = [stripped, '\\x00C' + stack.pop() + '\\x00', ws]
+
+        # split at hard line breaks: emphasis is closed and reopened around each break
+        pieces = []
+        for it in items:
+            for n, part in enumerate(it['t'].split('\\n')):
+                if n:
+                    pieces.append(None)
+                if part:
+                    pieces.append({'f': it['f'], 't': part})
+        for it in pieces:
+            if it is None:
+                close_to([])
+                out.append(nl)
+                continue
+            f, t = it['f'], it['t']
+            want = [k for k, _ in order if f[k]]
+            if not t.strip():
+                out.append(t)
+                continue
+            close_to(want)
+            lead = t[:len(t) - len(t.lstrip())]
+            core = t[len(lead):]
+            trail = core[len(core.rstrip()):]
+            core = core[:len(core) - len(trail)] if trail else core
+            out.append(lead)
+            for k, m in order:
+                if f[k] and k not in stack:
+                    stack.append(k)
+                    out.append('\\x00O' + k + '\\x00')
+            piece = _dx_code_span(core) if f['code'] else _dx_esc(core, table)
+            if (f['sup'] or f['sub']) and not f['code']:
+                piece = _dx_script(piece, f['sup'])
+            out.append(piece)
+            out.append(trail)
+        close_to([])
+        return _dx_resolve_marks(''.join(out))
+
+    def _href(self, link):
+        if isinstance(link, tuple):
+            target = self.anchors.get(link[1])
+            return '#' + target if target else None
+        return link
+
+    # ── blocks ───────────────────────────────────────────────
+    def _blocks(self, parent, out, in_table=False):
+        for ch in parent:
+            if _dx_ns(ch) != _DX_NS['w']:
+                if _dx_ns(ch) == _DX_NS['mc'] and _dx_local(ch) == 'AlternateContent':
+                    c = ch.find(_dx('mc:Choice'))
+                    if c is not None:
+                        self._blocks(c, out, in_table)
+                continue
+            ln = _dx_local(ch)
+            if ln == 'p':
+                self._paragraph(ch, out, in_table)
+            elif ln == 'tbl':
+                self._table(ch, out)
+            elif ln == 'sdt':
+                pr = ch.find(_dx('w:sdtPr'))
+                c = ch.find(_dx('w:sdtContent'))
+                if c is not None:
+                    self._blocks(c, out, in_table)
+            elif ln in ('ins', 'moveTo', 'customXml'):
+                self._blocks(ch, out, in_table)
+
+    def _paragraph(self, p, out, in_table):
+        sid = self._pstyle(p)
+        names = self._style_names(sid)
+        ctx = {'segs': [], 'textboxes': []}
+        self._collect(p, sid, ctx)
+        toc = next((re.match(r'(?:toc|зміст)\\s*(\\d)', n) for n in names
+                    if re.match(r'(?:toc|зміст)\\s*\\d', n)), None)
+        if toc:
+            # TOC entry → bullet link to the heading (page numbers are dropped)
+            text = re.sub(r'[\\s.…]*\\d*\\s*$', '', self._render(ctx['segs']).replace('\\t', ' ')).strip()
+            text = re.sub(r'\\s*\\.{3,}\\s*(?=\\]|$)', '', text)
+            if text:
+                out.append({'type': 'li', 'level': int(toc.group(1)) - 1, 'ordered': False, 'n': None,
+                            'text': re.sub(r' {2,}', ' ', text), 'ind': 720 * int(toc.group(1))})
+            return
+        segs = ctx['segs']
+        plain = ''.join(s.get('t', '') for s in segs)
+        has_raw = any('raw' in s for s in segs)
+
+        level = self._heading_level(p, sid)
+        numpr = self._numpr(p, sid)
+        is_code = self._style_has(sid, 'code', 'html preformatted', 'preformatted', 'source', 'listing', 'verbatim')
+        text_segs = [s for s in segs if 't' in s and s['t'].strip()]
+        if not is_code and text_segs and all(s['fmt']['code'] for s in text_segs) and not has_raw \\
+                and level is None and numpr is None:
+            is_code = True
+
+        if not plain.strip() and not has_raw:
+            ppr = p.find(_dx('w:pPr'))
+            bdr = ppr.find(_dx('w:pBdr')) if ppr is not None else None
+            if bdr is not None and bdr.find(_dx('w:bottom')) is not None and not in_table:
+                out.append({'type': 'hr'})
+            self._textboxes(ctx, out, in_table)
+            return
+
+        if level is not None:
+            text = self._render(segs, no_bold=True).replace('  \\n', ' ').strip()
+            if text and numpr is not None:
+                lvl = self._lvl(numpr[0], numpr[1])
+                if lvl and lvl['fmt'] not in ('bullet', 'none'):
+                    label = self._label(numpr[0], numpr[1], self._count(numpr[0], numpr[1], lvl))
+                    if label and not text.startswith(label):
+                        text = _dx_esc(label) + ' ' + text
+            if text:
+                slug = self._register_heading(p, plain)
+                out.append({'type': 'h', 'level': level, 'text': text, 'slug': slug})
+        elif is_code:
+            out.append({'type': 'code', 'text': self._render(segs, code=True).rstrip()})
+        elif numpr is not None:
+            num_id, ilvl = numpr
+            lvl = self._lvl(num_id, ilvl) or {'fmt': 'bullet', 'start': 1}
+            ordered = lvl['fmt'] not in ('bullet', 'none')
+            n = None
+            if ordered:
+                n = self._count(num_id, ilvl, lvl)[ilvl]
+            text = self._render(segs).strip()
+            if lvl['fmt'] == 'none':
+                out.append({'type': 'p', 'text': text})
+            else:
+                ind = self._indent(p, sid, self._lvl(num_id, ilvl))
+                out.append({'type': 'li', 'level': ilvl, 'ordered': ordered, 'n': n, 'text': text,
+                            'num': num_id, 'ind': ind if ind is not None else 720 * (ilvl + 1)})
+        elif self._style_has(sid, 'quote', 'цитата'):
+            out.append({'type': 'quote', 'text': self._render(segs).strip()})
+        elif self._style_has(sid, 'caption', 'назва об'):
+            t = self._render(segs).strip()
+            out.append({'type': 'p', 'text': '*' + t + '*' if not t.startswith('*') else t})
+        else:
+            out.append({'type': 'p', 'text': self._render(segs).strip()})
+        self._textboxes(ctx, out, in_table)
+
+    def _textboxes(self, ctx, out, in_table):
+        for tb in ctx['textboxes']:
+            self._blocks(tb, out, in_table)
+
+    def _register_heading(self, p, plain):
+        base = _dx_slug(plain) or 'section'
+        n = self.slug_count.get(base, 0)
+        self.slug_count[base] = n + 1
+        slug = base if n == 0 else '%s-%d' % (base, n)
+        for bm in p.iter(_dx('w:bookmarkStart')):
+            name = bm.get(_dx('w:name'))
+            if name:
+                self.anchors[name] = slug
+        return slug
+
+    def _prescan_anchors(self, body):
+        """Map heading bookmarks to slugs before rendering, so links resolve forward."""
+        saved = dict(self.slug_count)
+        for p in body.iter(_dx('w:p')):
+            sid = self._pstyle(p)
+            if self._heading_level(p, sid) is None:
+                continue
+            plain = ''.join(t.text or '' for t in p.iter(_dx('w:t')))
+            if plain.strip():
+                self._register_heading(p, plain)
+        self.slug_count = saved
+
+    # ── tables ───────────────────────────────────────────────
+    def _table(self, tbl, out):
+        rows = []
+        for tr in self._direct(tbl, 'tr'):
+            cells = []
+            for cell in self._direct(tr, 'tc'):
+                pr = cell.find(_dx('w:tcPr'))
+                span = int(_dx_val(pr.find(_dx('w:gridSpan'))) or 1) if pr is not None and pr.find(_dx('w:gridSpan')) is not None else 1
+                vm = pr.find(_dx('w:vMerge')) if pr is not None else None
+                cont = vm is not None and (_dx_val(vm) or 'continue') == 'continue'
+                blocks = []
+                if not cont:
+                    self._blocks(cell, blocks, in_table=True)
+                cells.append({'blocks': blocks, 'span': span, 'cont': cont})
+            rows.append(cells)
+        rows = [r for r in rows if r]
+        if not rows:
+            return
+        ncols = max(sum(c['span'] for c in r) for r in rows)
+        complex_ = ncols == 1 or any(
+            b['type'] in ('h', 'li', 'code', 'table', 'quote', 'hr') or
+            (b['type'] == 'p' and b['text'].count('\\n') > 6)
+            for r in rows for c in r for b in c['blocks']) or \\
+            any(sum(1 for b in c['blocks']) > 6 for r in rows for c in r)
+        if complex_:
+            # Layout table / callout box → linearize cell content as normal blocks
+            inner = []
+            for r in rows:
+                for c in r:
+                    inner.extend(c['blocks'])
+            if ncols == 1 and len(rows) == 1 and all(b['type'] in ('p', 'li', 'quote', 'code') for b in inner):
+                out.append({'type': 'callout', 'blocks': inner})
+            else:
+                out.extend(inner)
+            return
+        grid = []
+        for r in rows:
+            line = []
+            for c in r:
+                txt = '' if c['cont'] else self._cell_text(c['blocks'])
+                line.append(txt)
+                line.extend([''] * (c['span'] - 1))
+            line += [''] * (ncols - len(line))
+            grid.append(line)
+        if all(not x.strip() for row in grid for x in row):
+            return
+        out.append({'type': 'table', 'rows': grid})
+
+    def _direct(self, el, name):
+        # children named w:<name>, looking through sdt / customXml wrappers
+        for ch in el:
+            ln = _dx_local(ch)
+            if ln == name:
+                yield ch
+            elif ln in ('sdt', 'sdtContent', 'customXml'):
+                yield from self._direct(ch, name)
+
+    def _cell_text(self, blocks):
+        parts = []
+        for b in blocks:
+            if b['type'] == 'li':
+                parts.append(('%d. ' % b['n'] if b['ordered'] else '• ') + b['text'])
+            elif b['type'] in ('p', 'quote', 'h'):
+                parts.append(b['text'])
+            elif b['type'] == 'code':
+                parts.append(_dx_code_span(b['text'].replace('\\n', ' ')))
+        parts = ['\\\\' + x if re.match(r'^:?-{3,}:?$', x.strip()) else x for x in parts]
+        txt = '<br>'.join(x for x in parts if x)
+        txt = txt.replace('  \\n', '<br>').replace('\\n', ' ')
+        return re.sub(r'(?<!\\\\)\\|', r'\\\\|', txt)
+
+    # ── equations (OMML → LaTeX) ─────────────────────────────
+    def _omml(self, el):
+        ln = _dx_local(el)
+        k = lambda name: el.find(_dx('m:' + name))
+        sub = lambda name: self._omml(k(name)) if k(name) is not None else ''
+        if ln == 't':
+            return ''.join(_DX_TEX.get(c, c) for c in (el.text or '').replace('\\\\', '\\\\backslash '))
+        if ln == 'f':
+            return '\\\\frac{%s}{%s}' % (sub('num'), sub('den'))
+        if ln == 'sSup':
+            return '{%s}^{%s}' % (sub('e'), sub('sup'))
+        if ln == 'sSub':
+            return '{%s}_{%s}' % (sub('e'), sub('sub'))
+        if ln == 'sSubSup':
+            return '{%s}_{%s}^{%s}' % (sub('e'), sub('sub'), sub('sup'))
+        if ln == 'rad':
+            deg = sub('deg')
+            return ('\\\\sqrt[%s]{%s}' % (deg, sub('e'))) if deg.strip() else '\\\\sqrt{%s}' % sub('e')
+        if ln == 'd':
+            pr = k('dPr')
+            beg = _dx_val(pr.find(_dx('m:begChr')), 'm:val') if pr is not None and pr.find(_dx('m:begChr')) is not None else '('
+            end = _dx_val(pr.find(_dx('m:endChr')), 'm:val') if pr is not None and pr.find(_dx('m:endChr')) is not None else ')'
+            inner = ', '.join(self._omml(e) for e in el.findall(_dx('m:e')))
+            return '\\\\left%s %s \\\\right%s' % (beg or '.', inner, end or '.')
+        if ln == 'nary':
+            pr = k('naryPr')
+            chr_ = _dx_val(pr.find(_dx('m:chr')), 'm:val') if pr is not None and pr.find(_dx('m:chr')) is not None else '∫'
+            op = {'∑': '\\\\sum', '∏': '\\\\prod', '∫': '\\\\int', '∬': '\\\\iint', '∮': '\\\\oint', '⋃': '\\\\bigcup', '⋂': '\\\\bigcap'}.get(chr_, chr_)
+            s, p_ = sub('sub'), sub('sup')
+            return op + ('_{%s}' % s if s else '') + ('^{%s}' % p_ if p_ else '') + ' ' + sub('e')
+        if ln == 'func':
+            return '%s %s' % (sub('fName'), sub('e'))
+        if ln == 'bar':
+            return '\\\\overline{%s}' % sub('e')
+        if ln == 'acc':
+            return '\\\\hat{%s}' % sub('e')
+        if ln in ('rPr', 'ctrlPr', 'fPr', 'sSupPr', 'sSubPr', 'radPr', 'dPr', 'naryPr', 'funcPr',
+                  'barPr', 'accPr', 'oMathParaPr', 'degHide') or _dx_ns(el) == _DX_NS['w'] and ln == 'rPr':
+            return ''
+        return ''.join(self._omml(c) for c in el)
+
+    # ── serialization ────────────────────────────────────────
+    def _serialize(self, blocks):
+        out = []
+        prev = None
+        depth_stack = []          # ilvl of each open list level
+        i = 0
+        while i < len(blocks):
+            b = blocks[i]
+            t = b['type']
+            if t != 'li':
+                depth_stack = []
+            if t == 'code':
+                lines = [b['text']]
+                while i + 1 < len(blocks) and blocks[i + 1]['type'] == 'code':
+                    i += 1
+                    lines.append(blocks[i]['text'])
+                body = '\\n'.join(lines)
+                fence = _BT * max(3, max((len(m) for m in re.findall(_BT + '+', body)), default=0) + 1)
+                out += ['', fence, body, fence]
+            elif t == 'h':
+                out += ['', '#' * b['level'] + ' ' + b['text']]
+            elif t == 'li':
+                # nesting follows the visual indentation (ilvl alone misses
+                # "List Bullet 2"-style lists that restart at ilvl 0 with a deeper indent)
+                ind = b['ind']
+                while depth_stack and depth_stack[-1] > ind + 90:
+                    depth_stack.pop()
+                if not depth_stack or ind > depth_stack[-1] + 90:
+                    depth_stack.append(ind)
+                depth = len(depth_stack) - 1
+                marker = '%d.' % b['n'] if b['ordered'] else '-'
+                text = b['text'].replace('  \\n', '  \\n' + '    ' * (depth + 1))
+                pb = blocks[i - 1] if i else None
+                if prev != 'li' or (depth == 0 and pb.get('ordered') != b['ordered']):
+                    out.append('')
+                elif depth == 0 and b['ordered'] and pb.get('ordered') and pb.get('num') != b.get('num') \\
+                        and b['n'] <= pb['n']:
+                    out += ['', '<!-- -->', '']     # a new numbered list starts here
+                out.append('    ' * depth + marker + ' ' + text)
+            elif t == 'quote':
+                out += [''] + ['> ' + l for l in b['text'].split('\\n')]
+            elif t == 'callout':
+                inner = self._serialize(b['blocks']).split('\\n')
+                out += [''] + [('> ' + l).rstrip() if l.strip() else '>' for l in inner]
+            elif t == 'hr':
+                out += ['', '---']
+            elif t == 'table':
+                rows = b['rows']
+                out += ['', '| ' + ' | '.join(rows[0]) + ' |',
+                        '|' + '|'.join(' --- ' for _ in rows[0]) + '|']
+                out += ['| ' + ' | '.join(r) + ' |' for r in rows[1:]]
+            else:  # paragraph
+                if b['text']:
+                    lines = b['text'].split('\\n')
+                    lines[0] = _dx_esc_line_start(lines[0])
+                    lines = [lines[0]] + [_dx_esc_line_start(l) for l in lines[1:]]
+                    out += [''] + ['\\n'.join(lines)]
+            prev = t
+            i += 1
+        text = '\\n'.join(out)
+        text = re.sub(r'\\n{3,}', '\\n\\n', text)
+        return text.strip('\\n')
+
+    def _notes_md(self):
+        if not self.note_order:
+            return ''
+        out = []
+        for kind, nid in self.note_order:
+            blocks = []
+            self._blocks(self.notes[kind][nid], blocks)
+            body = ' '.join(b.get('text', '') for b in blocks if b.get('text')).strip()
+            out.append('[^%d]: %s' % (self.note_num[(kind, nid)], body))
+        return '\\n'.join(out)
+
+    def _core_props(self):
+        root = self._xml('docProps/core.xml')
+        if root is None:
+            return {}
+        t = root.find(_dx('dc:title'))
+        return {'title': (t.text or '').strip() if t is not None else ''}
+
+    def convert(self):
+        root = self._xml(self.doc_path)
+        if root is None:
+            raise ValueError('word/document.xml not found — not a valid DOCX file')
+        body = root.find(_dx('w:body'))
+        self._prescan_anchors(body)
+        self.list_counters, self.field_stack = {}, []
+        blocks = []
+        self._blocks(body, blocks)
+        md = self._serialize(blocks)
+        if not any(b['type'] == 'h' for b in blocks):
+            title = self._core_props().get('title') or re.sub(r'\\.docx$', '', self.filename, flags=re.I)
+            md = '# ' + _dx_esc(title) + '\\n\\n' + md
+        notes = self._notes_md()
+        if notes:
+            md += '\\n\\n' + notes
+        md = '\\n'.join(l.rstrip() if not l.endswith('  ') or not l.strip() else l for l in md.split('\\n'))
+        return md.strip() + '\\n'
+
+
+def docx_to_md(file_bytes, filename, images='placeholder'):
+    """Convert DOCX bytes to Markdown. images: 'placeholder' (media/… links) or 'embed' (data URIs)."""
+    try:
+        return _DocxToMarkdown(bytes(file_bytes), filename, images).convert()
+    except _dx_zip.BadZipFile:
+        return '# DOCX Conversion Error\\n\\n> The file is not a valid DOCX (ZIP) package. Old .doc files must be re-saved as .docx.'
     except Exception as e:
         return f'# DOCX Conversion Error\\n\\n> Error: {str(e)}\\n\\nPlease try again with a different DOCX file.'
 
@@ -2851,7 +3737,9 @@ def _scribe_detect_tables(pages):
 def md_to_html(md):
     try:
         import re as _re
-        lines = md.split('\\n')
+        from html import escape as _esc
+        # Escape every source line first so HTML in the input renders as text
+        lines = [_esc(l, quote=False) for l in md.split('\\n')]
         html = []
         in_code = False
         in_list = False
@@ -2865,8 +3753,10 @@ def md_to_html(md):
                     in_code = True
                 continue
             if in_code:
-                html.append(_re.escape(line))
+                html.append(line)          # already HTML-escaped above
                 continue
+            # re-allow a whitelist of attribute-less inline tags (x<sup>2</sup>, H<sub>2</sub>O, <br>)
+            line = _re.sub(r'&lt;(/?)(sup|sub|br|b|i|strong|em|del|s|u|kbd|mark)\\s*/?&gt;', r'<\\1\\2>', line)
             if not line.strip():
                 if in_list:
                     html.append('</ul>')
@@ -2881,7 +3771,7 @@ def md_to_html(md):
                     html.append('<ul>')
                     in_list = True
                 html.append(f'<li>{line[2:]}</li>')
-            elif line.startswith('> '): html.append(f'<blockquote>{line[2:]}</blockquote>')
+            elif line.startswith('&gt; '): html.append(f'<blockquote>{line[5:]}</blockquote>')  # '> ' after escaping
             else:
                 if in_list:
                     html.append('</ul>')
@@ -2924,13 +3814,13 @@ def _make_error(pos, end, word, msg, etype, suggestions=None, msg_key=None, msg_
 def check_stage_repeats(text):
     """Знаходить повторення слів поруч."""
     errors = []
-    words = list(_re_c.finditer(r'\b(\w+)\b', text, _re_c.IGNORECASE))
+    words = list(_re_c.finditer(r'\\b(\\w+)\\b', text, _re_c.IGNORECASE))
     for i in range(1, len(words)):
         w1, w2 = words[i-1], words[i]
         if w1.group().lower() == w2.group().lower() and len(w1.group()) > 2:
             errors.append(_make_error(
                 w2.start(), w2.end(), w2.group(),
-                'Повтор слова \u00ab' + w2.group() + '\u00bb', 'repeat',
+                'Повтор слова \\u00ab' + w2.group() + '\\u00bb', 'repeat',
                 ['(видалити)'],
                 msg_key='err.msg.repeat', msg_args={'word': w2.group()}
             ))
@@ -2939,13 +3829,13 @@ def check_stage_repeats(text):
 def check_stage_spaces(text):
     """Знаходить зайві пробіли."""
     errors = []
-    for m in _re_c.finditer(r'[ \t]{2,}', text):
+    for m in _re_c.finditer(r'[ \\t]{2,}', text):
         errors.append(_make_error(
             m.start(), m.end(), m.group(),
             'Зайві пробіли', 'space', [' '],
             msg_key='err.msg.extraSpaces'
         ))
-    for m in _re_c.finditer(r'[ \t]+([,\.!?;:])', text):
+    for m in _re_c.finditer(r'[ \\t]+([,\\.!?;:])', text):
         errors.append(_make_error(
             m.start(), m.end(), m.group(),
             'Пробіл перед знаком пунктуації', 'space',
@@ -2958,7 +3848,7 @@ def check_stage_punct(text):
     """Знаходить проблеми з пунктуацією."""
     errors = []
     for m in _re_c.finditer(r'[.!?,;]{2,}', text):
-        if m.group() not in ('...', '\u2026', '!!', '??'):
+        if m.group() not in ('...', '\\u2026', '!!', '??'):
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
                 'Подвійна пунктуація', 'punct', [m.group()[0]],
@@ -2969,7 +3859,7 @@ def check_stage_punct(text):
 def check_stage_dict(text, lang):
     """Перевірка великої літери на початку речень."""
     errors = []
-    for m in _re_c.finditer(r'(?:(?<=[.!?]\s))([a-z\u0430-\u044f\u0456\u0457\u0454\u0491])', text):
+    for m in _re_c.finditer(r'(?:(?<=[.!?]\\s))([a-z\\u0430-\\u044f\\u0456\\u0457\\u0454\\u0491])', text):
         errors.append(_make_error(
             m.start(1), m.end(1), m.group(1),
             'Речення починається з малої літери', 'capital',
@@ -2982,7 +3872,7 @@ def check_stage_spellcheck(text, lang, prior_errors):
     """Знаходить слова що написані ВЕЛИКИМИ ЛІТЕРАМИ (крім коротких абревіатур)."""
     errors = []
     prior_pos = {e['pos'] for e in prior_errors}
-    for m in _re_c.finditer(r'\b[А-ЯІЇЄҐ]{4,}\b', text):
+    for m in _re_c.finditer(r'\\b[А-ЯІЇЄҐ]{4,}\\b', text):
         if m.start() not in prior_pos:
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
@@ -3012,7 +3902,7 @@ def check_stage_grammar(text, lang):
             for m in _re_c.finditer(pattern, text, _re_c.IGNORECASE):
                 errors.append(_make_error(
                     m.start(), m.end(), m.group(),
-                    'Граматична помилка або русизм \u2192 \u00ab' + suggestion + '\u00bb',
+                    'Граматична помилка або русизм \\u2192 \\u00ab' + suggestion + '\\u00bb',
                     'grammar', [suggestion],
                     msg_key='err.msg.grammarRu', msg_args={'suggestion': suggestion}
                 ))
@@ -3035,7 +3925,7 @@ def check_stage_style(text, lang):
         for m in _re_c.finditer(_re_c.escape(w), text, _re_c.IGNORECASE):
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
-                'Канцеляризм або кліше: \u00ab' + w + '\u00bb', 'style', ['(спростити)'],
+                'Канцеляризм або кліше: \\u00ab' + w + '\\u00bb', 'style', ['(спростити)'],
                 msg_key='err.msg.cliche', msg_args={'word': w}
             ))
     return errors
@@ -3044,9 +3934,9 @@ def check_stage_passive(text, lang):
     """Знаходить пасивний стан."""
     errors = []
     if lang == 'uk':
-        patterns = [r'\bбуло\s+\w+ено\b', r'\bбула\s+\w+ена\b', r'\bбуло\s+\w+ано\b']
+        patterns = [r'\\bбуло\\s+\\w+ено\\b', r'\\bбула\\s+\\w+ена\\b', r'\\bбуло\\s+\\w+ано\\b']
     else:
-        patterns = [r'\bwas\s+\w+ed\b', r'\bwere\s+\w+ed\b', r'\bbeing\s+\w+ed\b']
+        patterns = [r'\\bwas\\s+\\w+ed\\b', r'\\bwere\\s+\\w+ed\\b', r'\\bbeing\\s+\\w+ed\\b']
     for pat in patterns:
         for m in _re_c.finditer(pat, text, _re_c.IGNORECASE):
             errors.append(_make_error(
@@ -3065,11 +3955,11 @@ def check_stage_structure(text, lang):
     has_task   = bool(_re_c.search(r'task|завдання|мета|потрібно|необхідно|зроби|create|generate|write|analyze', text, _re_c.IGNORECASE))
     has_output = bool(_re_c.search(r'output|format|результат|формат|відповідь|response', text, _re_c.IGNORECASE))
     if not has_role:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a\u2026" або "Ти \u2014 ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
+        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a\\u2026" або "Ти \\u2014 ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
     if not has_task:
         errors.append(_make_error(0, 0, '', 'Відсутнє чітке завдання', 'structure', ['Додайте конкретний опис задачі'], msg_key='err.msg.noTask', sugg_key='err.sugg.noTask'))
     if not has_output and len(text) > 200:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі\u2026"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
+        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі\\u2026"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
     return errors
 
 def check_merge(errors):

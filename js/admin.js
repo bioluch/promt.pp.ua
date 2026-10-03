@@ -1034,7 +1034,8 @@
     document.querySelectorAll('.auth-modal-overlay').forEach(el => el.remove());
   }
 
-  function tryEnter() {
+  async function tryEnter() {
+    try { await window.API?.ensureSession?.(); } catch {}
     const user = window.API?.getCurrentUser();
     if (!user) {
       document.getElementById('adminContent').innerHTML =

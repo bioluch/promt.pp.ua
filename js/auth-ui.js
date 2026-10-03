@@ -710,7 +710,8 @@
         const wordEl      = document.getElementById('statWords');
         const word_count  = wordEl ? parseInt(wordEl.textContent.replace(/,/g,'')) || null : null;
         const qualEl      = document.getElementById('statQual');
-        const quality_score = qualEl ? qualEl.textContent.trim() || null : null;
+        // Stable key set by the checker ('excellent', 'needsWork', …); null if not checked yet
+        const quality_score = qualEl?.dataset.quality || null;
 
         const title = customTitle;
 
@@ -855,7 +856,7 @@
               ${new Date(p.created_at).toLocaleDateString()}
               ${p.word_count ? ' · '+p.word_count+' '+T('lib.words') : ''}
               · ${p.token_count ? p.token_count.toLocaleString() : '?'} ${T('lib.tokens')}
-              ${p.quality_score ? ' · '+p.quality_score : ''}
+              ${p.quality_score ? ' · '+escHtml(qualityLabel(p.quality_score)) : ''}
             </span>
           </div>
         </div>`).join('');
@@ -1425,6 +1426,13 @@
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // quality_score holds a key like 'needsWork'; older rows may hold a translated label
+  function qualityLabel(q) {
+    const key = 'quality.' + q;
+    const label = window.Lang ? Lang.t(key) : null;
+    return label && label !== key ? label : q;
+  }
+
   // ── Bootstrap ──────────────────────────────────────────────────
   function init() {
     injectAuthButton();
@@ -1448,6 +1456,8 @@
     // Always verify token with server on startup
     (async () => {
       let loggedIn = false;
+      // Refresh an expired/missing access token from the stored refresh token first
+      try { await window.API?.ensureSession?.(); } catch {}
       if (window.API?.isLoggedIn()) {
         try {
           await window.API.getMe();
@@ -1458,7 +1468,12 @@
           loggedIn = false;
         }
       }
-      if (!loggedIn) setTimeout(() => showLoginModal(), 400);
+      if (!loggedIn) { setTimeout(() => showLoginModal(), 400); return; }
+      updateAuthUI();
+      // Load DeepSeek key status on startup now that the session is confirmed
+      if (typeof DeepSeek !== 'undefined') {
+        DeepSeek.fetchKeyFromEnv().then(() => DeepSeek.refreshBalance()).catch(() => {});
+      }
     })();
 
     // Auth events
@@ -1477,10 +1492,6 @@
       setTimeout(() => showLoginModal(), 300);
     });
 
-    // Load DeepSeek key on startup if already logged in
-    if (window.API?.isLoggedIn() && typeof DeepSeek !== 'undefined') {
-      DeepSeek.fetchKeyFromEnv().then(() => DeepSeek.refreshBalance()).catch(() => {});
-    }
   }
 
   // Expose for other pages (e.g. admin.html) that need to trigger the login modal directly
