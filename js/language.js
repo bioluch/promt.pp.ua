@@ -308,6 +308,7 @@
     'err.msg.spaceBeforePunct': { en: 'Space before punctuation mark', uk: 'Пробіл перед знаком пунктуації', es: 'Espacio antes del signo de puntuación' },
     'err.msg.doublePunct':    { en: 'Double punctuation', uk: 'Подвійна пунктуація', es: 'Puntuación doble' },
     'err.msg.lowercaseStart': { en: 'Sentence starts with a lowercase letter', uk: 'Речення починається з малої літери', es: 'La oración comienza con minúscula' },
+    'err.msg.spelling':       { en: 'Possible spelling mistake: \u00ab{word}\u00bb', uk: 'Можлива орфографічна помилка: \u00ab{word}\u00bb', es: 'Posible error ortográfico: \u00ab{word}\u00bb' },
     'err.msg.capsLock':       { en: 'CAPS LOCK might be on', uk: 'Можливо, CAPS LOCK увімкнений', es: 'Es posible que BLOQ MAYÚS esté activado' },
     'err.msg.grammarRu':      { en: 'Grammar issue or calque \u2192 \u00ab{suggestion}\u00bb', uk: 'Граматична помилка або русизм \u2192 \u00ab{suggestion}\u00bb', es: 'Error gramatical o calco \u2192 \u00ab{suggestion}\u00bb' },
     'err.msg.cliche':         { en: 'Cliché or bureaucratic phrase: \u00ab{word}\u00bb', uk: 'Канцеляризм або кліше: \u00ab{word}\u00bb', es: 'Cliché o frase burocrática: \u00ab{word}\u00bb' },

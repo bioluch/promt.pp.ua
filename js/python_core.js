@@ -3503,6 +3503,10 @@ def md_to_html(md):
 # ═══════════════════════════════════════════════════════════════════════════
 # TEXT CHECKER — функції перевірки якості тексту
 # ═══════════════════════════════════════════════════════════════════════════
+# Every stage skips "protected" regions that are not prose: fenced and inline
+# code, URLs, e-mails, file names / extensions (.md, report.docx), paths,
+# version numbers and Markdown table rows. Rules use word boundaries, and
+# overlapping findings are resolved so "Apply all fixes" never corrupts text.
 
 import re as _re_c
 
@@ -3523,184 +3527,393 @@ def _make_error(pos, end, word, msg, etype, suggestions=None, msg_key=None, msg_
         'sugg_key': sugg_key, 'sugg_args': sugg_args or {}
     }
 
+# ── Protected (non-prose) regions ─────────────────────────────────────────
+_PROTECT_RX = [
+    _BT * 3 + r'[\\s\\S]*?(?:' + _BT * 3 + r'|\\Z)',          # fenced code blocks
+    r'~~~[\\s\\S]*?(?:~~~|\\Z)',
+    _BT + '[^' + _BT + r'\\n]+' + _BT,                  # inline code
+    r'\\b(?:https?|ftp)://[^\\s<>()\\[\\]]+',             # URLs
+    r'\\bwww\\.[^\\s<>()\\[\\]]+',
+    r'\\b[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+',                # e-mails
+    r'(?<![\\w.])\\.[A-Za-z0-9]{1,8}\\b',                # bare extensions: .md, .docx, .NET
+    r'\\b[\\w-]+(?:\\.[A-Za-z0-9]{1,8})+\\b',             # file / host names: report.md, docxmd.pp.ua
+    r'(?:\\.{1,2}|~)?/[\\w.\\-/]+',                      # unix paths, ../dir
+    r'\\b[A-Za-z]:\\\\[^\\s]*',                           # windows paths
+    r'\\bv?\\d+(?:\\.\\d+){1,3}\\b',                       # versions, numbers 1.2.3, 3.14
+    r'\\d+\\.{2,3}\\d+',                                 # ranges 1..5
+    r'^[ \\t]*\\|.*\\|[ \\t]*$',                          # Markdown table rows
+    r'^(?: {4}|\\t).*$',                               # indented code
+]
+_PROTECT_ONE = _re_c.compile('|'.join('(?:%s)' % p for p in _PROTECT_RX), _re_c.M)
+_SPAN_CACHE = {'text': None, 'spans': []}
+
+def _protected_spans(text):
+    if _SPAN_CACHE['text'] is not text:
+        _SPAN_CACHE['text'] = text
+        _SPAN_CACHE['spans'] = [(m.start(), m.end()) for m in _PROTECT_ONE.finditer(text) if m.end() > m.start()]
+    return _SPAN_CACHE['spans']
+
+def _is_protected(text, start, end=None):
+    end = start + 1 if end is None or end <= start else end
+    return any(s < end and start < e for s, e in _protected_spans(text))
+
+def _cap_like(src, repl):
+    """Keep the source's leading capital: 'В рамках' → 'У межах'."""
+    return repl[:1].upper() + repl[1:] if src[:1].isupper() else repl
+
+# ── Stage 1: repeated words ──────────────────────────────────────────────
 def check_stage_repeats(text):
-    """Знаходить повторення слів поруч."""
+    """Знаходить повторення слів поруч (лише через пробіли, не через розділові знаки)."""
     errors = []
-    words = list(_re_c.finditer(r'\\b(\\w+)\\b', text, _re_c.IGNORECASE))
-    for i in range(1, len(words)):
-        w1, w2 = words[i-1], words[i]
-        if w1.group().lower() == w2.group().lower() and len(w1.group()) > 2:
-            errors.append(_make_error(
-                w2.start(), w2.end(), w2.group(),
-                'Повтор слова \\u00ab' + w2.group() + '\\u00bb', 'repeat',
-                ['(видалити)'],
-                msg_key='err.msg.repeat', msg_args={'word': w2.group()}
-            ))
+    for m in _re_c.finditer(r'\\b(\\w{3,})\\b([ \\t]+)(\\1)\\b', text, _re_c.IGNORECASE):
+        if m.group(1).isdigit() or _is_protected(text, m.start(), m.end()):
+            continue
+        w2 = m.group(3)
+        errors.append(_make_error(
+            m.start(3), m.end(3), w2,
+            'Повтор слова «' + w2 + '»', 'repeat', ['(видалити)'],
+            msg_key='err.msg.repeat', msg_args={'word': w2}
+        ))
     return errors
 
+# ── Stage 2: spacing ─────────────────────────────────────────────────────
 def check_stage_spaces(text):
-    """Знаходить зайві пробіли."""
+    """Зайві пробіли всередині рядка та пробіл перед розділовим знаком."""
     errors = []
-    for m in _re_c.finditer(r'[ \\t]{2,}', text):
+    # 2+ spaces between words; indentation and Markdown hard breaks (trailing "  ") are fine
+    for m in _re_c.finditer(r'(?<=\\S)[ \\t]{2,}(?=\\S)', text):
+        if _is_protected(text, m.start(), m.end()):
+            continue
         errors.append(_make_error(
-            m.start(), m.end(), m.group(),
-            'Зайві пробіли', 'space', [' '],
-            msg_key='err.msg.extraSpaces'
-        ))
-    for m in _re_c.finditer(r'[ \\t]+([,\\.!?;:])', text):
+            m.start(), m.end(), m.group(), 'Зайві пробіли', 'space', [' '],
+            msg_key='err.msg.extraSpaces'))
+    # space before , . ! ? ; : — but not when the mark starts a token (.md, .5, ...)
+    for m in _re_c.finditer(r'(?<=\\w)[ \\t]+([,.!?;:])(?![\\w.\\\\/])', text):
+        if _is_protected(text, m.start(), m.end()):
+            continue
         errors.append(_make_error(
-            m.start(), m.end(), m.group(),
-            'Пробіл перед знаком пунктуації', 'space',
-            [m.group(1)],
-            msg_key='err.msg.spaceBeforePunct'
-        ))
+            m.start(), m.end(), m.group(), 'Пробіл перед знаком пунктуації', 'space',
+            [m.group(1)], msg_key='err.msg.spaceBeforePunct'))
     return errors
+
+# ── Stage 3: punctuation ─────────────────────────────────────────────────
+_PUNCT_OK = {'...', '…', '?!', '!?', '?!?', '!!', '??', '!!!', '???'}
 
 def check_stage_punct(text):
-    """Знаходить проблеми з пунктуацією."""
+    """Подвійна пунктуація (крім трикрапки, ?!, !!, діапазонів і шляхів)."""
     errors = []
     for m in _re_c.finditer(r'[.!?,;]{2,}', text):
-        if m.group() not in ('...', '\\u2026', '!!', '??'):
-            errors.append(_make_error(
-                m.start(), m.end(), m.group(),
-                'Подвійна пунктуація', 'punct', [m.group()[0]],
-                msg_key='err.msg.doublePunct'
-            ))
+        g = m.group()
+        if g in _PUNCT_OK or _is_protected(text, m.start(), m.end()):
+            continue
+        errors.append(_make_error(
+            m.start(), m.end(), g, 'Подвійна пунктуація', 'punct',
+            ['...' if set(g) == {'.'} else g[0]], msg_key='err.msg.doublePunct'))
     return errors
+
+# ── Stage 4: sentence capitalisation ─────────────────────────────────────
+_ABBR = {
+    # English
+    'e.g', 'i.e', 'etc', 'vs', 'cf', 'approx', 'ca', 'no', 'fig', 'figs', 'vol', 'p', 'pp',
+    'mr', 'mrs', 'ms', 'dr', 'prof', 'st', 'jr', 'sr', 'inc', 'ltd', 'co', 'corp', 'dept',
+    'est', 'min', 'max', 'avg', 'al', 'resp', 'incl', 'excl', 'approx',
+    # Ukrainian
+    'т.д', 'т.п', 'т.ч', 'т.зв', 'і.т.д', 'напр', 'див', 'с', 'ст', 'п', 'пп', 'р', 'рр',
+    'м', 'вул', 'просп', 'обл', 'тис', 'млн', 'млрд', 'грн', 'коп', 'проф', 'акад', 'ін',
+    'інш', 'під', 'гл', 'ред', 'вид', 'ч', 'т', 'стор',
+}
 
 def check_stage_dict(text, lang):
-    """Перевірка великої літери на початку речень."""
+    """Речення, що починається з малої літери (без хибних спрацювань після скорочень)."""
     errors = []
-    for m in _re_c.finditer(r'(?:(?<=[.!?]\\s))([a-z\\u0430-\\u044f\\u0456\\u0457\\u0454\\u0491])', text):
+    for m in _re_c.finditer(r'([.!?])([ \\t]+|\\n)([a-zа-яіїєґ])', text):
+        mark, letter_pos = m.group(1), m.start(3)
+        if _is_protected(text, m.start(), m.end()):
+            continue
+        before = text[:m.start(1)]
+        tok = _re_c.search(r'([\\w.]+)$', before)
+        word = (tok.group(1) if tok else '').lower().strip('.')
+        if mark == '.':
+            if word in _ABBR or _re_c.fullmatch(r'(?:\\w\\.)*\\w', word) and len(word.replace('.', '')) <= 2:
+                continue                                  # e.g. / т.д. / U.S.
+            if before.endswith('..') or before.endswith('…'):
+                continue                                  # ellipsis inside a sentence
+            if _re_c.search(r'(?:^|\\n)[ \\t]*\\d{1,3}$', before):
+                continue                                  # numbered list marker "1. item"
         errors.append(_make_error(
-            m.start(1), m.end(1), m.group(1),
-            'Речення починається з малої літери', 'capital',
-            [m.group(1).upper()],
-            msg_key='err.msg.lowercaseStart'
-        ))
+            letter_pos, letter_pos + 1, m.group(3),
+            'Речення починається з малої літери', 'capital', [m.group(3).upper()],
+            msg_key='err.msg.lowercaseStart'))
     return errors
+
+# ── Stage 5: spelling ────────────────────────────────────────────────────
+_SPELL = {'checker': None, 'failed': False}
+_CAPS_OK = {'НАТО', 'НАБУ', 'НАЗК', 'ДБР', 'СБУ', 'ЗСУ', 'ООН', 'ЄСПЛ', 'МВФ', 'ВООЗ', 'ВРУ',
+            'НБУ', 'КМУ', 'ДСНС', 'ЄБРР', 'ОБСЄ', 'МКБ', 'ПДВ', 'ФОП', 'ТОВ', 'ПАТ', 'ПрАТ',
+            'АТ', 'КПК', 'ЦПК', 'ККУ', 'ГПУ', 'ОДА', 'ЦВК', 'УРСР', 'СРСР', 'США', 'ЄС', 'РФ'}
+
+# Technical / domain words that general dictionaries lack (prompts are full of them)
+_SPELL_EXTRA = (
+    'markdown json yaml toml html xhtml css scss http https api apis pdf docx xlsx pptx csv tsv '
+    'javascript typescript python pyodide github gitlab bitbucket npm pnpm yarn nginx apache '
+    'frontend backend fullstack devops devsecops kubernetes docker dockerfile postgres postgresql '
+    'mysql sqlite nosql mongodb redis webhook webhooks chatbot chatbots prompt prompts llm llms '
+    'chatgpt claude deepseek gemini openai anthropic mistral llama saas paas iaas url urls uri '
+    'email emails online offline login logout signup username usernames dataset datasets workflow '
+    'workflows timestamp timestamps metadata linter linters refactor refactoring async await '
+    'boolean enum enums utf regex localhost plugin plugins toolchain codebase onboarding roadmap '
+    'roadmaps stakeholder stakeholders middleware microservice microservices serverless runtime '
+    'runtimes subfolder subfolders repo repos changelog readme config configs env dotenv cli gui '
+    'sdk sdks oauth jwt csrf xss cors cdn dns ssl tls vpn ssh sftp ftp osint geolocation '
+    'cybersecurity pentest pentesting fintech edtech healthtech blockchain crypto tokenomics defi '
+    'nft nfts esg kpi kpis okr okrs roi capex opex ebitda lexer lexers parser parsers tokenizer '
+    'tokenizers linting minify minified hotfix hotfixes'
+).split()
+
+_SPELL_EXTRA += 'bulleted docstring docstrings emoji emojis multilevel'.split()
+
+def _spell_variants(w):
+    """Plural, possessive and British spellings of a word (dictionaries list mostly US lemmas)."""
+    v = set()
+    if w.endswith('ies'):
+        v.add(w[:-3] + 'y')
+    if w.endswith('es'):
+        v.add(w[:-2])
+    if w.endswith('s'):
+        v.add(w[:-1])
+    for a, b in (('our', 'or'), ('isation', 'ization'), ('ised', 'ized'), ('ise', 'ize'),
+                 ('ising', 'izing'), ('yse', 'yze'), ('ysed', 'yzed'), ('ysing', 'yzing'),
+                 ('lled', 'led'), ('lling', 'ling'), ('tre', 'ter'), ('ence', 'ense'), ('ogue', 'og')):
+        if a in w:
+            v.add(w.replace(a, b))
+    return {x for x in v if len(x) >= 3}
+
+def _spell_en():
+    if _SPELL['checker'] is None and not _SPELL['failed']:
+        try:
+            from spellchecker import SpellChecker
+            sc = SpellChecker(language='en')
+            sc.word_frequency.load_words(_SPELL_EXTRA)
+            _SPELL['checker'] = sc
+        except Exception:
+            _SPELL['failed'] = True
+    return _SPELL['checker']
 
 def check_stage_spellcheck(text, lang, prior_errors):
-    """Знаходить слова що написані ВЕЛИКИМИ ЛІТЕРАМИ (крім коротких абревіатур)."""
+    """EN: справжня перевірка орфографії (pyspellchecker). UK: слова, набрані CAPS LOCK."""
     errors = []
-    prior_pos = {e['pos'] for e in prior_errors}
-    for m in _re_c.finditer(r'\\b[А-ЯІЇЄҐ]{4,}\\b', text):
-        if m.start() not in prior_pos:
-            errors.append(_make_error(
-                m.start(), m.end(), m.group(),
-                'Можливо, CAPS LOCK увімкнений', 'spelling',
-                [m.group().capitalize()],
-                msg_key='err.msg.capsLock'
-            ))
+    prior = [(e['pos'], e['end']) for e in (prior_errors or [])]
+    taken = lambda s, e: any(ps < e and s < pe for ps, pe in prior)
+
+    # Ukrainian (and any Cyrillic in mixed text): long all-caps words outside headings
+    for m in _re_c.finditer(r'(?<![\\w-])[А-ЯІЇЄҐ]{6,}(?![\\w-])', text):
+        word = m.group()
+        line_start = text.rfind('\\n', 0, m.start()) + 1
+        line_end = text.find('\\n', m.end())
+        line = text[line_start: line_end if line_end != -1 else len(text)]
+        letters = [c for c in line if c.isalpha()]
+        is_heading = line.lstrip().startswith('#') or (letters and sum(c.isupper() for c in letters) / len(letters) > 0.7)
+        if word in _CAPS_OK or is_heading or taken(m.start(), m.end()) or _is_protected(text, m.start(), m.end()):
+            continue
+        errors.append(_make_error(
+            m.start(), m.end(), word, 'Можливо, CAPS LOCK увімкнений', 'spelling',
+            [word.capitalize()], msg_key='err.msg.capsLock'))
+
+    if lang != 'en':
+        return errors
+    sc = _spell_en()
+    if sc is None:
+        return errors
+    candidates = []
+    for m in _re_c.finditer(r"(?<![\\w'\\-@#$/\\\\])([A-Za-z][a-z]{3,})(?![\\w'\\-@(])", text):
+        w = m.group(1)
+        if _is_protected(text, m.start(), m.end()) or taken(m.start(), m.end()):
+            continue
+        if w[0].isupper():
+            # Title-case: only check it at a sentence start (otherwise likely a proper noun)
+            prev = text[:m.start()].rstrip(' \\t')
+            if prev and prev[-1] not in '.!?\\n:"“(' :
+                continue
+        candidates.append(m)
+    unknown = sc.unknown([m.group(1).lower() for m in candidates])
+    for m in candidates:
+        w = m.group(1)
+        if w.lower() not in unknown:
+            continue
+        variants = _spell_variants(w.lower())
+        if variants and sc.known(variants):
+            continue                       # a plural / British / inflected form of a known word
+        fix = sc.correction(w.lower())
+        # typos rarely change the first letter — a different one usually means an unknown term
+        if not fix or fix == w.lower() or fix[0] != w[0].lower() or "'" in fix:
+            continue
+        errors.append(_make_error(
+            m.start(1), m.end(1), w, 'Можлива орфографічна помилка', 'spelling',
+            [_cap_like(w, fix)], msg_key='err.msg.spelling', msg_args={'word': w}))
     return errors
 
+# ── Stage 6: grammar / calques (Ukrainian) ───────────────────────────────
+# (pattern, replacement, safe_to_auto_apply)
 _UK_GRAMMAR_PAIRS = [
-    (r'взагалі то', 'взагалі-то'),
-    (r'як що', 'якщо'),
-    (r'по відношенню до', 'щодо'),
-    (r'по крайній мірі', 'принаймні'),
-    (r'в рамках', 'у межах'),
-    (r'на даний час', 'наразі'),
-    (r'з метою', 'щоб'),
-    (r'у будь якому', 'у будь-якому'),
-    (r'як найкраще', 'якнайкраще'),
+    (r'взагалі то', 'взагалі-то', True),
+    (r'як що', 'якщо', False),               # often legitimate: «так, як що…» is rare but possible
+    (r'по відношенню до', 'щодо', True),
+    (r'по крайній мірі', 'принаймні', True),
+    (r'в рамках', 'у межах', True),
+    (r'на даний час', 'наразі', True),
+    (r'на даний момент', 'наразі', True),
+    (r'у будь якому', 'у будь-якому', True),
+    (r'як найкраще', 'якнайкраще', True),
+    (r'приймати участь', 'брати участь', True),
+    (r'приймає участь', 'бере участь', True),
+    (r'являється', 'є', False),
+    (r'слідуючий', 'наступний', True),
+    (r'співпадає', 'збігається', True),
+    (r'вірно', 'правильно', False),
 ]
+_UK_GRAMMAR_RX = [(_re_c.compile(r'(?<![\\w-])' + p + r'(?![\\w-])', _re_c.IGNORECASE), s, a)
+                  for p, s, a in _UK_GRAMMAR_PAIRS]
 
 def check_stage_grammar(text, lang):
-    """Граматичні помилки та русизми."""
+    """Граматичні помилки та русизми (лише цілі слова; регістр першої літери зберігається)."""
     errors = []
-    if lang == 'uk':
-        for pattern, suggestion in _UK_GRAMMAR_PAIRS:
-            for m in _re_c.finditer(pattern, text, _re_c.IGNORECASE):
-                errors.append(_make_error(
-                    m.start(), m.end(), m.group(),
-                    'Граматична помилка або русизм \\u2192 \\u00ab' + suggestion + '\\u00bb',
-                    'grammar', [suggestion],
-                    msg_key='err.msg.grammarRu', msg_args={'suggestion': suggestion}
-                ))
+    if lang != 'uk':
+        return errors
+    for rx, suggestion, auto in _UK_GRAMMAR_RX:
+        for m in rx.finditer(text):
+            if _is_protected(text, m.start(), m.end()):
+                continue
+            fix = _cap_like(m.group(), suggestion)
+            err = _make_error(
+                m.start(), m.end(), m.group(),
+                'Граматична помилка або русизм → «' + fix + '»', 'grammar', [fix],
+                msg_key='err.msg.grammarRu', msg_args={'suggestion': fix})
+            err['auto'] = auto     # False → shown and clickable, but skipped by "Apply all fixes"
+            errors.append(err)
     return errors
 
+# ── Stage 7: style / clichés ─────────────────────────────────────────────
 _STYLE_WORDS_UK = [
     'здійснювати', 'проводити заходи', 'забезпечувати', 'реалізовувати',
-    'є наявним', 'в цілому', 'таким чином', 'в свою чергу',
+    'є наявним', 'в цілому', 'таким чином', 'в свою чергу', 'з метою',
 ]
 _STYLE_WORDS_EN = [
-    'utilize', 'leverage', 'synergy', 'paradigm',
-    'going forward', 'in order to',
+    'utilize', 'utilise', 'leverage', 'synergy', 'paradigm',
+    'going forward', 'in order to', 'at this point in time', 'due to the fact that',
 ]
 
 def check_stage_style(text, lang):
-    """Знаходить канцеляризми та кліше."""
+    """Канцеляризми та кліше (лише цілі слова; порада, без автозаміни)."""
     errors = []
     words = _STYLE_WORDS_UK if lang == 'uk' else _STYLE_WORDS_EN
     for w in words:
-        for m in _re_c.finditer(_re_c.escape(w), text, _re_c.IGNORECASE):
+        for m in _re_c.finditer(r'(?<![\\w-])' + _re_c.escape(w) + r'(?![\\w-])', text, _re_c.IGNORECASE):
+            if _is_protected(text, m.start(), m.end()):
+                continue
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
-                'Канцеляризм або кліше: \\u00ab' + w + '\\u00bb', 'style', ['(спростити)'],
-                msg_key='err.msg.cliche', msg_args={'word': w}
-            ))
+                'Канцеляризм або кліше: «' + w + '»', 'style', ['(спростити)'],
+                msg_key='err.msg.cliche', msg_args={'word': w}))
     return errors
 
+# ── Stage 8: passive voice ───────────────────────────────────────────────
+_EN_IRREGULAR_PP = ('taken|given|written|seen|known|shown|chosen|driven|broken|spoken|forgotten|hidden|'
+                    'eaten|beaten|made|done|built|sent|held|found|paid|told|kept|left|brought|thought|'
+                    'bought|caught|taught|put|set|cut|read|led|won|lost|run|begun|drawn|grown|thrown')
 def check_stage_passive(text, lang):
-    """Знаходить пасивний стан."""
+    """Пасивний стан (порада)."""
     errors = []
     if lang == 'uk':
-        patterns = [r'\\bбуло\\s+\\w+ено\\b', r'\\bбула\\s+\\w+ена\\b', r'\\bбуло\\s+\\w+ано\\b']
+        patterns = [r'\\b(?:було|була|був|були)\\s+\\w+(?:ено|ано|ена|ана|ений|аний|ені|ані)\\b']
     else:
-        patterns = [r'\\bwas\\s+\\w+ed\\b', r'\\bwere\\s+\\w+ed\\b', r'\\bbeing\\s+\\w+ed\\b']
+        patterns = [r'\\b(?:was|were|is|are|been|being|be)\\s+(?:\\w+ly\\s+)?(?:\\w+ed|' + _EN_IRREGULAR_PP + r')\\b']
     for pat in patterns:
         for m in _re_c.finditer(pat, text, _re_c.IGNORECASE):
+            if _is_protected(text, m.start(), m.end()):
+                continue
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
                 'Пасивний стан — розгляньте активний', 'passive', ['(активний стан)'],
-                msg_key='err.msg.passive'
-            ))
+                msg_key='err.msg.passive'))
     return errors
 
+# ── Stage 9: prompt structure ────────────────────────────────────────────
+_RX_ROLE = _re_c.compile(
+    r'\\b(?:you are|act as|acting as|as an? (?:expert|senior|experienced|professional)|your role|role:|persona)\\b'
+    r'|(?<![\\w-])(?:ти|ви)\\s*(?:—|-|–|є|виступаєш|виступаєте|працюєш)'
+    r'|(?<![\\w-])(?:виступай|виступайте|уяви, що ти|роль|як експерт)',
+    _re_c.IGNORECASE)
+_RX_TASK = _re_c.compile(
+    r'\\b(?:task|goal|objective|analy[sz]e|analysis|write|create|generate|provide|prepare|conduct|gather|'
+    r'collect|explain|describe|summari[sz]e|compare|evaluate|assess|identify|list|draft|review|design|'
+    r'build|develop|plan|translate|calculate|forecast|investigate|research|find|propose|recommend)\\b'
+    r'|(?<![\\w-])(?:завдання|мета|потрібно|необхідно|зроби|зробіть|проаналізуй|проаналізуйте|підготуй|'
+    r'підготуйте|напиши|напишіть|створи|створіть|опиши|опишіть|поясни|поясніть|порівняй|порівняйте|оціни|'
+    r'оцініть|розроби|розробіть|знайди|знайдіть|склади|складіть|надай|надайте|визнач|визначте|переклади|'
+    r'перекладіть|зберіть|збери|спрогнозуй|запропонуй|запропонуйте|дослідіть|досліди)',
+    _re_c.IGNORECASE)
+_RX_OUTPUT = _re_c.compile(
+    r'\\b(?:output|format|response|report|table|list|summary|json|csv|markdown|bullet|sections?|words?)\\b'
+    r'|\\.(?:md|docx|pdf|xlsx|pptx|json|csv|html)\\b'
+    r'|(?<![\\w-])(?:результат|формат|відповід|звіт|таблиц|список|перелік|резюме|розділ)',
+    _re_c.IGNORECASE)
+
 def check_stage_structure(text, lang):
-    """Перевіряє структуру промту."""
+    """Структура промту: роль, завдання, очікуваний результат (порада)."""
     errors = []
     if len(text) < 100:
         return errors
-    has_role   = bool(_re_c.search(r'role|ти|you are|act as|ролі|роль', text, _re_c.IGNORECASE))
-    has_task   = bool(_re_c.search(r'task|завдання|мета|потрібно|необхідно|зроби|create|generate|write|analyze', text, _re_c.IGNORECASE))
-    has_output = bool(_re_c.search(r'output|format|результат|формат|відповідь|response', text, _re_c.IGNORECASE))
-    if not has_role:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a\\u2026" або "Ти \\u2014 ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
-    if not has_task:
+    if not _RX_ROLE.search(text):
+        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a…" або "Ти — ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
+    if not _RX_TASK.search(text):
         errors.append(_make_error(0, 0, '', 'Відсутнє чітке завдання', 'structure', ['Додайте конкретний опис задачі'], msg_key='err.msg.noTask', sugg_key='err.sugg.noTask'))
-    if not has_output and len(text) > 200:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі\\u2026"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
+    if not _RX_OUTPUT.search(text) and len(text) > 200:
+        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі…"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
     return errors
 
+# ── Merge & apply ────────────────────────────────────────────────────────
+_TYPE_PRIORITY = {'repeat': 0, 'punct': 1, 'space': 2, 'capital': 3, 'spelling': 4,
+                  'grammar': 5, 'style': 6, 'passive': 7, 'structure': 8}
+
 def check_merge(errors):
-    """Злиття та дедублікація помилок."""
-    seen = set()
-    merged = []
-    for e in errors:
+    """Дедублікація та розв'язання перекриттів (один діапазон — одна помилка)."""
+    seen, merged, kept = set(), [], []
+    ordered = sorted(errors, key=lambda e: (_TYPE_PRIORITY.get(e['type'], 9), e['pos'], -(e['end'] - e['pos'])))
+    for e in ordered:
         key = (e['pos'], e['end'], e['type'])
-        if key not in seen:
-            seen.add(key)
-            merged.append(e)
-    return sorted(merged, key=lambda x: x['pos'])
+        if key in seen:
+            continue
+        seen.add(key)
+        if e['end'] > e['pos'] and any(s < e['end'] and e['pos'] < en for s, en in kept):
+            continue                       # overlaps a higher-priority finding
+        if e['end'] > e['pos']:
+            kept.append((e['pos'], e['end']))
+        merged.append(e)
+    return sorted(merged, key=lambda x: (x['pos'], x['end']))
+
+_ADVISORY = {'(видалити)', '(активний стан)', '(спростити)'}
 
 def apply_all_fixes(text, errors):
-    """Застосовує першу пропозицію для кожної помилки (з кінця до початку)."""
+    """Застосовує першу пропозицію для кожної помилки (з кінця до початку, без перекриттів)."""
     sorted_errors = sorted(
         [e for e in errors if e.get('suggestions') and e['pos'] != e['end']],
-        key=lambda x: x['pos'], reverse=True
+        key=lambda x: (x['pos'], x['end']), reverse=True
     )
-    skip = {'(видалити)', '(активний стан)', '(спростити)'}
+    applied_from = len(text) + 1          # start of the leftmost range already changed
     for e in sorted_errors:
+        start, end = e['pos'], e['end']
+        if end > applied_from or e.get('auto') is False:
+            continue                       # overlapping range or context-dependent fix
         sugg = e['suggestions'][0]
-        if sugg and sugg not in skip:
-            text = text[:e['pos']] + sugg + text[e['end']:]
-        elif sugg == '(видалити)':
-            start = e['pos']
-            end   = e['end']
-            if start > 0 and text[start-1] == ' ':
+        if sugg == '(видалити)':
+            while start > 0 and text[start - 1] in ' \\t':   # the whole whitespace run before the word
                 start -= 1
             text = text[:start] + text[end:]
+        elif sugg and sugg not in _ADVISORY:
+            text = text[:start] + sugg + text[end:]
+        else:
+            continue
+        applied_from = start
     return text
+
 `;

@@ -1496,7 +1496,7 @@ function applySuggestion(idx, sugg) {
   const e = currentErrors[idx];
   if (!e) return;
   // Markers mirror apply_all_fixes() in python_core.js: advisory hints never
-  // replace text, '(видалити)' removes the word plus one preceding space.
+  // replace text, '(видалити)' removes the word plus the whitespace run before it.
   if (sugg === '(спростити)' || sugg === '(активний стан)') {
     toast(window.Lang ? Lang.t('toast.adviceOnly') : 'This is a style hint — edit the text manually', '');
     return;
@@ -1505,7 +1505,7 @@ function applySuggestion(idx, sugg) {
   let replacement = sugg;
   if (sugg === '(видалити)') {
     replacement = '';
-    if (start > 0 && currentText[start - 1] === ' ') start -= 1;
+    while (start > 0 && (currentText[start - 1] === ' ' || currentText[start - 1] === '\t')) start -= 1;
   }
   const before = currentText.slice(0, start);
   const after = currentText.slice(e.end);
