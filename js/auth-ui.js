@@ -1006,8 +1006,8 @@
             <input class="schedule-input" type="datetime-local" id="schedDateTime">
           </div>
           <div class="schedule-field">
-            <label class="schedule-label">${T('sched.maxTokens')} <span id="schedTokensDefault" style="color:var(--text-dim);font-weight:400;">${T('sched.default', { n: 8192 })}</span></label>
-            <input class="schedule-input" type="number" id="schedMaxTokens" placeholder="8192" min="1" max="65536" step="1">
+            <label class="schedule-label">${T('sched.maxTokens')} <span id="schedTokensDefault" style="color:var(--text-dim);font-weight:400;">${T('sched.default', { n: 16384 })}</span></label>
+            <input class="schedule-input" type="number" id="schedMaxTokens" placeholder="16384" min="1" max="65536" step="1">
           </div>
         </div>
         <button class="auth-modal-btn" id="schedCreateBtn" style="margin-top:4px;">${T('sched.scheduleJobBtn')}</button>
@@ -1040,13 +1040,14 @@
       });
     } catch {}
 
-    // Max tokens defaults per provider — updates placeholder/hint when Target AI changes
-    const TOKEN_DEFAULTS = { gemini: 8192, deepseek: 8000, claude: 8000 };
+    // Max tokens defaults per provider (mirror api/scheduler.js) — updates placeholder/hint.
+    // Size of the answer itself; Gemini 2.5 gets extra room for its thinking on top.
+    const TOKEN_DEFAULTS = { gemini: 16384, deepseek: 8192, claude: 16384 };
     const aiSel       = container.querySelector('#schedAi');
     const tokensInput = container.querySelector('#schedMaxTokens');
     const tokensHint  = container.querySelector('#schedTokensDefault');
     function syncTokenDefault() {
-      const def = TOKEN_DEFAULTS[aiSel.value] || 8192;
+      const def = TOKEN_DEFAULTS[aiSel.value] || 8000;   // other providers: conservative default
       tokensInput.placeholder = String(def);
       tokensHint.textContent  = T('sched.default', { n: def });
     }
