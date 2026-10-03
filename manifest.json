@@ -9,17 +9,17 @@
   "background_color": "#0a1929",
   "theme_color": "#132f4c",
   "related_applications": [
-  {
-    "platform": "windows",
-    "url": "https://promt.pp.ua",
-    "id": "SCKOLIBRILLC.JSPROMPT"
-  },
-  {
-    "platform": "play",
-    "url": "https://promt.pp.ua",
-    "id": "ua.pp.promt.twa"
-  }
-],
+    {
+      "platform": "windows",
+      "url": "https://promt.pp.ua",
+      "id": "SCKOLIBRILLC.JSPROMPT"
+    },
+    {
+      "platform": "play",
+      "url": "https://promt.pp.ua",
+      "id": "ua.pp.promt.twa"
+    }
+  ],
   "icons": [
     {
       "src": "png/js-promt-192x192.png",
@@ -92,60 +92,179 @@
   "id": "JSPROMPT2026-06-27",
   "screenshots": [
     {
+      "src": "screenshots/main-3840x2160.png",
+      "sizes": "3840x2160",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (desktop, 3840x2160)"
+    },
+    {
+      "src": "screenshots/main-2560x1440.png",
+      "sizes": "2560x1440",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (desktop, 2560x1440)"
+    },
+    {
+      "src": "screenshots/main-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (desktop, 1920x1080)"
+    },
+    {
       "src": "screenshots/main-1366x768.png",
       "sizes": "1366x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Prompt Generator (1366x768)"
+      "label": "JS PROMPT — Prompt Generator (desktop, 1366x768)"
     },
     {
       "src": "screenshots/main-1280x720.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Prompt Generator (1280x720)"
+      "label": "JS PROMPT — Prompt Generator (desktop, 1280x720)"
     },
     {
       "src": "screenshots/main-1024x500.png",
       "sizes": "1024x500",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Prompt Generator (1024x500)"
+      "label": "JS PROMPT — Prompt Generator (desktop, 1024x500)"
     },
     {
       "src": "screenshots/main-640x480.png",
       "sizes": "640x480",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "JS PROMPT — Prompt Generator (640x480)"
+      "form_factor": "wide",
+      "label": "JS PROMPT — Prompt Generator (desktop, 640x480)"
+    },
+    {
+      "src": "screenshots/checker-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Error Checker (desktop, 1920x1080)"
+    },
+    {
+      "src": "screenshots/checker-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Error Checker (desktop, 1366x768)"
+    },
+    {
+      "src": "screenshots/converter-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — PDF/DOCX → Markdown Converter (desktop, 1920x1080)"
+    },
+    {
+      "src": "screenshots/converter-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — PDF/DOCX → Markdown Converter (desktop, 1366x768)"
+    },
+    {
+      "src": "screenshots/editor-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Markdown Editor (desktop, 1920x1080)"
+    },
+    {
+      "src": "screenshots/editor-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Markdown Editor (desktop, 1366x768)"
     },
     {
       "src": "screenshots/help-1366x768.png",
       "sizes": "1366x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help & Documentation (1366x768)"
+      "label": "JS PROMPT — Help & Documentation (desktop, 1366x768)"
     },
     {
       "src": "screenshots/help-1280x720.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help & Documentation (1280x720)"
+      "label": "JS PROMPT — Help & Documentation (desktop, 1280x720)"
     },
     {
       "src": "screenshots/help-1024x500.png",
       "sizes": "1024x500",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "JS PROMPT — Help & Documentation (1024x500)"
+      "label": "JS PROMPT — Help & Documentation (desktop, 1024x500)"
     },
     {
       "src": "screenshots/help-640x480.png",
       "sizes": "640x480",
       "type": "image/png",
+      "form_factor": "wide",
+      "label": "JS PROMPT — Help & Documentation (desktop, 640x480)"
+    },
+    {
+      "src": "screenshots/mobile-tablet-main-2048x2732.png",
+      "sizes": "2048x2732",
+      "type": "image/png",
       "form_factor": "narrow",
-      "label": "JS PROMPT — Help & Documentation (640x480)"
+      "label": "JS PROMPT — Prompt Generator (tablet, 2048x2732)"
+    },
+    {
+      "src": "screenshots/mobile-tablet-main-1600x2560.png",
+      "sizes": "1600x2560",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Prompt Generator (tablet, 1600x2560)"
+    },
+    {
+      "src": "screenshots/mobile-phone-main-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Prompt Generator (phone, 1080x1920)"
+    },
+    {
+      "src": "screenshots/mobile-phone-main-1080x2340.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Prompt Generator (phone, 1080x2340)"
+    },
+    {
+      "src": "screenshots/mobile-tablet-checker-1600x2560.png",
+      "sizes": "1600x2560",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Error Checker (tablet, 1600x2560)"
+    },
+    {
+      "src": "screenshots/mobile-phone-checker-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Error Checker (phone, 1080x1920)"
+    },
+    {
+      "src": "screenshots/mobile-phone-converter-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — PDF/DOCX → Markdown Converter (phone, 1080x1920)"
+    },
+    {
+      "src": "screenshots/mobile-tablet-editor-1600x2560.png",
+      "sizes": "1600x2560",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JS PROMPT — Markdown Editor (tablet, 1600x2560)"
     }
   ],
   "categories": [

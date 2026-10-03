@@ -862,6 +862,26 @@ function initPromptPanel() {
 }
 
 /** Рендерить markdown у #promptOutput та зберігає raw у #promptOutputRaw */
+// Prompts use XML-style section tags (<role>, <task>, …). Real HTML parsing would
+// swallow them (DOMPurify drops unknown tags and Markdown inside an HTML block is
+// not rendered), so for the preview they become visible labels instead.
+const HTML_INLINE_OK = new Set(['b', 'i', 'u', 's', 'em', 'strong', 'code', 'sup', 'sub', 'br', 'kbd', 'mark', 'small', 'del']);
+function promptTagsForPreview(md) {
+  let inFence = false;
+  return md.split('\n').map(line => {
+    if (/^\s*(```|~~~)/.test(line)) { inFence = !inFence; return line; }
+    if (inFence) return line;
+    const whole = line.match(/^\s*<(\/?)([a-z][a-z0-9_]*)>\s*$/);
+    if (whole && !HTML_INLINE_OK.has(whole[2])) {
+      return '\n<span class="prompt-tag">&lt;' + whole[1] + whole[2] + '&gt;</span>\n';
+    }
+    // escape tags outside inline code spans only (Markdown already escapes code content)
+    return line.split(/(`+[^`]*?`+)/).map((part, i) => i % 2 ? part
+      : part.replace(/<(\/?)([a-z][a-z0-9_]*)>/g, (m, slash, name) =>
+          HTML_INLINE_OK.has(name) ? m : '&lt;' + slash + name + '&gt;')).join('');
+  }).join('\n');
+}
+
 function renderPromptOutput(mdText) {
   const rendered = $('#promptOutput');
   const rawEl    = $('#promptOutputRaw');
@@ -882,7 +902,7 @@ function renderPromptOutput(mdText) {
         breaks: true,
         gfm:    true,
       });
-      rendered.innerHTML = DOMPurify.sanitize(marked.parse(mdText));
+      rendered.innerHTML = DOMPurify.sanitize(marked.parse(promptTagsForPreview(mdText)));
       rendered.querySelectorAll('pre code').forEach(block => {
         block.style.display = 'block';
       });
@@ -989,6 +1009,8 @@ async function handleFiles(files) {
       hideHourglassSpinner();
     }
   }
+  // progress steps update the header status — return it to "Ready" when done
+  setStatus(window.Lang ? Lang.t('status.ready') : 'Ready', true);
 }
 
 let _pdf2mdFn = null;
@@ -1315,6 +1337,7 @@ function initCheckerPanel() {
       toast((window.Lang ? Lang.t('toast.errorGeneric') : 'Error:') + ' ' + e.message, 'error');
     } finally {
       hideHourglassSpinner();
+      setStatus(window.Lang ? Lang.t('status.ready') : 'Ready', true);
       btn.disabled = false;
       btn.textContent = window.Lang ? Lang.t('p4.btn.check') : 'Check';
     }

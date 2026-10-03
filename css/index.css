@@ -1489,3 +1489,26 @@ textarea.editor {
   .pane-actions-end { justify-content: stretch; }
   #panel-check .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Section tags of generated prompts (<role>, <task>, …) shown as labels in the preview */
+.output-rendered .prompt-tag {
+  display: inline-block;
+  margin: 10px 0 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent-2);
+  background: rgba(79, 195, 247, 0.10);
+  border: 1px solid rgba(79, 195, 247, 0.25);
+}
+
+/* Converter results show the raw Markdown — keep its line breaks */
+#convertResult .output-box {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-height: 420px;
+}

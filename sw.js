@@ -3,7 +3,7 @@
  * Network-first for Pyodide CDN; cache-first for local assets.
  */
 
-const CACHE_NAME = 'js-prompt-v2.0.3';
+const CACHE_NAME = 'js-prompt-v2.0.8';
 
 const PRECACHE = [
   './index.html',

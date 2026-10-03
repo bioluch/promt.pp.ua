@@ -530,3 +530,29 @@
   .btn-mic.recording { animation: none; }
   .loader       { animation: none; border-top-color: transparent; }
 }
+/* ══════════════════════════════════════════════════════════════
+   Layout v2 — phones: the main menu becomes a 2-column grid so every
+   item (incl. "API Keys") is visible without hidden horizontal scroll
+   and labels are never cut off.
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    overflow: visible;
+  }
+  .tab {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    padding: 10px 8px;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+    overflow: visible;
+  }
+  .tab.tab-action { grid-column: 1 / -1; }
+}
