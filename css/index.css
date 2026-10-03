@@ -1146,6 +1146,40 @@ textarea.editor {
   transform: translateY(-1px);
 }
 
+/* ── "No API key" notice ─────────────────────────────────────────── */
+.nokey-box { max-width: 480px; }
+.nokey-how {
+  margin: 14px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.nokey-steps {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.nokey-steps li { margin: 2px 0; }
+.nokey-dismiss {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+.nokey-dismiss input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+/* Menu button that opens a dialog rather than a panel */
+.tab.tab-action {
+  flex: 0 0 auto;
+  min-width: 0;
+  color: var(--accent-2);
+}
+
 /* ── DeepSeek API Key Banner ──────────────────────────────────────── */
 .api-key-banner {
   display: flex;
@@ -1309,4 +1343,149 @@ textarea.editor {
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* ══════════════════════════════════════════════════════════════════
+   Layout v2 — symmetric workspaces (prompt / editor / checker / converter)
+   Equal panes, aligned headers, one control height, mirrored action rows.
+   ══════════════════════════════════════════════════════════════════ */
+[hidden] { display: none !important; }   /* .btn's display must not override [hidden] */
+
+:root {
+  --ctl-h: 44px;          /* height of every control and action button */
+  --pane-h: 380px;        /* input / output panes */
+  --pane-h-tall: 520px;   /* editor / preview panes */
+}
+
+/* Settings strip: three equal fields */
+.settings-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  background: rgba(6, 17, 31, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.field-label,
+.pane-head label {
+  display: block;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.settings-bar select {
+  height: var(--ctl-h);
+  padding: 0 14px;
+  cursor: pointer;
+}
+.engine-tabs.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  height: var(--ctl-h);
+  padding: 4px;
+  box-sizing: border-box;
+}
+.engine-tabs.segmented .engine-tab {
+  justify-content: center;
+  font-size: 13px;
+  height: 100%;
+}
+
+/* Two equal panes */
+.workspace { align-items: stretch; gap: 24px; }
+.pane { display: flex; flex-direction: column; min-width: 0; }
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  margin-bottom: 8px;
+}
+.workspace .pane-body {
+  height: var(--pane-h);
+  min-height: var(--pane-h);
+  max-height: none;
+  margin: 0;
+  box-sizing: border-box;
+  resize: none;
+}
+.workspace .pane-body.pane-tall {
+  height: var(--pane-h-tall);
+  min-height: var(--pane-h-tall);
+}
+.workspace .output-box.pane-body { overflow: auto; }
+.workspace .voice-input-wrapper { display: block; }
+.workspace textarea.pane-body { display: block; width: 100%; }   /* no inline baseline gap → rows align */
+.workspace .voice-input-wrapper .voice-status {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  right: 56px;
+  z-index: 2;
+}
+
+/* Action rows: same height everywhere; output pane mirrors to the right */
+.pane-actions,
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.toolbar { margin: 0 0 18px; }
+.pane-actions-end { justify-content: flex-end; }
+.pane-actions .btn,
+.toolbar .btn {
+  min-height: var(--ctl-h);
+  min-width: 128px;
+  padding: 0 22px;
+  font-size: 14px;
+}
+.pane-actions .btn-primary { min-width: 180px; }
+
+.btn-success {
+  background: rgba(102, 187, 106, 0.16);
+  color: #66bb6a;
+  border: 1px solid rgba(102, 187, 106, 0.45);
+}
+.btn-success:hover { background: rgba(102, 187, 106, 0.26); border-color: #66bb6a; }
+
+.section { margin-top: 22px; }
+
+/* Error checker: five equal stat tiles */
+#panel-check .stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+#panel-check .stat { min-width: 0; text-align: center; padding: 12px 10px; }
+#panel-check textarea.editor { min-height: 320px; }
+
+/* Converter: centred drop zone */
+.drop-zone { padding: 44px 24px; }
+.drop-zone .icon { color: var(--accent-2); margin-bottom: 12px; display: flex; justify-content: center; }
+
+@media (max-width: 900px) {
+  :root { --pane-h: 280px; --pane-h-tall: 360px; }
+  .settings-bar { grid-template-columns: 1fr 1fr; }
+  .settings-bar .field:first-child { grid-column: 1 / -1; }
+  .workspace { gap: 20px; }
+  #panel-check .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  :root { --pane-h: 220px; --pane-h-tall: 280px; }
+  .settings-bar { grid-template-columns: 1fr; gap: 14px; padding: 14px; }
+  .pane-actions .btn,
+  .toolbar .btn { flex: 1 1 0; min-width: 0; padding: 0 12px; }
+  .pane-actions-end { justify-content: stretch; }
+  #panel-check .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
