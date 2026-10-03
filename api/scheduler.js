@@ -124,16 +124,15 @@ async function runJob(job) {
   const startMs = Date.now();
   console.log(`[scheduler] Running job ${job.id} (${job.target_ai}) prompt: ${job.prompt_id}`);
 
-  // Mark running
-  await pool.query(
-    `UPDATE scheduled_jobs SET status='running', last_run_at=now() WHERE id=$1`,
-    [job.id]
-  );
+  // The job was already claimed (status='running') by pollAndRun; refresh
+  // last_run_at so stale detection measures this job's run, not the batch claim.
+  await pool.query(`UPDATE scheduled_jobs SET last_run_at=now() WHERE id=$1`, [job.id]);
 
   let resultText  = null;
   let errorMsg    = null;
   let errorDetail = null;   // raw provider text stored in metadata for debugging
   let tokenCount  = null;
+  const outputMeta = {};   // { truncated, continuations } from the adapter
   let status      = 'done';
   let retryable   = false;  // transient overload (503/429) → reschedule in 30 min
 
@@ -153,25 +152,34 @@ async function runJob(job) {
     job.target_ai_key = keyRows[0]?.api_key || null;
 
     // ── Execute against target AI ──
+    let out;
     switch (job.target_ai) {
       case 'gemini':
-        ({ resultText, tokenCount } = await callGemini(promptContent, job));
+        out = await callGemini(promptContent, job);
         break;
       case 'deepseek':
-        ({ resultText, tokenCount } = await callDeepSeek(promptContent, job));
+        out = await callDeepSeek(promptContent, job);
         break;
       case 'claude':
-        ({ resultText, tokenCount } = await callClaude(promptContent, job));
+        out = await callClaude(promptContent, job);
         break;
       case 'perplexity':
         // Perplexity sonar has built-in web search — uses dedicated adapter
-        ({ resultText, tokenCount } = await callPerplexity(promptContent, job));
+        out = await callPerplexity(promptContent, job);
         break;
       default:
         // Mistral, Groq, GPT-4, OpenRouter, Together, Qwen, etc.
         // OpenAI-compatible format, no built-in web search
-        ({ resultText, tokenCount } = await callOpenAICompatible(promptContent, job));
+        out = await callOpenAICompatible(promptContent, job);
         break;
+    }
+    ({ resultText, tokenCount } = out);
+    if (out.continuations) outputMeta.continuations = out.continuations;
+    if (out.truncated) {
+      // Still cut off after all continuations: keep the text, but say so
+      outputMeta.truncated = true;
+      resultText = (resultText || '') + TRUNCATION_NOTE;
+      console.warn(`[scheduler] Job ${job.id}: response still truncated after ${out.continuations || 0} continuation(s)`);
     }
   } catch (err) {
     // If the adapter provided an i18n key (job.err.*), store THAT so the
@@ -194,7 +202,7 @@ async function runJob(job) {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
     [job.id, job.user_id, job.prompt_id, status, resultText,
      errorMsg, tokenCount, durationMs, job.target_ai,
-     errorDetail ? JSON.stringify({ detail: errorDetail, retryable }) : '{}']
+     JSON.stringify({ ...outputMeta, ...(errorDetail ? { detail: errorDetail, retryable } : {}) })]
   );
 
   // ── Transient overload (Gemini 503 / 429 etc.) → retry in 30 min ──
@@ -206,11 +214,17 @@ async function runJob(job) {
     const attempts = (job.retry_count || 0) + 1;
     if (attempts <= MAX_TRANSIENT_RETRIES) {
       const retryAt = new Date(Date.now() + RETRY_DELAY_MS);
+      // A retry overwrites next_run_at; pin the original slot first so jobs
+      // without run_time / run_days keep their schedule after the retry.
+      const slot = scheduleAnchor(job);
       await pool.query(
         `UPDATE scheduled_jobs
-           SET status='pending', next_run_at=$2, retry_count=$3, last_run_at=now()
+           SET status='pending', next_run_at=$2, retry_count=$3, last_run_at=now(),
+               run_time = COALESCE(run_time, $4::time),
+               run_days = CASE WHEN run_days IS NULL OR cardinality(run_days) = 0
+                               THEN $5::int[] ELSE run_days END
          WHERE id=$1`,
-        [job.id, retryAt, attempts]
+        [job.id, retryAt, attempts, slot.runTime, slot.runDays]
       );
       console.warn(`[scheduler] Job ${job.id} overloaded — retry ${attempts}/${MAX_TRANSIENT_RETRIES} at ${retryAt.toISOString()}`);
       await sendJobPush(job, 'retry').catch(e =>
@@ -237,12 +251,23 @@ async function runJob(job) {
     );
   } else {
     const nextRun = computeNextRun(job);
-    await pool.query(
-      `UPDATE scheduled_jobs
-       SET status='pending', next_run_at=$2, run_count=$3, retry_count=0, last_run_at=now()
-       WHERE id=$1`,
-      [job.id, nextRun, newRunCount]
-    );
+    if (!nextRun) {
+      // No remaining date (e.g. custom schedule exhausted) — deactivate instead of
+      // storing a NULL next_run_at.
+      await pool.query(
+        `UPDATE scheduled_jobs
+         SET status='done', is_active=false, run_count=$2, retry_count=0, last_run_at=now()
+         WHERE id=$1`,
+        [job.id, newRunCount]
+      );
+    } else {
+      await pool.query(
+        `UPDATE scheduled_jobs
+         SET status='pending', next_run_at=$2, run_count=$3, retry_count=0, last_run_at=now()
+         WHERE id=$1`,
+        [job.id, nextRun, newRunCount]
+      );
+    }
   }
 
   console.log(`[scheduler] Job ${job.id} ${status} in ${durationMs}ms`);
@@ -254,38 +279,91 @@ async function runJob(job) {
 }
 
 // ── Compute next run time ────────────────────────────────────
+// All schedule maths happens in the job's own timezone, not the server's.
+
+// Calendar parts of `date` as seen in `tz`.
+function zonedParts(date, tz) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hourCycle: 'h23',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', weekday: 'short',
+  }).formatToParts(date);
+  const get = (t) => parts.find(p => p.type === t).value;
+  return {
+    y: +get('year'), mo: +get('month'), d: +get('day'),
+    h: +get('hour'), mi: +get('minute'),
+    wd: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday')),
+  };
+}
+
+// UTC instant for wall-clock y-mo-d h:mi in `tz` (handles DST by re-checking the offset).
+function zonedTimeToUtc(y, mo, d, h, mi, tz) {
+  const wall = Date.UTC(y, mo - 1, d, h, mi);
+  let ts = wall;
+  for (let i = 0; i < 2; i++) {
+    const p = zonedParts(new Date(ts), tz);
+    ts += wall - Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi);
+  }
+  return new Date(ts);
+}
+
+// The recurring slot (HH:MM and weekday / day-of-month) implied by the job's
+// original next_run_at, in the job's timezone. Used to pin the schedule before
+// a transient retry moves next_run_at.
+function scheduleAnchor(job) {
+  if (!job.next_run_at || job.schedule_type === 'once') return { runTime: null, runDays: null };
+  let tz = job.timezone || 'UTC';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch { tz = 'UTC'; }
+  const p = zonedParts(new Date(job.next_run_at), tz);
+  const pad = (n) => String(n).padStart(2, '0');
+  const runDays = job.schedule_type === 'weekly' ? [p.wd]
+                : job.schedule_type === 'monthly' ? [p.d]
+                : null;
+  return { runTime: `${pad(p.h)}:${pad(p.mi)}`, runDays };
+}
+
 function computeNextRun(job) {
   const now = new Date();
-  const tz  = job.timezone || 'UTC';
+  let tz = job.timezone || 'UTC';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch { tz = 'UTC'; }
+
+  // Fall back to the job's original next_run_at for a missing time / days,
+  // so a job created with only next_run_at keeps its original slot.
+  const anchor = zonedParts(job.next_run_at ? new Date(job.next_run_at) : now, tz);
+  const [h, m] = job.run_time
+    ? String(job.run_time).split(':').map(Number)
+    : [anchor.h, anchor.mi];
+
+  // First day (in tz) from today onward, matching `matches`, whose h:m is still in the future.
+  const nextMatchingDay = (matches, maxDays) => {
+    const today = zonedParts(now, tz);
+    for (let i = 0; i <= maxDays; i++) {
+      const day = new Date(Date.UTC(today.y, today.mo - 1, today.d + i));
+      if (!matches(day)) continue;
+      const at = zonedTimeToUtc(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), h, m, tz);
+      if (at > now) return at;
+    }
+    return null;
+  };
 
   switch (job.schedule_type) {
     case 'weekly': {
-      // run_days: [0..6], run_time: 'HH:MM'
-      const [h, m] = (job.run_time || '09:00').split(':').map(Number);
-      const days   = job.run_days || [1]; // default Monday
-      let next = new Date(now);
-      next.setHours(h, m, 0, 0);
-      for (let i = 1; i <= 8; i++) {
-        next = new Date(next.getTime() + 24 * 3600 * 1000);
-        if (days.includes(next.getDay())) break;
-      }
-      return next;
+      // run_days: [0..6] (Sun=0)
+      const days = job.run_days?.length ? job.run_days : [anchor.wd];
+      return nextMatchingDay(day => days.includes(day.getUTCDay()), 8);
     }
     case 'monthly': {
-      const [h, m] = (job.run_time || '09:00').split(':').map(Number);
-      const days   = job.run_days || [1]; // day of month
-      let next = new Date(now);
-      for (let i = 1; i <= 32; i++) {
-        next = new Date(next.getTime() + 24 * 3600 * 1000);
-        if (days.includes(next.getDate())) break;
-      }
-      next.setHours(h, m, 0, 0);
-      return next;
+      // run_days: [1..31] day of month
+      const days = job.run_days?.length ? job.run_days : [anchor.d];
+      return nextMatchingDay(day => days.includes(day.getUTCDate()), 366);
     }
     case 'custom': {
-      // run_dates: ['2026-08-15', ...]
+      // run_dates: DATE[] — node-pg parses DATE as local midnight, so read local parts
       const remaining = (job.run_dates || [])
-        .map(d => new Date(d))
+        .map(d => {
+          const dt = d instanceof Date ? d : new Date(`${d}T00:00:00`);
+          return zonedTimeToUtc(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), h, m, tz);
+        })
         .filter(d => d > now)
         .sort((a, b) => a - b);
       return remaining[0] || null;
@@ -441,14 +519,51 @@ async function callGemini(prompt, job) {
     }]
   };
 */
-  const body = JSON.stringify({
+  // Gemini 2.5+ "thinking" models count their internal reasoning against
+  // maxOutputTokens, so an 8K budget can leave only ~1K tokens of visible
+  // text. Give thinking models headroom on top of the requested answer size.
+  const visibleBudget = job.max_tokens || DEFAULT_OUTPUT_TOKENS;
+  const thinkingModel = /gemini-(2\.5|[3-9])|thinking/i.test(model);
+  const maxOutputTokens = Math.min(visibleBudget + (thinkingModel ? 16384 : 0), 65536);
+
+  const makeBody = (contents) => JSON.stringify({
     system_instruction: systemInstruction,
-    contents:           [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig:   { maxOutputTokens: job.max_tokens || 8192 },
+    contents,
+    generationConfig:   { maxOutputTokens },
     // tools come from DB provider_options — e.g. [{ google_search: {} }]
     ...(opts.tools?.length && { tools: opts.tools }),
   });
 
+  let contents = [{ role: 'user', parts: [{ text: prompt }] }];
+  let text = '', tokens = 0, truncated = false, rounds = 0;
+  for (;;) {
+    const data = await geminiRequest(url, makeBody(contents));
+    const cand = data?.candidates?.[0];
+    const part = (cand?.content?.parts || []).filter(p => p.text && !p.thought).map(p => p.text).join('');
+    text   += part;
+    tokens += data?.usageMetadata?.totalTokenCount || 0;
+    truncated = cand?.finishReason === 'MAX_TOKENS';
+
+    // Log grounding status
+    const grounding = cand?.groundingMetadata;
+    if (grounding?.webSearchQueries?.length) {
+      console.log(`[scheduler] Gemini grounding OK — queries: ${grounding.webSearchQueries.join(' | ')}`);
+    } else if (!rounds) {
+      console.warn('[scheduler] Gemini WARNING: grounding did not fire — no web search performed');
+    }
+
+    if (!truncated || !part.trim() || rounds >= MAX_CONTINUATIONS) break;
+    rounds++;
+    console.warn(`[scheduler] Gemini output limit reached — requesting continuation ${rounds}/${MAX_CONTINUATIONS}`);
+    contents = [...contents,
+      { role: 'model', parts: [{ text: part }] },
+      { role: 'user',  parts: [{ text: CONTINUE_PROMPT }] }];
+  }
+  return { resultText: text, tokenCount: tokens || null, truncated, continuations: rounds };
+}
+
+// One Gemini generateContent call with in-process retries on 429/503.
+async function geminiRequest(url, body) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -459,22 +574,8 @@ async function callGemini(prompt, job) {
     });
 
     if (resp.ok) {
-      const data = await resp.json();
-
-      const parts = data?.candidates?.[0]?.content?.parts || [];
-      const text  = parts.filter(p => p.text).map(p => p.text).join('');
-      const tokens = data?.usageMetadata?.totalTokenCount || null;
-
-      // Log grounding status
-      const grounding = data?.candidates?.[0]?.groundingMetadata;
-      if (grounding?.webSearchQueries?.length) {
-        console.log(`[scheduler] Gemini grounding OK — queries: ${grounding.webSearchQueries.join(' | ')}`);
-      } else {
-        console.warn('[scheduler] Gemini WARNING: grounding did not fire — no web search performed');
-      }
-
       if (attempt > 1) console.log(`[scheduler] Gemini OK on attempt ${attempt}`);
-      return { resultText: text, tokenCount: tokens };
+      return resp.json();
     }
 
     if (RETRY_CODES.has(resp.status)) {
@@ -501,6 +602,45 @@ async function callGemini(prompt, job) {
   throw lastError || new RetryableError('Gemini: max retries exceeded', { i18nKey: ERR.overloaded });
 }
 
+// ── Output limits & automatic continuation ──────────────────────
+// A provider stops at its output-token limit and reports it (Gemini
+// finishReason MAX_TOKENS, OpenAI-style finish_reason "length", Claude
+// stop_reason "max_tokens"). Instead of silently saving a cut-off report,
+// ask the model to continue and stitch the parts together.
+const DEFAULT_OUTPUT_TOKENS = 16384;   // Gemini / Claude: models that accept large outputs
+// OpenAI-compatible providers and Perplexity often cap output lower (qwen-plus,
+// sonar-pro ≈ 8K) and reject a larger max_tokens with HTTP 400 — keep the old
+// default there; long reports are completed by automatic continuation instead.
+const COMPAT_OUTPUT_TOKENS  = 8000;
+const MAX_CONTINUATIONS     = 3;
+const CONTINUE_PROMPT =
+  'Your previous response was cut off by the output length limit. Continue exactly where it ' +
+  'stopped: do not repeat anything already written, do not add a preamble or summary of what ' +
+  'came before, and keep the same language, structure and formatting.';
+const TRUNCATION_NOTE =
+  '\n\n---\n*[The response was cut off at the provider\'s output limit. Increase "Max tokens" for this job to get the full text.]*';
+
+/**
+ * OpenAI-style chat with continuation. send(messages) → parsed JSON response.
+ * Returns { resultText, tokenCount, truncated, continuations }.
+ */
+async function chatWithContinuation(send, messages) {
+  let text = '', tokens = 0, truncated = false, rounds = 0, msgs = messages;
+  for (;;) {
+    const data   = await send(msgs);
+    const choice = data?.choices?.[0];
+    const part   = choice?.message?.content || '';
+    text   += part;
+    tokens += data?.usage?.total_tokens || 0;
+    truncated = choice?.finish_reason === 'length';
+    if (!truncated || !part.trim() || rounds >= MAX_CONTINUATIONS) break;
+    rounds++;
+    console.warn(`[scheduler] output limit reached — requesting continuation ${rounds}/${MAX_CONTINUATIONS}`);
+    msgs = [...msgs, { role: 'assistant', content: part }, { role: 'user', content: CONTINUE_PROMPT }];
+  }
+  return { resultText: text, tokenCount: tokens || null, truncated, continuations: rounds };
+}
+
 // ── DEEPSEEK adapter ─────────────────────────────────────────
 async function callDeepSeek(prompt, job) {
   const cfg    = await getProviderConfig('deepseek');
@@ -509,29 +649,26 @@ async function callDeepSeek(prompt, job) {
 
   console.log(`[scheduler] DeepSeek endpoint=${cfg.endpoint_url} model=${cfg.model_name}`);
 
-  const resp = await fetch(cfg.endpoint_url, {
-    method:  'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      [cfg.auth_header || 'Authorization']: `${cfg.auth_prefix ?? 'Bearer '}${apiKey}`,
-    },
-    body: JSON.stringify({
-      model:    cfg.model_name,
-      messages: [
-        { role: 'system', content: `Today is ${todayStr()}.` },
-        { role: 'user',   content: prompt },
-      ],
-      max_tokens: job.max_tokens || 8000,
-    }),
-  });
-  if (!resp.ok) {
-    const err = await resp.text().catch(() => '');
-    throwProviderError('DeepSeek', resp.status, err);
-  }
-  const data   = await resp.json();
-  const text   = data?.choices?.[0]?.message?.content || '';
-  const tokens = data?.usage?.total_tokens || null;
-  return { resultText: text, tokenCount: tokens };
+  // deepseek-chat accepts at most 8K output tokens; continuation covers longer reports
+  const maxTokens = Math.min(job.max_tokens || 8192, /reasoner/i.test(cfg.model_name || '') ? 32768 : 8192);
+  return chatWithContinuation(async (messages) => {
+    const resp = await fetch(cfg.endpoint_url, {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [cfg.auth_header || 'Authorization']: `${cfg.auth_prefix ?? 'Bearer '}${apiKey}`,
+      },
+      body: JSON.stringify({ model: cfg.model_name, messages, max_tokens: maxTokens }),
+    });
+    if (!resp.ok) {
+      const err = await resp.text().catch(() => '');
+      throwProviderError('DeepSeek', resp.status, err);
+    }
+    return resp.json();
+  }, [
+    { role: 'system', content: `Today is ${todayStr()}.` },
+    { role: 'user',   content: prompt },
+  ]);
 }
 
 // ── CLAUDE adapter ───────────────────────────────────────────
@@ -544,7 +681,8 @@ async function callClaude(prompt, job) {
 
   console.log(`[scheduler] Claude endpoint=${cfg.endpoint_url} model=${cfg.model_name}`);
 
-  const resp = await fetch(cfg.endpoint_url, {
+  const tools = buildTools(cfg.provider_options, job);
+  const send = (messages) => fetch(cfg.endpoint_url, {
     method:  'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -553,55 +691,67 @@ async function callClaude(prompt, job) {
     },
     body: JSON.stringify({
       model:      cfg.model_name,
-      max_tokens: job.max_tokens || 8000,
+      max_tokens: job.max_tokens || DEFAULT_OUTPUT_TOKENS,
       system:     `Today is ${todayStr()}. This is the real current date — not a future date. ` +
                   `Use web search to find current information before answering questions about recent events.`,
-      messages:   [{ role: 'user', content: prompt }],
+      messages,
       // tools from DB provider_options with dynamic date in web_search type
-      ...(buildTools(cfg.provider_options, job) && { tools: buildTools(cfg.provider_options, job) }),
+      ...(tools && { tools }),
     }),
   });
-  if (!resp.ok) {
-    const errBody = await resp.text().catch(() => '');
-    // Parse friendly error message from Anthropic API response
-    let friendlyMsg = `Claude API error ${resp.status}`;
-    let msg = '';
-    try {
-      const errJson = JSON.parse(errBody);
-      msg = errJson?.error?.message || '';
-      if (msg.includes('credit balance is too low') || msg.includes('insufficient')) {
-        friendlyMsg = ERR.low_balance;
-      } else if (msg.includes('invalid x-api-key') || msg.includes('authentication')) {
-        friendlyMsg = ERR.invalid_key;
-      } else if (msg.includes('overloaded')) {
-        friendlyMsg = ERR.overloaded;
-      } else if (msg) {
-        friendlyMsg = `Claude API error: ${msg}`;
+
+  let messages = [{ role: 'user', content: prompt }];
+  let text = '', tokens = 0, truncated = false, rounds = 0, searches = 0;
+  for (;;) {
+    const resp = await send(messages);
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => '');
+      // Parse friendly error message from Anthropic API response
+      let friendlyMsg = `Claude API error ${resp.status}`;
+      let msg = '';
+      try {
+        const errJson = JSON.parse(errBody);
+        msg = errJson?.error?.message || '';
+        if (msg.includes('credit balance is too low') || msg.includes('insufficient')) {
+          friendlyMsg = ERR.low_balance;
+        } else if (msg.includes('invalid x-api-key') || msg.includes('authentication')) {
+          friendlyMsg = ERR.invalid_key;
+        } else if (msg.includes('overloaded')) {
+          friendlyMsg = ERR.overloaded;
+        } else if (msg) {
+          friendlyMsg = `Claude API error: ${msg}`;
+        }
+      } catch {}
+      // Anthropic uses 529 "Overloaded" (plus 429/503) for transient outages.
+      if (resp.status === 529 || RETRY_CODES.has(resp.status) || msg.includes('overloaded')) {
+        throw new RetryableError(friendlyMsg, { i18nKey: ERR.overloaded, status: resp.status });
       }
-    } catch {}
-    // Anthropic uses 529 "Overloaded" (plus 429/503) for transient outages.
-    if (resp.status === 529 || RETRY_CODES.has(resp.status) || msg.includes('overloaded')) {
-      throw new RetryableError(friendlyMsg, { i18nKey: ERR.overloaded, status: resp.status });
+      throw new Error(friendlyMsg);
     }
-    throw new Error(friendlyMsg);
+    const data = await resp.json();
+
+    // web_search produces multiple content blocks — extract only text blocks
+    const part = (data?.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+    text     += part;
+    tokens   += (data?.usage?.input_tokens || 0) + (data?.usage?.output_tokens || 0);
+    searches += data?.usage?.server_tool_use?.web_search_requests || 0;
+    truncated = data?.stop_reason === 'max_tokens';
+    if (!truncated || !part.trim() || rounds >= MAX_CONTINUATIONS) break;
+    rounds++;
+    console.warn(`[scheduler] Claude output limit reached — requesting continuation ${rounds}/${MAX_CONTINUATIONS}`);
+    messages = [...messages, { role: 'assistant', content: part }, { role: 'user', content: CONTINUE_PROMPT }];
   }
-  const data = await resp.json();
 
-  // web_search produces multiple content blocks — extract only text blocks
-  const text = (data?.content || [])
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
-    .join('');
-
-  const tokens = (data?.usage?.input_tokens || 0) + (data?.usage?.output_tokens || 0);
-  const searches = data?.usage?.server_tool_use?.web_search_requests || 0;
   if (searches > 0) {
     console.log(`[scheduler] Claude web search: ${searches} request(s) used`);
   } else {
     console.warn('[scheduler] Claude WARNING: web_search did not fire');
   }
 
-  return { resultText: text, tokenCount: tokens };
+  return { resultText: text, tokenCount: tokens || null, truncated, continuations: rounds };
 }
 
 // ── PERPLEXITY adapter ───────────────────────────────────────
@@ -615,38 +765,38 @@ async function callPerplexity(prompt, job) {
 
   console.log(`[scheduler] Perplexity endpoint=${cfg.endpoint_url} model=${cfg.model_name}`);
 
-  const resp = await fetch(cfg.endpoint_url, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+  return chatWithContinuation(async (messages) => {
+    const resp = await fetch(cfg.endpoint_url, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: cfg.model_name,  // e.g. "sonar" — has built-in search
+        messages,
+        max_tokens: job.max_tokens || COMPAT_OUTPUT_TOKENS,
+        // Extra params from DB provider_options:
+        //   return_citations: true, search_recency_filter: 'week'
+        ...cfg.provider_options,
+      }),
+    });
+    if (!resp.ok) {
+      const err = await resp.text().catch(() => '');
+      throwProviderError('Perplexity', resp.status, err);
+    }
+    const data = await resp.json();
+    console.log(`[scheduler] Perplexity citations: ${data?.citations?.length || 0}`);
+    return data;
+  }, [
+    {
+      role:    'system',
+      content: `Today is ${todayStr()}. This is the real current date — not a future date. ` +
+               `Always search the web for current information. ` +
+               `Never refuse to answer claiming dates are in the future.`,
     },
-    body: JSON.stringify({
-      model: cfg.model_name,  // e.g. "sonar" — has built-in search
-      messages: [
-        {
-          role:    'system',
-          content: `Today is ${todayStr()}. This is the real current date — not a future date. ` +
-                   `Always search the web for current information. ` +
-                   `Never refuse to answer claiming dates are in the future.`,
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: job.max_tokens || 8000,
-      // Extra params from DB provider_options:
-      //   return_citations: true, search_recency_filter: 'week'
-      ...cfg.provider_options,
-    }),
-  });
-  if (!resp.ok) {
-    const err = await resp.text().catch(() => '');
-    throwProviderError('Perplexity', resp.status, err);
-  }
-  const data   = await resp.json();
-  const text   = data?.choices?.[0]?.message?.content || '';
-  const tokens = data?.usage?.total_tokens || null;
-  console.log(`[scheduler] Perplexity citations: ${data?.citations?.length || 0}`);
-  return { resultText: text, tokenCount: tokens };
+    { role: 'user', content: prompt },
+  ]);
 }
 
 // ── GENERIC OpenAI-compatible adapter ────────────────────────
@@ -662,46 +812,66 @@ async function callOpenAICompatible(prompt, job) {
 
   console.log(`[scheduler] ${job.target_ai} endpoint=${cfg.endpoint_url} model=${cfg.model_name}`);
 
-  const resp = await fetch(cfg.endpoint_url, {
-    method:  'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      [cfg.auth_header || 'Authorization']: `${cfg.auth_prefix ?? 'Bearer '}${apiKey}`,
+  return chatWithContinuation(async (messages) => {
+    const resp = await fetch(cfg.endpoint_url, {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        [cfg.auth_header || 'Authorization']: `${cfg.auth_prefix ?? 'Bearer '}${apiKey}`,
+      },
+      body: JSON.stringify({ model: cfg.model_name, messages, max_tokens: job.max_tokens || COMPAT_OUTPUT_TOKENS }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => '');
+      throwProviderError(cfg.label || job.target_ai, resp.status, errText);
+    }
+    return resp.json();
+  }, [
+    {
+      role:    'system',
+      content: `Today is ${todayStr()}. This is the real current date — not a future date. ` +
+               `Search the web for the most current information before answering questions about recent events. ` +
+               `Never refuse to answer claiming dates are in the future.`,
     },
-    body: JSON.stringify({
-      model:    cfg.model_name,
-      messages: [
-        {
-          role:    'system',
-          content: `Today is ${todayStr()}. This is the real current date — not a future date. ` +
-                   `Search the web for the most current information before answering questions about recent events. ` +
-                   `Never refuse to answer claiming dates are in the future.`,
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: job.max_tokens || 8000,
-    }),
-  });
-  if (!resp.ok) {
-    const errText = await resp.text().catch(() => '');
-    throwProviderError(cfg.label || job.target_ai, resp.status, errText);
-  }
-  const data   = await resp.json();
-  const text   = data?.choices?.[0]?.message?.content || '';
-  const tokens = data?.usage?.total_tokens || null;
-  return { resultText: text, tokenCount: tokens };
+    { role: 'user', content: prompt },
+  ]);
 }
 
 // ── Main poll loop ────────────────────────────────────────────
 
+// Guard against overlapping ticks: a slow batch must not let the next
+// setInterval tick start while jobs are still being processed.
+let pollInProgress = false;
+const STALE_RUNNING_MINUTES = 60;   // a 'running' job older than this is considered abandoned
+
 async function pollAndRun() {
+  if (pollInProgress) return;
+  pollInProgress = true;
   try {
-    const { rows: dueJobs } = await pool.query(
-      `SELECT * FROM scheduled_jobs
-       WHERE is_active=true AND status='pending' AND next_run_at <= now()
-       ORDER BY next_run_at ASC
-       LIMIT 10`
+    // Reclaim jobs stuck in 'running' (scheduler crashed or restarted mid-run).
+    // No poll of this process is in flight here, so these rows belong to a dead run.
+    const { rowCount: reclaimed } = await pool.query(
+      `UPDATE scheduled_jobs SET status='pending'
+       WHERE is_active=true AND status='running'
+         AND (last_run_at IS NULL OR last_run_at < now() - make_interval(mins => $1))`,
+      [STALE_RUNNING_MINUTES]
     );
+    if (reclaimed) console.warn(`[scheduler] Reclaimed ${reclaimed} stale running job(s)`);
+
+    // Atomically claim due jobs: SKIP LOCKED + the status flip in the same
+    // statement means no other poller (or overlapping tick) can claim them too.
+    const { rows: dueJobs } = await pool.query(
+      `UPDATE scheduled_jobs SET status='running', last_run_at=now()
+       WHERE id IN (
+         SELECT id FROM scheduled_jobs
+         WHERE is_active=true AND status='pending' AND next_run_at <= now()
+         ORDER BY next_run_at ASC
+         LIMIT 10
+         FOR UPDATE SKIP LOCKED
+       )
+       RETURNING *`
+    );
+    dueJobs.sort((a, b) => a.next_run_at - b.next_run_at);
 
     for (const job of dueJobs) {
       // Run sequentially to avoid thundering herd
@@ -711,6 +881,8 @@ async function pollAndRun() {
     }
   } catch (err) {
     console.error('[scheduler] Poll error:', err.message);
+  } finally {
+    pollInProgress = false;
   }
 }
 

@@ -479,7 +479,7 @@
               id: "analytics",
               name: "Analytics",
               description: "<p>These cookies help us improve the site by tracking which pages are most popular and how visitors move around the site.</p>",
-              defaultValue: true,
+              defaultValue: false,
               onAccept: function() {
                 // Використовуємо dataLayer, якщо gtag ще не завантажений
                 if (typeof gtag !== 'undefined') {
@@ -533,7 +533,7 @@
           ],
           text: {
             banner: {
-              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://idea4rs.pp.ua/cookie-policy\" target=\"_blank\">Cookie Policy.</a></p>",
+              description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic. <a href=\"https://promt.pp.ua/pp.html#cookies\" target=\"_blank\">Cookie Policy.</a></p>",
               acceptAllButtonText: "Accept all",
               acceptAllButtonAccessibleLabel: "Accept all cookies",
               rejectNonEssentialButtonText: "Reject non-essential",
@@ -627,7 +627,7 @@
         <li><strong>Service</strong> refers to the JS PROMPT website and application.</li>
         <li><strong>Supervisory Authority</strong> means an independent public authority responsible for monitoring application of data protection law, such as Your national Data Protection Authority in the EU/EEA.</li>
         <li><strong>Usage Data</strong> means data collected automatically through use of the Service, or from the Service's own infrastructure (for example, page visit duration).</li>
-        <li><strong>Website</strong> refers to JS PROMPT, accessible from <a href="#" target="_blank">#</a>.</li>
+        <li><strong>Website</strong> refers to JS PROMPT, accessible from <a href="https://promt.pp.ua/" target="_blank" rel="noopener">https://promt.pp.ua/</a>.</li>
         <li><strong>You</strong> means the individual accessing or using the Service, or the entity on whose behalf such individual is acting.</li>
       </ul>
 
@@ -654,7 +654,7 @@
       <h3>Usage Data</h3>
       <p>Usage Data is collected automatically and may include Your device's IP address, browser type and version, the pages of the Service You visit, the time and date of Your visit, time spent on those pages, unique device identifiers, operating system, and other diagnostic data.</p>
 
-      <h3>Tracking Technologies and Cookies</h3>
+      <h3 id="cookies">Tracking Technologies and Cookies</h3>
       <p>We use Cookies and similar technologies (tags, pixels, local storage) to operate, secure, and improve the Service, and — where You consent — for analytics and advertising purposes. In line with the GDPR and the ePrivacy Directive, We request Your <strong>active, opt-in consent</strong> before placing any non-essential Cookies. Your preferences are managed through our Consent Management Platform, and You can change or withdraw them at any time via the cookie icon on the Service. We also honour the <strong>Global Privacy Control (GPC)</strong> signal as a valid opt-out request where applicable law requires it.</p>
       <table>
         <thead>
@@ -666,12 +666,12 @@
           <tr><td>Advertising</td><td>Personalize content and, where enabled, measure advertising</td><td>Yes</td></tr>
         </tbody>
       </table>
-      <p>For more detail, see Our <a href="#/cookie-policy" target="_blank">Cookie Policy</a>.</p>
+      <p>For more detail, see the Cookie table above and Section 7 (<a href="#who-we-share">Who We Share Your Data With</a>).</p>
 
       <h2 id="ai-processing">4. How We Use AI to Process Your Data</h2>
       <p>The Service uses artificial intelligence and machine learning, including third-party AI model providers, to extract text from Your uploaded documents (OCR) and to generate the analysis You request. This section explains what that means for Your data.</p>
       <ul>
-        <li><strong>Third-party AI providers:</strong> Our AI service providers are DeepSeek (Hangzhou DeepSeek Artificial Intelligence Co., Ltd.) and Google LLC, which process data in accordance with their own corporate/API data-processing terms. Content You submit is sent to these providers solely to generate Your requested output.</li>
+        <li><strong>Third-party AI providers:</strong> Our AI service providers are DeepSeek (Hangzhou DeepSeek Artificial Intelligence Co., Ltd.) and Google LLC, which process data in accordance with their own corporate/API data-processing terms. Content You submit is sent to these providers solely to generate Your requested output. If You use Your own DeepSeek API key, Your requests go directly from Your browser to DeepSeek; if You are signed in and use the Service's key instead, Your requests pass through our server (which forwards them to DeepSeek and does not store their content). API keys You save while signed in are stored in Your account so that scheduled jobs can use them.</li>
         <li><strong>Model training:</strong> We work with Our AI providers in accordance with their respective Terms of Use, which govern whether and how submitted content may be used.</li>
         <li><strong>Automated decision-making:</strong> The analysis the Service generates is intended to inform You, not to make decisions about You with legal or similarly significant effect without human involvement. If the result of Our software is ever used to automatically approve or reject something of importance to You without human verification, this triggers Your rights under Art. 22 GDPR. In case of disputes, We will require formal confirmation that the software's results have been reviewed and approved by a suitably qualified person.</li>
         <li><strong>Accuracy:</strong> AI-generated analysis may contain errors. We encourage You to independently verify any output that informs an important decision.</li>
@@ -786,7 +786,8 @@
         <li><strong>Right to non-discrimination</strong> for exercising any CCPA/CPRA right.</li>
       </ul>
       <p>You may exercise Your opt-out right by clicking the button below, which opens Our consent management panel:</p>
-      <p><em>JS PROMPT does not use cookies or advertising — this clause is not applicable.</em></p>
+      <p><button type="button" class="btn" onclick="document.getElementById('silktide-cookie-icon')?.click()">Manage cookie preferences / Do Not Sell or Share My Personal Information</button></p>
+      <p>Analytics and advertising Cookies are off by default and are only set if You opt in; You can switch them off again at any time from this panel or via the cookie icon on the Service.</p>
 
       <h3>Verifying and Submitting Requests</h3>
       <p>To protect Your data, We will verify Your identity before fulfilling access, correction, deletion, or portability requests, using information You have already provided to Us. You may designate an authorized agent to make a request on Your behalf where permitted by Your state's law; We may require proof of the agent's authority and may still need to verify Your identity directly.</p>

@@ -33,7 +33,8 @@ async function main() {
     port:   parseInt(MAIL_PORT),
     secure: parseInt(MAIL_PORT) === 465,
     auth:   { user: MAIL_USER, pass: MAIL_PASS },
-    tls:    { rejectUnauthorized: false },  // allow self-signed for local test
+    // Certificate verification stays on; set MAIL_TLS_INSECURE=1 to allow a self-signed cert
+    tls:    { rejectUnauthorized: process.env.MAIL_TLS_INSECURE !== '1' },
   });
 
   // Verify connection

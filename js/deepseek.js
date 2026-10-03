@@ -4,7 +4,8 @@
  * Parity with python_core.js: full domain classification, expert roles,
  * domain-specific methodologies, Probability Yardstick, Examples Clause,
  * anti-hallucination controls, CoT scratchpad enforcement.
- * API key stored in localStorage (never sent to any server except api.deepseek.com).
+ * Personal API key stored in localStorage (sent only to api.deepseek.com); without one,
+ * requests go through the authenticated server proxy, which keeps its key server-side.
  */
 'use strict';
 /* updated: 2026-06-26 — hard-reload browser (Ctrl+Shift+R) if you see cached 404 errors */
@@ -17,42 +18,69 @@ const DeepSeek = (() => {
   const ENV_URL  = '/env';                // nginx proxies this → env-server.js:3099
 
   /* ── Key management ──────────────────────────────────────────── */
-  // _envKey caches the key fetched from server /env endpoint (env-server.js).
-  // Priority: server .env > localStorage (manual entry fallback).
-  let _envKey = '';
+  // The server never exposes its own DeepSeek key. /api/env only reports whether
+  // one is configured; if so, requests without a personal key go through the
+  // authenticated server proxy /api/deepseek/chat.
+  // Priority: personal key in localStorage > server proxy.
+  let _serverKey = false;
+  const PROXY_ENDPOINT = '/api/deepseek/chat';
 
   /**
-   * fetchKeyFromEnv() — fetch DEEPSEEK_API_KEY from /env endpoint once on init.
-   * nginx proxies /env → env-server.js:3099 which reads the server-side .env file.
-   * Falls back silently to localStorage if endpoint is unavailable.
+   * fetchKeyFromEnv() — ask the server once whether it has a DeepSeek key configured.
+   * Falls back silently to the localStorage key if the endpoint is unavailable.
    */
   async function fetchKeyFromEnv() {
     try {
-      // Use /api/env (auth-gated) if user is logged in, otherwise skip silently
       const token = sessionStorage.getItem('_jsat') || '';
-      if (!token) return; // Not logged in — use localStorage key
+      if (!token) { _serverKey = false; return; } // Not logged in — personal key only
+      const epoch = _sessionEpoch;   // ignore this response if a logout happens meanwhile
       const resp = await fetch('/api/env', {
         method: 'GET',
         cache: 'no-store',
         headers: { Accept: 'application/json', Authorization: 'Bearer ' + token }
       });
-      if (!resp.ok) return; // Silently fall back to localStorage
+      if (epoch !== _sessionEpoch) return;
+      if (!resp.ok) { _serverKey = false; return; } // Fall back to the personal key
       const data = await resp.json();
-      const k = data && data.DEEPSEEK_API_KEY;
-      if (typeof k === 'string' && k.startsWith('sk-')) {
-        _envKey = k;
-        const masked = k.slice(0, 6) + '…' + k.slice(-4);
-        console.info('[DeepSeek] API key loaded from /api/env:', masked);
-      }
+      if (epoch !== _sessionEpoch) return;
+      _serverKey = !!(data && data.deepseekConfigured);
+      if (_serverKey) console.info('[DeepSeek] server-side key available via proxy');
     } catch (err) {
       console.info('[DeepSeek] /api/env not reachable — using localStorage key');
     }
   }
 
-  function getKey()   { return localStorage.getItem(LS_KEY) || _envKey || ''; }
+  // The server key is only usable within a signed-in session
+  let _sessionEpoch = 0;   // bumped on logout to invalidate in-flight key checks
+  window.addEventListener('jsprompt:logout', () => { _sessionEpoch++; _serverKey = false; });
+
+  function getKey()   { return localStorage.getItem(LS_KEY) || ''; }
   function setKey(k)  { localStorage.setItem(LS_KEY, k.trim()); }
-  function clearKey() { localStorage.removeItem(LS_KEY); _envKey = ''; }
-  function hasKey()   { return !!getKey(); }
+  function clearKey() { localStorage.removeItem(LS_KEY); }
+  function hasKey()   { return !!getKey() || _serverKey; }
+
+  /**
+   * chatRequest(body) — POST a chat completion either directly to DeepSeek with the
+   * personal key, or through the server proxy (server key) when no personal key is set.
+   */
+  async function chatRequest(body) {
+    const key = getKey();
+    if (key) {
+      return fetch(ENDPOINT, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body:    JSON.stringify(body),
+      });
+    }
+    // Refresh an expired access token first so the proxy call doesn't 401
+    try { await window.API?.ensureSession?.(); } catch {}
+    const token = sessionStorage.getItem('_jsat') || '';
+    return fetch(PROXY_ENDPOINT, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body:    JSON.stringify(body),
+    });
+  }
 
 
 
@@ -857,52 +885,18 @@ Use standardized language for ALL probability assessments:
     return s[lang] || s.en;
   }
 
-  /* ── CoT scratchpad enforcement ──────────────────────────────── */
-  const COT_INSTRUCTIONS = {
-    uk: `## Обов'язкова методологія (Chain-of-Thought)
-
-**ПЕРЕД написанням фінальної відповіді виконай такі кроки в <scratchpad>:**
-
-<scratchpad>
-1. Визначення домену та типу задачі
-2. Перелік ключових фактів та наявних даних
-3. Виявлення інформаційних прогалин
-4. Формулювання 2–3 конкуруючих гіпотез
-5. Оцінка кожної гіпотези за наявними доказами
-6. Визначення рівня достовірності для кожного ключового твердження
-7. Вибір оптимальної структури відповіді
-</scratchpad>
-
-Тільки після завершення scratchpad — пиши фінальну відповідь.`,
-    en: `## Mandatory Methodology (Chain-of-Thought)
-
-**BEFORE writing the final answer, complete the following steps in <scratchpad>:**
-
-<scratchpad>
-1. Domain and task type identification
-2. Key facts and available data listing
-3. Information gap identification
-4. Formulation of 2–3 competing hypotheses
-5. Evidence evaluation for each hypothesis
-6. Confidence level determination for each key claim
-7. Optimal response structure selection
-</scratchpad>
-
-Only after completing the scratchpad — write the final answer.`
-  };
-
   /* ── Anti-hallucination controls ─────────────────────────────── */
   const ANTI_HALLUCINATION = {
     uk: `## Контроль якості та антигалюцинація
 
-- Якщо інформація невідома або непевна — ЗАВЖДИ зазначай: "[Інформація відсутня / Необхідна верифікація]"
+- Якщо інформація невідома або непевна, прямо зазначай це: "[Інформація відсутня / Потрібна верифікація]"
 - Не вигадуй факти, цифри, імена, дати або джерела
 - Якщо запит виходить за межі компетенції — явно зазнач це
 - Кожне ключове твердження = посилання на джерело або явне позначення як припущення
 - Краще визнати невизначеність, ніж надати хибну впевненість`,
     en: `## Quality Control and Anti-Hallucination
 
-- If information is unknown or uncertain — ALWAYS note: "[Information unavailable / Verification required]"
+- If information is unknown or uncertain, say so plainly: "[Information unavailable / Verification required]"
 - Do not fabricate facts, numbers, names, dates, or sources
 - If request is outside competence — state this explicitly
 - Every key claim = source reference OR explicit labeling as assumption
@@ -930,147 +924,140 @@ Only after completing the scratchpad — write the final answer.`
   }
 
   /* ── Main system prompt builder ──────────────────────────────── */
-  function buildSystemPrompt(domain, style, lang) {
-    const langName  = LANG_NAMES[lang] || 'English';
-    const langInstr = `Write the ENTIRE output in ${langName}.`;
+  /**
+   * finalizePrompt(text, docDesign) — post-process a model-written prompt:
+   * strip code fences and emoji; if a document deliverable was requested but the
+   * model dropped the design requirements, append them so they are never lost.
+   */
+  function finalizePrompt(text, docDesign) {
+    let out = text.replace(/^```[a-z]*\n([\s\S]*?)\n```$/i, '$1');
+    // strip emoji (keep © ® ™) and trailing spaces left behind
+    out = out.replace(/(?![\u00A9\u00AE\u2122])[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '')
+             .replace(/[ \t]+$/gm, '');
+    // The design block may come back translated, so check for its distinctive,
+    // language-neutral markers rather than exact text.
+    const keptDocx = !/\.docx/.test(docDesign) || /1[.,]15/.test(out);
+    const keptMd   = !/Markdown/.test(docDesign) || (/\bH1\b/.test(out) && /\bH2\b/.test(out));
+    if (docDesign && !(keptDocx && keptMd && /emoji|емодзі/i.test(out))) {
+      out += '\n\n<document_design>\n' + docDesign.trim() + '\n</document_design>';
+    }
+    return out.trim();
+  }
+
+  function buildSystemPrompt(domain, style, lang, docDesign = '') {
+    const langName = LANG_NAMES[lang] || 'English';
 
     const styleGuide = {
-      detailed:  'Structure the prompt with clearly labeled sections. Be thorough and comprehensive. Include all mandatory sections.',
-      concise:   'Keep the prompt focused — no more than 250 words. Preserve traceability rules and Probability Yardstick; compress narrative sections.',
-      expert:    'Assume deep domain expertise. Use technical terminology. Enforce maximum analytical rigor.',
-      creative:  'Allow creative freedom within structural requirements. Use evocative language while keeping traceability intact.',
-      technical: 'Optimize for precision. Include explicit constraints on format, data types, error handling, and performance.'
-    }[style] || 'Be clear, structured, and professional.';
+      detailed:  'Thorough and well-structured; include every part listed in <prompt_structure>.',
+      concise:   'Compact: about 250–400 words. Keep role, task, instructions, quality standards, output format and success criteria; omit context, methodology and examples.',
+      expert:    'Assume a deeply expert reader. Add a key-assumptions check, competing hypotheses, a red-team pass and sensitivity analysis to the instructions.',
+      creative:  'For creative work: focus on voice, tone, audience, originality and structure; replace analytical rigor (probability scales, confidence levels) with craft guidance.',
+      technical: 'For engineering work: require complete runnable code, versions, edge cases, error handling, tests, run instructions and complexity notes.',
+    }[style] || 'Clear, structured and professional.';
 
     const role        = getRole(domain, lang);
     const constraints = getConstraints(domain, lang);
     const structure   = getReportStructure(domain, lang);
-    const yardstick   = PROBABILITY_YARDSTICK[lang] || PROBABILITY_YARDSTICK.en;
-    const cot         = COT_INSTRUCTIONS[lang]      || COT_INSTRUCTIONS.en;
-    const antiHal     = ANTI_HALLUCINATION[lang]    || ANTI_HALLUCINATION.en;
+    const antiHal     = ANTI_HALLUCINATION[lang] || ANTI_HALLUCINATION.en;
     const examples    = getExamplesClause(domain, lang);
-
-    // For analytical domains add Probability Yardstick; others get a lite version
     const analyticalDomains = ['intelligence_analysis', 'osint', 'strategic_risk',
-                                'financial_analysis', 'medical_diagnostics', 'legal_analysis'];
-    const includeFullYardstick = analyticalDomains.includes(domain);
+                               'financial_analysis', 'medical_diagnostics', 'legal_analysis'];
+    const yardstick = (analyticalDomains.includes(domain) && style !== 'creative')
+      ? (PROBABILITY_YARDSTICK[lang] || PROBABILITY_YARDSTICK.en)
+      : '';
+    const withExamples = (style === 'detailed' || style === 'expert') && domain !== 'general';
 
-    return `You are a world-class Prompt Engineer specialized in creating high-performance analytical prompts for Claude (Anthropic).
+    return `You are an expert prompt engineer who writes production-grade prompts for Anthropic's Claude models, following Anthropic's published prompt-engineering guidance.
 
-Your task: given a user's raw task description, produce ONE professional, ready-to-use prompt for Claude.
+<goal>
+Turn the user's raw task (given in <user_task>) into ONE ready-to-use prompt for Claude that will get an excellent result on the first try. Detected domain: ${domain}.
+</goal>
 
-## Domain Context
-Domain detected: ${domain}
-
-${langInstr}
-
-## Style Directive
-${styleGuide}
-
-## Structural Requirements for the Prompt You Generate
-
-The prompt you produce MUST contain ALL of the following sections, in this order:
-
-### 1. Role Definition
-Open with: "You are [role with 15–20+ years experience, specific credentials, specific authority]."
-Use this exact role as the foundation:
----
+<prompt_structure>
+Write the prompt in ${langName}; keep XML tag names in English. Use these parts, in this order:
+1. A one-line directive that the whole answer must be written in ${langName}.
+2. <role> — one sentence naming a specific expert role, plus up to four expertise bullets. Base it on this role and adapt it to the task:
 ${role}
----
-
-### 2. Context Block
-Brief, precise summary of the task and any background the AI needs.
-
-### 3. Task Definition
-Clear, unambiguous primary objective. One sentence maximum.
-
-### 4. Detailed Requirements
-Numbered list, minimum 5 items, highly specific to the domain and user's task.
-Include these domain-specific constraints:
+3. <context> — why the task matters, who the audience is and how the result will be used. Infer this from the task; phrase inferences as working assumptions.
+4. <task> — the user's task reproduced verbatim, without shortening or paraphrasing.
+5. <instructions> — 5–10 numbered steps written specifically for this task (not generic advice). Work these domain constraints in where relevant:
 ${constraints}
-
-### 5. Chain-of-Thought Methodology
-Include verbatim:
-${cot}
-
-### 6. Report Structure
-Include this section structure:
-${structure}
-
-${includeFullYardstick ? `### 7. Probability Yardstick\nInclude verbatim:\n${yardstick}` : `### 7. Confidence Standards\nInstruct the AI to label confidence as High / Moderate / Low for every key claim, with brief rationale.`}
-
-### 8. Quality Controls & Anti-Hallucination
-Include verbatim:
-${antiHal}
-
-### 9. Examples Clause
-Include these concrete output examples:
+   Include a step telling Claude to state assumptions explicitly and continue when information is missing (open questions go at the end), and a step to check the draft against <success_criteria> before finishing.
+   Ask Claude to think the problem through step by step before writing (using extended thinking if available) and to put only the final result in the answer. Do not ask for a visible scratchpad.
+6. <quality_standards> — grounding rules adapted from:
+${antiHal}${yardstick ? `
+   Include this probability scale for all likelihood statements:
+${yardstick}` : ''}
+7. <output_format> — the exact structure of the answer (adapt from the outline below, drop what does not apply), formatting rules and length guidance:
+${structure}${docDesign ? `
+   The task asks for a document deliverable. Include the following document-design requirements in <output_format>, translated into ${langName} and kept complete:
+${docDesign}` : `
+   Formatting: Markdown with ## sections, tables for comparisons, bold only for key terms, no emoji.`}
+${withExamples ? `8. <examples> — present these as illustrations of the expected level of specificity (not content to copy):
 ${examples}
+9.` : '8.'} <success_criteria> — 4–6 concrete, checkable criteria for a great answer${docDesign ? ', including that the document is polished, consistently styled and contains no emoji' : ''}.
+${withExamples ? '10.' : '9.'} A final one-line instruction to complete the task in <task>.
+</prompt_structure>
 
-## Critical Rules for the Prompt
-- Output ONLY the prompt itself. No preamble, no meta-commentary, no "Here is your prompt:".
-- Do NOT wrap the output in markdown code blocks.
-- MANDATORY: the prompt you generate MUST contain an explicit, clearly visible instruction near the very top telling the target AI to write its ENTIRE final response in ${langName} — for example: "IMPORTANT: Write the entire final report in ${langName}, regardless of the language of these instructions or examples." This must be present even if some scaffolding text is in English.
-- The prompt must be immediately usable — paste into Claude, get excellent results.
-- Make it specific, not generic. Tailor every sentence to the user's actual task.
-- Every probability assessment in the generated prompt must reference the Probability Yardstick.
-- Traceability is mandatory: every key claim → source reference or explicit assumption label.`;
+<writing_rules>
+- Style of the prompt: ${styleGuide}
+- Use calm, direct, specific language and explain the reason behind non-obvious rules. Avoid ALL-CAPS emphasis and shouted words such as MUST or CRITICAL: current Claude models follow plain instructions precisely and over-apply shouted ones.
+- Phrase instructions positively (what to do), not only as prohibitions.
+- Make every sentence specific to the user's task. Do not leave placeholders such as [X], [Result 1] or <insert>.
+- Use no emoji anywhere in the prompt.
+</writing_rules>
+
+<response_rules>
+Output only the prompt itself: no preamble, no commentary, no code fences.
+</response_rules>`;
   }
 
   /* ── Main API call ───────────────────────────────────────────── */
-  async function generatePrompt({ userText, style = 'detailed', lang = 'uk', onStatus }) {
-    const key = getKey();
-    if (!key) throw new Error('NO_API_KEY');
+  async function generatePrompt({ userText, style = 'detailed', lang = 'uk', onStatus, docDesign = '', domain: knownDomain = '' }) {
+    if (!hasKey()) throw new Error('NO_API_KEY');
 
-    const domain   = detectDomain(userText);
+    // Prefer the domain from the PYTHON_CORE classifier (shared with the local engine)
+    const domain   = knownDomain || detectDomain(userText);
     // An explicit output-language request inside the task text overrides the dropdown.
     const requested = detectOutputLang(userText);
     const outLang   = requested || lang;
     if (requested && requested !== lang) {
       console.info(`[DeepSeek] output language overridden by task text: ${lang} → ${outLang}`);
     }
-    const system   = buildSystemPrompt(domain, style, outLang);
+    const system   = buildSystemPrompt(domain, style, outLang, docDesign);
     const langWord = LANG_NAMES[outLang] || 'English';
 
-    const userMsg = `Task description (reason internally in English, output entirely in ${langWord}):
-
-"""
+    const userMsg = `<user_task>
 ${userText}
-"""
+</user_task>
 
-Generate a professional Claude prompt for this task now. Follow all structural requirements exactly.`;
+Write the Claude prompt for this task now, in ${langWord}, following <prompt_structure> and <writing_rules>.`;
 
     if (onStatus) onStatus((window.Lang ? Lang.t('status.deepseekAnalyzing') : 'DeepSeek: analyzing domain') + ` «${domain}»…`);
 
-    const resp = await fetch(ENDPOINT, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${key}`,
-      },
-      body: JSON.stringify({
+    const resp = await chatRequest({
         model:       MODEL,
         temperature: 0.20,
-        max_tokens:  2400,
+        max_tokens:  4000,
         messages: [
           { role: 'system', content: system },
           { role: 'user',   content: userMsg },
         ],
-      }),
     });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       const msg = err?.error?.message || `HTTP ${resp.status}`;
-      if (resp.status === 401) throw new Error('INVALID_KEY');
+      if (resp.status === 401) throw new Error(getKey() ? 'INVALID_KEY' : 'SESSION_EXPIRED');  // proxy 401 = session
       if (resp.status === 402) throw new Error('QUOTA_EXCEEDED');
       if (resp.status === 429) throw new Error('RATE_LIMIT');
       throw new Error(`DeepSeek API: ${msg}`);
     }
 
     const data   = await resp.json();
-    const result = data?.choices?.[0]?.message?.content?.trim();
+    let result = data?.choices?.[0]?.message?.content?.trim();
     if (!result) throw new Error('Порожня відповідь від DeepSeek');
+    result = finalizePrompt(result, docDesign);
 
     return { result, domain, model: data.model, tokens: data.usage };
   }
@@ -1241,8 +1228,8 @@ Generate a professional Claude prompt for this task now. Follow all structural r
         const cfg = PROVIDERS[p];
         // Check localStorage (already synced from DB via syncKeysFromServer on modal open)
         const hasLocal = !!localStorage.getItem(cfg.lsKey);
-        // For DeepSeek also check _envKey from server
-        const hasEnv = p === 'deepseek' && !!_envKey;
+        // For DeepSeek also check whether the server proxy key is available
+        const hasEnv = p === 'deepseek' && _serverKey;
         const has = hasLocal || hasEnv;
         const tab = document.createElement('button');
         tab.className = '_akTab';
@@ -1686,6 +1673,7 @@ Generate a professional Claude prompt for this task now. Follow all structural r
     const map = {
       'NO_API_KEY':     T('apikey.err.noKey',    'Enter DeepSeek API Key'),
       'INVALID_KEY':    T('apikey.err.invalid',  'Invalid API Key — please check and update'),
+      'SESSION_EXPIRED': T('apikey.err.session', 'Your session has expired — please sign in again'),
       'QUOTA_EXCEEDED': T('apikey.err.quota',    'DeepSeek quota exceeded — top up your balance'),
       'RATE_LIMIT':     T('apikey.err.rateLimit','Too many requests — wait a minute'),
     };
@@ -1705,7 +1693,7 @@ Generate a professional Claude prompt for this task now. Follow all structural r
    */
   async function fetchBalance() {
     const key = getKey();
-    if (!key) return null;
+    if (!hasKey()) return null;
 
     // Return cached result if still fresh
     if (_balanceCache && (Date.now() - _balanceCache.ts) < BALANCE_CACHE_MS) {
@@ -1881,19 +1869,12 @@ Generate a professional Claude prompt for this task now. Follow all structural r
    * @param {string} targetLang  - BCP-47 code or full name (default: 'en')
    */
   async function translateText(text, sourceLang = 'uk', targetLang = 'en') {
-    const key = getKey();
-    if (!key) throw new Error('NO_API_KEY');
+    if (!hasKey()) throw new Error('NO_API_KEY');
 
     const srcName = LANG_NAMES[sourceLang] || sourceLang;
     const tgtName = LANG_NAMES[targetLang] || targetLang;
 
-    const resp = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${key}`,
-      },
-      body: JSON.stringify({
+    const resp = await chatRequest({
         model:       MODEL,
         temperature: 0.1,
         max_tokens:  2000,
@@ -1907,13 +1888,12 @@ Generate a professional Claude prompt for this task now. Follow all structural r
             content: text,
           },
         ],
-      }),
     });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       const msg = err?.error?.message || `HTTP ${resp.status}`;
-      if (resp.status === 401) throw new Error('INVALID_KEY');
+      if (resp.status === 401) throw new Error(getKey() ? 'INVALID_KEY' : 'SESSION_EXPIRED');  // proxy 401 = session
       if (resp.status === 429) throw new Error('RATE_LIMIT');
       if (resp.status === 402) throw new Error('QUOTA_EXCEEDED');
       throw new Error(`DeepSeek translate: ${msg}`);

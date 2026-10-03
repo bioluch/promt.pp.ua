@@ -48,6 +48,14 @@
     return { id: p.sub, email: p.email, role: p.role };
   }
 
+  // Restore a usable access token on startup: the access token lives in
+  // sessionStorage (lost with the tab), the refresh token in localStorage.
+  async function ensureSession() {
+    if (getCurrentUser()) return true;
+    if (!_refreshToken) return false;
+    return _refreshAccessToken();
+  }
+
   // ── Core fetch with auto-refresh ─────────────────────────────
   async function _fetch(method, path, body, retry = true) {
     const headers = { 'Content-Type': 'application/json' };
@@ -279,6 +287,17 @@
     return _fetch('POST', '/admin/backup/create', {});
   }
 
+  // ── Release announcement e-mails ──
+  async function adminAnnouncementRecipients() {
+    return _fetch('GET', '/admin/announcements/recipients');
+  }
+  async function adminAnnouncementStatus() {
+    return _fetch('GET', '/admin/announcements/status');
+  }
+  async function adminSendAnnouncement({ subject, html, text, mode, confirm }) {
+    return _fetch('POST', '/admin/announcements/send', { subject, html, text, mode, confirm });
+  }
+
   async function adminListBackups() {
     return _fetch('GET', '/admin/backup/list');
   }
@@ -382,6 +401,7 @@
   window.API = {
     // auth
     isLoggedIn,
+    ensureSession,
     getCurrentUser,
     handleAuthCallback,
     login,
@@ -419,6 +439,9 @@
     adminWipeDatabase,
     adminCreateBackup,
     adminListBackups,
+    adminAnnouncementRecipients,
+    adminAnnouncementStatus,
+    adminSendAnnouncement,
     adminDeleteBackup,
     adminDownloadBackup,
     adminRestoreBackup,

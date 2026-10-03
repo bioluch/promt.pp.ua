@@ -3,7 +3,7 @@
  * Network-first for Pyodide CDN; cache-first for local assets.
  */
 
-const CACHE_NAME = 'js-prompt-v108.1.1';
+const CACHE_NAME = 'js-prompt-v2.0.8';
 
 const PRECACHE = [
   './index.html',
@@ -19,6 +19,8 @@ const PRECACHE = [
   './js/prompt.js',
   './js/language.js',
   './js/spinner.js',
+  './js/md-export.js',
+  './js/vendor/jszip.min.js',
   './png/js-promt-192x192.png',
   './png/js-promt-512x512.png',
   './png/js-promt-152x152.png',
@@ -42,7 +44,9 @@ self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
-      Promise.allSettled(PRECACHE.map(url => cache.add(url)))
+      // cache:'reload' bypasses the browser HTTP cache, otherwise a new SW
+      // version can precache stale CSS/JS left over from the previous release
+      Promise.allSettled(PRECACHE.map(url => cache.add(new Request(url, { cache: 'reload' }))))
     ).catch(() => {})
   );
 });
@@ -79,6 +83,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Other third-party origins (fonts, analytics, cdnjs …) — let the browser
+  // handle them. A fetch() from this worker would be subject to the page CSP's
+  // connect-src and fail for hosts that are only allowed in script-src.
+  if (url.origin !== self.location.origin) return;
+
   // API calls — never cache, always network
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
@@ -106,7 +115,25 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Local assets — cache-first with a safe network fallback (never rejects)
+  // Same-origin CSS / JS — stale-while-revalidate: answer from cache instantly,
+  // refresh the cache in the background so the next load gets the new release.
+  if (event.request.method === 'GET' && url.origin === self.location.origin &&
+      /\.(css|js)$/.test(url.pathname) && url.pathname !== '/sw.js') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(event.request).then(cached => {
+          const refresh = fetch(new Request(event.request, { cache: 'no-cache' })).then(res => {
+            if (res && res.status === 200) cache.put(event.request, res.clone());
+            return res;
+          }).catch(() => cached || Response.error());
+          return cached || refresh;
+        })
+      )
+    );
+    return;
+  }
+
+  // Other local assets — cache-first with a safe network fallback (never rejects)
   if (event.request.method === 'GET') {
     event.respondWith(
       caches.match(event.request).then(cached => {

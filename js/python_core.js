@@ -85,315 +85,6 @@ def _detect_language(text):
         return 'en'
 
 # ============================================================================
-# CONFIDENCE ASSESSMENT FRAMEWORK
-# ============================================================================
-
-class ConfidenceLevel:
-    HIGH = "High Confidence"
-    MODERATE = "Moderate Confidence" 
-    LOW = "Low Confidence"
-
-class ConfidenceAssessor:
-    """Assesses confidence levels based on evidence quality and source reliability."""
-    
-    @staticmethod
-    def assess(domain: str, context: Dict) -> Dict:
-        """Return confidence assessment with rationale."""
-        assessments = {
-            'intelligence_analysis': ConfidenceAssessor._assess_intelligence,
-            'osint': ConfidenceAssessor._assess_osint,
-            'strategic_risk': ConfidenceAssessor._assess_strategic_risk,
-            'medical_diagnostics': ConfidenceAssessor._assess_medical,
-            'cybersecurity': ConfidenceAssessor._assess_cybersecurity,
-            'financial_analysis': ConfidenceAssessor._assess_financial,
-            'scientific_research': ConfidenceAssessor._assess_research,
-        }
-        
-        assessor = assessments.get(domain, ConfidenceAssessor._assess_general)
-        return assessor(context)
-    
-    @staticmethod
-    def _assess_intelligence(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'Intelligence analysis based on open sources, confidence limited by information availability and source verification status.',
-            'criteria': [
-                'Source verification status required for high confidence',
-                'Multiple independent sources increase confidence',
-                'Information gaps reduce confidence'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_osint(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'OSINT relies on open-source information requiring cross-verification for high confidence.',
-            'criteria': [
-                'Cross-verified sources = Higher confidence',
-                'Single source = Lower confidence',
-                'Primary source quality impacts confidence'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_strategic_risk(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'Strategic risk assessment requires probabilistic modeling and scenario analysis.',
-            'criteria': [
-                'Scenario analysis provides structured uncertainty',
-                'Multiple scenarios improve confidence',
-                'Historical data increases confidence'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_medical(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.HIGH,
-            'rationale': 'Medical diagnostics follow evidence-based protocols with established guidelines.',
-            'criteria': [
-                'Follows Evidence-Based Medicine guidelines',
-                'Grade A/B/C evidence levels specified',
-                'Clinical guidelines provide structured approach'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_cybersecurity(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'Cybersecurity assessment depends on threat intelligence quality and testing scope.',
-            'criteria': [
-                'Penetration test scope defines confidence',
-                'Threat intelligence quality impacts assessment',
-                'Vulnerability severity rating provides confidence'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_financial(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'Financial analysis depends on data quality, assumptions, and model reliability.',
-            'criteria': [
-                'Data quality impacts confidence',
-                'Model assumptions explicitly stated',
-                'Sensitivity analysis shows confidence ranges'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_research(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.HIGH,
-            'rationale': 'Scientific research follows systematic methodology with peer-reviewed standards.',
-            'criteria': [
-                'Research methodology defined',
-                'Evidence quality assessed',
-                'Peer-reviewed sources increase confidence'
-            ]
-        }
-    
-    @staticmethod
-    def _assess_general(context: Dict) -> Dict:
-        return {
-            'level': ConfidenceLevel.MODERATE,
-            'rationale': 'General assessment based on available information with standard quality controls.',
-            'criteria': [
-                'Information quality impacts confidence',
-                'Clear reasoning supports conclusions',
-                'Uncertainties explicitly stated'
-            ]
-        }
-
-# ============================================================================
-# ANTI-HALLUCINATION FRAMEWORK
-# ============================================================================
-
-class AntiHallucinationControls:
-    """Framework to prevent hallucinations and ensure factual accuracy."""
-    
-    @staticmethod
-    def get_controls(domain: str) -> Dict:
-        """Return domain-specific anti-hallucination controls."""
-        base_controls = [
-            "Do not fabricate facts or invent information",
-            "Clearly distinguish facts from assumptions and assessments",
-            "Explicitly identify information gaps and missing data",
-            "State evidence limitations and information quality issues",
-            "Explicitly acknowledge uncertainty where present",
-            "Apply confidence levels to all assessments",
-            "Provide alternative explanations and competing hypotheses",
-            "Avoid unsupported conclusions and speculative statements",
-            "Reference sources and evidence when making claims"
-        ]
-        
-        domain_controls = {
-            'intelligence_analysis': [
-                "Apply ACH (Analysis of Competing Hypotheses) methodology",
-                "Identify and challenge key assumptions",
-                "Use structured analytic techniques",
-                "Assess source reliability and credibility",
-                "Generate alternative scenarios",
-                "Distinguish between facts, assessments, and forecasts",
-                "Document analytical uncertainty explicitly"
-            ],
-            'medical_diagnostics': [
-                "Follow Evidence-Based Medicine guidelines",
-                "Specify evidence levels (Grade A/B/C)",
-                "Consult clinical guidelines (WHO, CDC, EMA)",
-                "Identify red flags requiring immediate attention",
-                "Provide differential diagnosis with probability estimates"
-            ],
-            'cybersecurity': [
-                "Apply CVSS vulnerability scoring standards",
-                "Document assessment methodology and scope",
-                "Use MITRE ATT&CK framework for threat modeling",
-                "Verify vulnerability claims before reporting",
-                "Provide reproducible evidence for findings"
-            ],
-            'financial_analysis': [
-                "State all model assumptions explicitly",
-                "Apply sensitivity analysis to key parameters",
-                "Specify valuation methodology (DCF, comparables, etc.)",
-                "Identify risks and limitations in analysis",
-                "Provide scenario-based ranges (bull/base/bear)"
-            ],
-            'scientific_research': [
-                "Follow research methodology standards",
-                "Cite peer-reviewed sources and evidence",
-                "Distinguish between hypothesis and established fact",
-                "Identify limitations in study design",
-                "Provide statistical significance where applicable"
-            ]
-        }
-        
-        return {
-            'base': base_controls,
-            'domain': domain_controls.get(domain, [])
-        }
-    
-    @staticmethod
-    def format_controls(domain: str, lang: str) -> str:
-        """Format anti-hallucination controls as prompt text."""
-        controls = AntiHallucinationControls.get_controls(domain)
-        
-        uk_template = """
-## Анти-галюцинаційний контроль
-
-### Обов'язкові вимоги
-{base}
-
-### Галузеві вимоги
-{domain}
-"""
-        en_template = """
-## Anti-Hallucination Control
-
-### Mandatory Requirements
-{base}
-
-### Domain-Specific Requirements
-{domain}
-"""
-        
-        template = uk_template if lang == 'uk' else en_template
-        
-        base_text = '\\n'.join(f"- {c}" for c in controls['base'])
-        domain_text = '\\n'.join(f"- {c}" for c in controls['domain']) if controls['domain'] else "- Apply standard quality controls"
-        
-        return template.format(base=base_text, domain=domain_text)
-
-# ============================================================================
-# BIAS CONTROL FRAMEWORK
-# ============================================================================
-
-def _build_bias_controls(domain: str, lang: str) -> str:
-    """Generate bias control section for analytical domains."""
-    uk = lang == 'uk'
-    
-    biases = {
-        'confirmation_bias': {
-            'uk': '''### Confirmation Bias Check
-- **Risk**: Tendency to seek information confirming existing beliefs
-- **Mitigation**: Actively search for disconfirming evidence; consider alternative hypotheses; challenge assumptions systematically''',
-            'en': '''### Confirmation Bias Check
-- **Risk**: Tendency to seek information confirming existing beliefs
-- **Mitigation**: Actively search for disconfirming evidence; consider alternative hypotheses; challenge assumptions systematically'''
-        },
-        'anchoring_bias': {
-            'uk': '''### Anchoring Bias Check
-- **Risk**: Over-reliance on first information received
-- **Mitigation**: Consider multiple reference points; use structured analytic techniques; compare with alternative estimates''',
-            'en': '''### Anchoring Bias Check
-- **Risk**: Over-reliance on first information received
-- **Mitigation**: Consider multiple reference points; use structured analytic techniques; compare with alternative estimates'''
-        },
-        'mirror_imaging': {
-            'uk': '''### Mirror Imaging Check
-- **Risk**: Assuming others think and act like us
-- **Mitigation**: Analyze from adversary perspective; consider cultural and strategic differences; use Red Team analysis''',
-            'en': '''### Mirror Imaging Check
-- **Risk**: Assuming others think and act like us
-- **Mitigation**: Analyze from adversary perspective; consider cultural and strategic differences; use Red Team analysis'''
-        },
-        'availability_bias': {
-            'uk': '''### Availability Bias Check
-- **Risk**: Over-weighting recent or memorable information
-- **Mitigation**: Systematically collect data over time; consider base rates; use statistical methods''',
-            'en': '''### Availability Bias Check
-- **Risk**: Over-weighting recent or memorable information
-- **Mitigation**: Systematically collect data over time; consider base rates; use statistical methods'''
-        },
-        'selection_bias': {
-            'uk': '''### Selection Bias Check
-- **Risk**: Sample not representative of population
-- **Mitigation**: Ensure diverse source selection; consider missing data; assess collection methodology''',
-            'en': '''### Selection Bias Check
-- **Risk**: Sample not representative of population
-- **Mitigation**: Ensure diverse source selection; consider missing data; assess collection methodology'''
-        },
-        'survivorship_bias': {
-            'uk': '''### Survivorship Bias Check
-- **Risk**: Focusing on successful examples only
-- **Mitigation**: Study failures as well as successes; consider selection effects; assess data completeness''',
-            'en': '''### Survivorship Bias Check
-- **Risk**: Focusing on successful examples only
-- **Mitigation**: Study failures as well as successes; consider selection effects; assess data completeness'''
-        },
-        'recency_bias': {
-            'uk': '''### Recency Bias Check
-- **Risk**: Over-weighting recent events
-- **Mitigation**: Consider historical patterns; use long-term trend analysis; assess cyclical patterns''',
-            'en': '''### Recency Bias Check
-- **Risk**: Over-weighting recent events
-- **Mitigation**: Consider historical patterns; use long-term trend analysis; assess cyclical patterns'''
-        }
-    }
-    
-    analytical_domains = ['intelligence_analysis', 'osint', 'strategic_risk', 
-                          'scientific_research', 'cybersecurity', 'financial_analysis', 'medical_diagnostics']
-    
-    if domain not in analytical_domains:
-        return ''
-    
-    bias_list = list(biases.values())
-    bias_text = '\\n\\n'.join(b.get('uk' if uk else 'en', b.get('en', '')) for b in bias_list)
-    
-    template = {
-        'uk': f'''## Контроль упереджень
-
-{bias_text}''',
-        'en': f'''## Bias Control
-
-{bias_text}'''
-    }
-    
-    return template.get('uk' if uk else 'en', template.get('en', ''))
-
-# ============================================================================
 # DOMAIN CLASSIFICATION ENGINE
 # ============================================================================
 
@@ -403,12 +94,11 @@ class DomainClassifier:
     DOMAINS = {
         'intelligence_analysis': {
             'keywords': [
-                'osint', 'розвідк', 'intelligence', 'геополітик', 'geopolit',
-                'стратегічн', 'strategic', 'threat', 'загроза', 'risk assessment',
-                'nuclear', 'ядерн', 'military', 'військов', 'conflict', 'конфлікт',
-                'sanctions', 'санкції', 'disinformation', 'дезінформ', 'propaganda',
-                'пропаганд', 'terrorism', 'тероризм', 'scenario', 'сценарний',
-                'war games', 'ескалація', 'escalation', 'crisis', 'кризов'
+                'osint', 'розвідк', 'intelligence', 'геополітик', 'geopolit', 'threat',
+                'загроза', 'nuclear', 'ядерн', 'military', 'військов', 'conflict',
+                'конфлікт', 'sanctions', 'санкції', 'disinformation', 'дезінформ',
+                'propaganda', 'пропаганд', 'terrorism', 'тероризм', 'war games',
+                'ескалація', 'escalation'
             ],
             'weight': 5,
             'priority': 1,
@@ -416,10 +106,9 @@ class DomainClassifier:
         },
         'osint': {
             'keywords': [
-                'osint', 'open source', 'відкриті джерела', 'розвідк',
-                'intelligence', 'analysis', 'аналіз', 'investigation', 'розслідув',
+                'osint', 'open source', 'відкриті джерела', 'investigation', 'розслідув',
                 'social media', 'соціальні медіа', 'geolocation', 'геолокація',
-                'verification', 'верифікац', 'source analysis', 'джерела'
+                'verification', 'верифікац', 'source analysis'
             ],
             'weight': 4,
             'priority': 2,
@@ -440,9 +129,9 @@ class DomainClassifier:
             'keywords': [
                 'медицин', 'медичн', 'діагност', 'diagnosis', 'симптом', 'symptom',
                 'пацієнт', 'patient', 'лікуванн', 'treatment', 'терапія', 'therapy',
-                'клінічн', 'clinical', 'хвороб', 'disease', 'protocol', 'протокол',
-                'дозування', 'dosage', 'мкб', 'icd', 'evidence-based', 'рандомізован',
-                'randomized', 'placebo', 'clinical trial', 'клінічні дослідження'
+                'клінічн', 'clinical', 'хвороб', 'disease', 'дозування', 'dosage', 'мкб',
+                'icd', 'evidence-based', 'рандомізован', 'randomized', 'placebo',
+                'clinical trial', 'клінічні дослідження'
             ],
             'weight': 5,
             'priority': 1,
@@ -462,11 +151,9 @@ class DomainClassifier:
         },
         'clinical_evaluation': {
             'keywords': [
-                'клінічн', 'clinical', 'evaluation', 'оцінк', 'patient assessment',
-                'оцінка пацієнта', 'treatment plan', 'план лікування', 'follow-up',
-                'спостереження', 'outcome', 'результат', 'effectiveness', 'ефективність',
-                'safety', 'безпека', 'side effects', 'побічні ефекти', 'risk-benefit',
-                'ризик-користь'
+                'клінічн', 'clinical', 'patient assessment', 'оцінка пацієнта',
+                'treatment plan', 'план лікування', 'follow-up', 'спостереження',
+                'side effects', 'побічні ефекти', 'risk-benefit', 'ризик-користь'
             ],
             'weight': 4,
             'priority': 2,
@@ -474,11 +161,11 @@ class DomainClassifier:
         },
         'cybersecurity': {
             'keywords': [
-                'security', 'безпека', 'cybersecurity', 'кібербезпека', 'pentest',
-                'vulnerability', 'вразливість', 'exploit', 'firewall', 'encryption',
-                'шифрування', 'authentication', 'oauth', 'jwt', 'csrf', 'xss',
-                'sql injection', 'malware', 'reverse engineering', 'forensics', 'soc',
-                'siem', 'zero trust', 'gdpr', 'compliance', 'audit'
+                'security', 'cybersecurity', 'кібербезпека', 'pentest', 'vulnerability',
+                'вразливість', 'exploit', 'firewall', 'encryption', 'шифрування',
+                'authentication', 'oauth', 'jwt', 'csrf', 'xss', 'sql injection',
+                'malware', 'reverse engineering', 'forensics', 'soc', 'siem', 'zero trust',
+                'gdpr'
             ],
             'weight': 5,
             'priority': 1,
@@ -487,11 +174,13 @@ class DomainClassifier:
         'financial_analysis': {
             'keywords': [
                 'фінанс', 'finance', 'інвестиц', 'investment', 'trading', 'трейдинг',
-                'portfolio', 'портфель', 'valuation', 'оцінк', 'dcf', 'p/e', 'бенчмарк',
-                'risk', 'ризик', 'hedge', 'хеджуванн', 'derivatives', 'деривативи',
-                'accounting', 'бухгалтер', 'financial statements', 'звітність', 'crypto',
-                'blockchain', 'defi', 'tokenomics', 'venture capital', 'private equity',
-                'ipo', 'm&a'
+                'portfolio', 'портфель', 'valuation', 'dcf', 'p/e', 'бенчмарк', 'hedge',
+                'хеджуванн', 'derivatives', 'деривативи', 'accounting', 'бухгалтер',
+                'financial statements', 'звітність', 'crypto', 'blockchain', 'defi',
+                'tokenomics', 'venture capital', 'private equity', 'ipo', 'm&a',
+                'інвестор', 'investor', 'прибутк', 'profit', 'revenue', 'виручк', 'бюджет',
+                'budget', 'кредит', 'loan', 'облігац', 'bond', 'акції', 'stocks',
+                'рентабельн', 'roi', 'ebitda'
             ],
             'weight': 5,
             'priority': 1,
@@ -513,9 +202,9 @@ class DomainClassifier:
             'keywords': [
                 'код', 'code', 'python', 'javascript', 'typescript', 'react', 'vue',
                 'angular', 'api', 'sql', 'database', 'алгоритм', 'algorithm', 'debug',
-                'рефактор', 'refactor', 'function', 'клас', 'class', 'library', 'framework',
-                'git', 'docker', 'kubernetes', 'backend', 'frontend', 'fullstack',
-                'microservice', 'rest', 'graphql', 'websocket', 'regex', 'тест', 'testing'
+                'рефактор', 'refactor', 'function', 'class', 'library', 'framework', 'git',
+                'docker', 'kubernetes', 'backend', 'frontend', 'fullstack', 'microservice',
+                'rest', 'graphql', 'websocket', 'regex', 'testing'
             ],
             'weight': 4,
             'priority': 2,
@@ -525,9 +214,9 @@ class DomainClassifier:
             'keywords': [
                 'research', 'дослідженн', 'science', 'наук', 'experiment', 'експеримент',
                 'methodology', 'методолог', 'peer review', 'рецензув', 'publication',
-                'публікац', 'hypothesis', 'гіпотеза', 'theory', 'теорія', 'analysis',
-                'аналіз', 'data analysis', 'аналіз даних', 'statistics', 'статистик',
-                'laboratory', 'лабораторн', 'scientific method', 'науковий метод'
+                'публікац', 'hypothesis', 'гіпотеза', 'theory', 'теорія', 'data analysis',
+                'аналіз даних', 'statistics', 'статистик', 'laboratory', 'лабораторн',
+                'scientific method', 'науковий метод'
             ],
             'weight': 4,
             'priority': 2,
@@ -551,7 +240,10 @@ class DomainClassifier:
                 'go-to-market', 'product market fit', 'unit economics', 'burn rate',
                 'swot', 'porter', 'mckinsey', 'bcg matrix', 'okr', 'balanced scorecard',
                 'competitive', 'конкурентн', 'market entry', 'виведення продукту',
-                'scaling', 'масштабуванн', 'operations', 'операційн'
+                'scaling', 'масштабуванн', 'operations', 'операційн', 'ринок', 'ринк',
+                'market', 'конкурент', 'competitor', 'маркетинг', 'marketing', 'продаж',
+                'sales', 'pricing', 'ціноутвор', 'бізнес-план', 'business plan', 'галуз',
+                'industry', 'tam', 'sam', 'som', 'go to market'
             ],
             'weight': 3,
             'priority': 3,
@@ -559,11 +251,10 @@ class DomainClassifier:
         },
         'product_management': {
             'keywords': [
-                'product', 'продукт', 'product management', 'управління продуктом',
-                'roadmap', 'дорожня карта', 'feature', 'функція', 'user story',
-                'користувацька історія', 'sprint', 'backlog', 'беклог', 'agile',
-                'scrum', 'product owner', 'власник продукту', 'MVP', 'product-market fit',
-                'customer development', 'розвиток клієнтів'
+                'product management', 'управління продуктом', 'roadmap', 'дорожня карта',
+                'user story', 'користувацька історія', 'sprint', 'backlog', 'беклог',
+                'agile', 'scrum', 'product owner', 'власник продукту', 'MVP',
+                'product-market fit', 'customer development', 'розвиток клієнтів'
             ],
             'weight': 3,
             'priority': 3,
@@ -571,55 +262,44 @@ class DomainClassifier:
         }
     }
     
+    _RX_CACHE = {}
+
+    @classmethod
+    def _hit(cls, kw, text_lower):
+        """Whole-word match for short ASCII keywords (avoids 'ml' in 'html'),
+        word-start (stem) match for everything else ('ризик' → 'ризики')."""
+        rx = cls._RX_CACHE.get(kw)
+        if rx is None:
+            k = re.escape(kw.lower())
+            if kw.isascii() and len(kw) <= 4:
+                rx = re.compile(r'(?<![a-z0-9])' + k + r'(?![a-z0-9])')
+            else:
+                rx = re.compile(r'(?<!\\w)' + k)
+            cls._RX_CACHE[kw] = rx
+        return rx.search(text_lower) is not None
+
     @classmethod
     def classify(cls, text: str) -> Dict[str, Any]:
         try:
             text_lower = text.lower()
-            
-            scores = {}
-            matched_keywords = {}
-            
+            scores, matched = {}, {}
             for domain, config in cls.DOMAINS.items():
-                hits = [kw for kw in config['keywords'] if kw in text_lower]
-                if hits:
-                    score = len(hits) * config['weight']
-                    semantic_bonus = sum(1 for m in config.get('semantic_markers', []) 
-                                       if m in text_lower) * 3
-                    score += semantic_bonus
-                    scores[domain] = score
-                    matched_keywords[domain] = hits
-            
+                hits = [kw for kw in config['keywords'] if cls._hit(kw, text_lower)]
+                if not hits:
+                    continue
+                score = len(hits) * config['weight']
+                score += 3 * sum(1 for m in config.get('semantic_markers', []) if cls._hit(m, text_lower))
+                score += 4 - config['priority']          # priority 1 = most specific → small tie-break bonus
+                scores[domain], matched[domain] = score, hits
             if not scores:
                 return {'domain': 'general', 'confidence': 'Low', 'score': 0}
-            
-            priority_bonus = {domain: cfg['priority'] * 2 
-                            for domain, cfg in cls.DOMAINS.items()}
-            
-            for domain in scores:
-                scores[domain] += priority_bonus.get(domain, 0)
-            
-            best_domain = max(scores, key=scores.get)
-            best_score = scores[best_domain]
-            
-            total_keywords = sum(len(kw) for kw in cls.DOMAINS[best_domain]['keywords'])
-            matched_count = len(matched_keywords.get(best_domain, []))
-            confidence_ratio = matched_count / max(total_keywords / 20, 1)
-            
-            if confidence_ratio > 0.3:
-                confidence = 'High'
-            elif confidence_ratio > 0.15:
-                confidence = 'Moderate'
-            else:
-                confidence = 'Low'
-            
-            return {
-                'domain': best_domain,
-                'confidence': confidence,
-                'score': best_score,
-                'matched_keywords': matched_keywords.get(best_domain, []),
-                'alternatives': sorted(scores.items(), key=lambda x: x[1], reverse=True)[1:3]
-            }
-            
+            ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+            best, best_score = ranked[0]
+            margin = best_score - (ranked[1][1] if len(ranked) > 1 else 0)
+            n = len(matched[best])
+            confidence = 'High' if n >= 3 and margin >= 5 else 'Moderate' if n >= 2 else 'Low'
+            return {'domain': best, 'confidence': confidence, 'score': best_score,
+                    'matched_keywords': matched[best], 'alternatives': ranked[1:3]}
         except Exception:
             return {'domain': 'general', 'confidence': 'Low', 'score': 0}
 
@@ -1310,362 +990,463 @@ class Methodologies:
         return general.get(lang, general['en'])
 
 # ============================================================================
-# INFORMATION REQUIREMENTS FRAMEWORK
+# PROMPT GENERATOR v2 — Claude prompt engineering best practices
+# ----------------------------------------------------------------------------
+# - The user's task is embedded verbatim (never truncated) inside <task> tags
+# - XML-tagged sections (role / context / task / instructions / quality /
+#   output format / success criteria) — the structure Claude is trained on
+# - Calm, explicit instructions with the reason behind them (no shouting)
+# - Missing information → explicit assumptions instead of blocking questions
+# - No unfilled placeholders; everything is derived from the request
+# - Output language directive + deliverable detection (.docx / .md / …) with
+#   professional, emoji-free document design requirements
 # ============================================================================
 
-def _build_information_requirements(domain: str, text: str, lang: str) -> str:
-    """Build information requirements section for analytical domains."""
-    analytical_domains = ['intelligence_analysis', 'osint', 'strategic_risk', 
-                          'scientific_research', 'cybersecurity', 'financial_analysis']
-    
-    if domain not in analytical_domains:
-        return ''
-    
-    uk = lang == 'uk'
-    
-    template = {
-        'uk': '''## Інформаційні вимоги
+_PG_LANG_NAMES = {
+    'uk': {'uk': 'українською', 'en': 'англійською', 'es': 'іспанською', 'de': 'німецькою',
+           'fr': 'французькою', 'pl': 'польською'},
+    'en': {'uk': 'Ukrainian', 'en': 'English', 'es': 'Spanish', 'de': 'German',
+           'fr': 'French', 'pl': 'Polish'},
+}
 
-### Відомі факти
-- [Документовані, верифіковані факти]
+_PG_DOMAIN_LABEL = {
+    'intelligence_analysis': ('розвідувально-аналітичне завдання', 'intelligence analysis'),
+    'osint':                 ('OSINT-розслідування', 'OSINT investigation'),
+    'strategic_risk':        ('аналіз стратегічних ризиків', 'strategic risk analysis'),
+    'medical_diagnostics':   ('клінічна діагностика', 'clinical diagnostics'),
+    'medical_regulatory':    ('регуляторні питання медицини', 'medical regulatory affairs'),
+    'clinical_evaluation':   ('клінічна оцінка', 'clinical evaluation'),
+    'cybersecurity':         ('кібербезпека', 'cybersecurity'),
+    'financial_analysis':    ('фінансовий аналіз', 'financial analysis'),
+    'legal_analysis':        ('правовий аналіз', 'legal analysis'),
+    'programming':           ('розробка програмного забезпечення', 'software engineering'),
+    'scientific_research':   ('наукове дослідження', 'scientific research'),
+    'data_science':          ('data science / машинне навчання', 'data science / machine learning'),
+    'business_strategy':     ('бізнес-стратегія та ринок', 'business strategy and markets'),
+    'product_management':    ('продуктовий менеджмент', 'product management'),
+    'general':               ('загальне завдання', 'general task'),
+}
 
-### Невідомі дані
-- [Ключові прогалини в інформації]
+_PG_ANALYTICAL = {'intelligence_analysis', 'osint', 'strategic_risk', 'financial_analysis',
+                  'medical_diagnostics', 'legal_analysis', 'scientific_research',
+                  'medical_regulatory', 'clinical_evaluation', 'business_strategy', 'data_science'}
 
-### Пріоритети збору
-1. [Найбільш критична інформація для збору]
-2. [Друга за важливістю інформація]
-3. [Третя за важливістю інформація]
+# Domain-specific quality rules (localized, short, positive phrasing)
+_PG_DOMAIN_RULES = {
+    'intelligence_analysis': (
+        ['Розрізняй факт, оцінку, припущення та прогноз — позначай кожне явно.',
+         'Для ключових суджень застосуй аналіз конкуруючих гіпотез (ACH) і перевірку ключових припущень.',
+         'Оцінюй надійність джерел (A–F) і достовірність інформації (1–6).'],
+        ['Label every statement as fact, assessment, assumption or forecast.',
+         'Apply Analysis of Competing Hypotheses (ACH) and a Key Assumptions Check to key judgements.',
+         'Rate source reliability (A–F) and information credibility (1–6).']),
+    'osint': (
+        ['Верифікуй кожен факт щонайменше двома незалежними джерелами.',
+         'Фіксуй джерело, дату доступу та метод перевірки для кожної знахідки.',
+         'Дотримуйся законності та етики: лише відкриті дані, без доксингу приватних осіб.'],
+        ['Verify each finding with at least two independent sources.',
+         'Record source, access date and verification method for every finding.',
+         'Stay legal and ethical: open data only, no doxxing of private individuals.']),
+    'strategic_risk': (
+        ['Оцінюй ризики за ймовірністю та впливом і пояснюй шкалу.',
+         'Розглянь сценарії best/base/worst з тригерами переходу між ними.',
+         'Для кожного ключового ризику запропонуй індикатори раннього попередження.'],
+        ['Score risks on probability and impact and explain the scale.',
+         'Cover best/base/worst scenarios with the triggers that move between them.',
+         'Give early-warning indicators for every key risk.']),
+    'medical_diagnostics': (
+        ['Спирайся на чинні клінічні настанови (WHO, NICE, ESC тощо) і вказуй рівень доказовості.',
+         'Першими виділяй «червоні прапорці», що потребують невідкладної допомоги.',
+         'Зазнач, що відповідь не замінює очну консультацію лікаря.'],
+        ['Rely on current clinical guidelines (WHO, NICE, ESC, etc.) and state the level of evidence.',
+         'Highlight red flags that need urgent care first.',
+         'State that the answer does not replace an in-person medical consultation.']),
+    'medical_regulatory': (
+        ['Посилайся на конкретні регламенти та стандарти (MDR 2017/745, ISO 13485, ISO 14971, FDA 21 CFR тощо).',
+         'Розрізняй обов\\'язкові вимоги та рекомендації (guidance).'],
+        ['Cite specific regulations and standards (MDR 2017/745, ISO 13485, ISO 14971, FDA 21 CFR, etc.).',
+         'Distinguish mandatory requirements from guidance.']),
+    'clinical_evaluation': (
+        ['Оцінюй співвідношення користь/ризик на основі опублікованих клінічних даних.',
+         'Вказуй дизайн і обмеження кожного використаного дослідження.'],
+        ['Assess benefit/risk using published clinical data.',
+         'State the design and limitations of every study you use.']),
+    'cybersecurity': (
+        ['Оцінюй вразливості за CVSS і прив\\'язуй техніки до MITRE ATT&CK.',
+         'Пріоритезуй рекомендації за ризиком і складністю впровадження.',
+         'Описуй лише авторизоване тестування та захисні заходи.'],
+        ['Score vulnerabilities with CVSS and map techniques to MITRE ATT&CK.',
+         'Prioritise recommendations by risk and implementation effort.',
+         'Describe authorised testing and defensive measures only.']),
+    'financial_analysis': (
+        ['Явно наводь усі припущення моделі та джерела даних з датою.',
+         'Дай сценарії bull/base/bear і аналіз чутливості до ключових параметрів.',
+         'Зазнач, що аналіз не є індивідуальною інвестиційною рекомендацією.'],
+        ['State every model assumption and dated data source explicitly.',
+         'Give bull/base/bear scenarios and a sensitivity analysis on key drivers.',
+         'State that the analysis is not personalised investment advice.']),
+    'legal_analysis': (
+        ['Визнач юрисдикцію та посилайся на конкретні норми і статті в чинній редакції.',
+         'Наводь релевантну судову практику і позначай спірні питання.',
+         'Зазнач, що відповідь має інформаційний характер і не замінює консультацію юриста.'],
+        ['Identify the jurisdiction and cite specific provisions in their current wording.',
+         'Cite relevant case law and flag contested points.',
+         'State that the answer is informational and not a substitute for legal counsel.']),
+    'programming': (
+        ['Пиши робочий, повний код без пропусків на кшталт «...решта коду».',
+         'Обробляй граничні випадки та помилки; додай тести для критичних шляхів.',
+         'Пояснюй ключові архітектурні рішення та їхні компроміси.'],
+        ['Write complete, working code with no "...rest of code" gaps.',
+         'Handle edge cases and errors; add tests for critical paths.',
+         'Explain key design decisions and their trade-offs.']),
+    'scientific_research': (
+        ['Розрізняй кореляцію та причинність; вказуй розмір ефекту та довірчі інтервали.',
+         'Посилайся на рецензовані джерела з роком публікації.',
+         'Описуй обмеження дизайну дослідження та можливі упередження.'],
+        ['Separate correlation from causation; report effect sizes and confidence intervals.',
+         'Cite peer-reviewed sources with publication year.',
+         'Describe study-design limitations and possible biases.']),
+    'data_science': (
+        ['Почни з базової моделі (baseline) і обґрунтуй вибір метрики.',
+         'Запобігай витоку даних; опиши схему валідації.',
+         'Поясни інтерпретованість моделі та ризики дрейфу даних.'],
+        ['Start with a baseline model and justify the metric.',
+         'Prevent data leakage; describe the validation scheme.',
+         'Explain model interpretability and data-drift risks.']),
+    'business_strategy': (
+        ['Підкріплюй висновки ринковими даними з джерелом і датою; оцінки позначай як оцінки.',
+         'Використовуй доречні фреймворки (TAM/SAM/SOM, Porter, SWOT, unit economics) і показуй розрахунки.',
+         'Рекомендації формулюй як конкретні дії з пріоритетом, ресурсами та метриками успіху.'],
+        ['Back conclusions with dated, sourced market data; label estimates as estimates.',
+         'Use fitting frameworks (TAM/SAM/SOM, Porter, SWOT, unit economics) and show the calculations.',
+         'Make recommendations concrete actions with priority, resources and success metrics.']),
+    'product_management': (
+        ['Пов\\'язуй кожну функцію з проблемою користувача та метрикою успіху.',
+         'Пріоритезуй за RICE або MoSCoW і показуй розрахунок.'],
+        ['Tie every feature to a user problem and a success metric.',
+         'Prioritise with RICE or MoSCoW and show the scoring.']),
+    'general': (
+        ['Підкріплюй ключові твердження прикладами, даними або міркуваннями.',
+         'Давай практичні, конкретні рекомендації з наступними кроками.'],
+        ['Support key claims with examples, data or reasoning.',
+         'Give practical, specific recommendations with next steps.']),
+}
 
-### Ключові аналітичні питання
-1. [Найважливіше питання, що потребує відповіді]
-2. [Друге критичне питання]
-3. [Третє критичне питання]
+# Deliverable / document format detection
+_PG_FORMATS = [
+    ('docx', r'\\.docx\\b|\\bdocx\\b|word[- ]?(документ|файл|document|file)|(документ|файл|формат[іу]?)\\s+word\\b|\\bms\\s*word\\b|ворд'),
+    ('md',   r'\\.md\\b|\\bmd\\b|markdown|маркдаун|маркдаун'),
+    ('pdf',  r'\\.pdf\\b|\\bpdf\\b'),
+    ('xlsx', r'\\.xlsx?\\b|\\bexcel\\b|ексел|ексель'),
+    ('pptx', r'\\.pptx?\\b|powerpoint|презентаці|presentation|slides?\\b|слайд'),
+]
 
-### Інформаційні прогалини
-- **Що відсутнє?** [Опис відсутньої інформації]
-- **Як це впливає на достовірність?** [Оцінка впливу на достовірність]
-- **Як можна зібрати?** [Методи збору відсутньої інформації]
-- **Які припущення залежать?** [Припущення, що залежать від цієї інформації]
-- **Які рішення залежать?** [Рішення, що залежать від цієї інформації]''',
-        'en': '''## Information Requirements
 
-### Known Facts
-- [Documented, verified facts]
+def _pg_detect_formats(text):
+    low = text.lower()
+    return [name for name, rx in _PG_FORMATS if re.search(rx, low)]
 
-### Unknowns
-- [Key information gaps]
 
-### Collection Priorities
-1. [Most critical information to collect]
-2. [Second most critical information]
-3. [Third most critical information]
+def _pg_role_parts(domain, ui):
+    """Split an ExpertRoles entry into (headline, expertise bullets, approach bullets)."""
+    raw = ExpertRoles.get_role(domain, ui)
+    lines = [l.strip() for l in raw.split('\\n')]
+    head = lines[0] if lines else ''
+    sections, cur = {}, None
+    for l in lines[1:]:
+        m = re.match(r'\\*\\*(.+?):\\*\\*$', l)
+        if m:
+            cur = m.group(1)
+            sections[cur] = []
+        elif l.startswith('- ') and cur:
+            sections[cur].append(l[2:])
+    names = list(sections)
+    expertise = sections.get(names[0], []) if names else []
+    approach = sections.get(names[-1], []) if len(names) > 1 else []
+    return head, expertise, approach
 
-### Key Intelligence Questions
-1. [Most important question to answer]
-2. [Second critical question]
-3. [Third critical question]
 
-### Information Gaps
-- **What is missing?** [Description of missing information]
-- **How does it affect confidence?** [Impact on confidence assessment]
-- **How can it be collected?** [Methods to collect missing information]
-- **What assumptions are affected?** [Assumptions dependent on this information]
-- **What decisions are affected?** [Decisions dependent on this information]'''
-    }
-    
-    return template.get('uk' if uk else 'en', template.get('en', ''))
+def _pg_methodology(domain, ui):
+    m = Methodologies.get_methodology(domain, ui) or Methodologies.get_general_methodology(ui)
+    lines = m.strip().split('\\n')
+    if lines and lines[0].startswith('## '):
+        lines = lines[1:]
+    # Drop the generic "Bias Control" subsection (covered by <quality_standards>)
+    out, skip = [], False
+    for l in lines:
+        if l.startswith('### '):
+            skip = 'bias' in l.lower() or 'упереджен' in l.lower()
+        if not skip:
+            out.append(l)
+    # renumber "### N." subsections after dropping one
+    n = [0]
+    def renum(m):
+        n[0] += 1
+        return '### %d.' % n[0]
+    return re.sub(r'^### \\d+\\.', renum, '\\n'.join(out).strip(), flags=re.M)
 
-# ============================================================================
-# PROMPT GENERATION ENGINE
-# ============================================================================
+
+def _pg_doc_design(fmt, ui):
+    uk = ui == 'uk'
+    if fmt == 'docx':
+        return ('''Вимоги до оформлення документа .docx:
+- Жодних емодзі, піктограм чи декоративних Unicode-символів — ні в заголовках, ні в списках, ні в таблицях.
+- Стриманий професійний дизайн: один шрифт для всього документа (наприклад, Calibri, Aptos або Times New Roman для офіційних документів), основний текст 11 пт, міжрядковий інтервал 1,15, поля 2–2,5 см.
+- Заголовки — лише вбудованими стилями «Заголовок 1–3» з єдиним стриманим акцентним кольором; для формальних документів — багаторівнева нумерація (1, 1.1, 1.1.1).
+- Титульна сторінка (назва, підзаголовок, дата, автор/організація); автоматичний зміст для документів довших за 5 сторінок; номери сторінок у нижньому колонтитулі.
+- Таблиці: виділений рядок заголовків, однакове вирівнювання (числа — праворуч), тонкі межі, підписи «Таблиця 1 — …»; рисунки з підписами «Рисунок 1 — …».
+- Списки — вбудованими стилями маркованих і нумерованих списків, а не символами вручну.
+- Акценти помірні: жирний лише для ключових термінів; без підкреслень (крім посилань) і без абзаців великими літерами.
+- Якщо створюєш файл програмно (python-docx, docx тощо), застосуй ці стилі безпосередньо в коді.''' if uk else
+'''Document design requirements for the .docx file:
+- No emoji, pictograms or decorative Unicode symbols anywhere — headings, lists or tables.
+- Restrained, professional design: one typeface throughout (e.g. Calibri, Aptos, or Times New Roman for formal documents), 11 pt body text, 1.15 line spacing, 2–2.5 cm margins.
+- Headings only via the built-in Heading 1–3 styles with a single restrained accent colour; multilevel numbering (1, 1.1, 1.1.1) for formal documents.
+- A title page (title, subtitle, date, author/organisation); an automatic table of contents for documents longer than 5 pages; page numbers in the footer.
+- Tables: a distinct header row, consistent alignment (numbers right-aligned), thin borders, captions "Table 1 — …"; figures captioned "Figure 1 — …".
+- Lists via the built-in bulleted and numbered list styles, not manual characters.
+- Restrained emphasis: bold only for key terms; no underlining (except links) and no all-caps paragraphs.
+- If you generate the file programmatically (python-docx, docx, etc.), apply these styles in code.''')
+    if fmt == 'md':
+        return ('''Вимоги до оформлення документа Markdown (.md):
+- Жодних емодзі, піктограм чи декоративних Unicode-символів.
+- Один заголовок H1 з назвою документа, далі ієрархія H2/H3 без пропуску рівнів; заголовки стислі, без крапки в кінці.
+- Таблиці GFM з рядком заголовків і вирівнюванням колонок; блоки коду з огородженням і зазначеною мовою.
+- Примітки та застереження — цитатами («> **Примітка.** …»).
+- Однакові маркери списків (-), нумеровані списки для послідовних кроків; порожній рядок між блоками.
+- Жирний — лише для ключових термінів; посилання у форматі [текст](URL).
+- Документ має бути охайним і легко читатися як у сирому вигляді, так і після рендерингу.''' if uk else
+'''Document design requirements for the Markdown (.md) file:
+- No emoji, pictograms or decorative Unicode symbols.
+- A single H1 with the document title, then an H2/H3 hierarchy without skipping levels; concise headings without trailing periods.
+- GFM tables with a header row and column alignment; fenced code blocks with a language tag.
+- Notes and caveats as blockquotes ("> **Note.** …").
+- Consistent list markers (-), numbered lists for sequential steps; a blank line between blocks.
+- Bold only for key terms; links as [text](URL).
+- The document must look clean and read well both raw and rendered.''')
+    return ''
+
+
+def _pg_section(tag, body):
+    body = body.strip()
+    return '<%s>\\n%s\\n</%s>' % (tag, body, tag) if body else ''
+
 
 def generate_prompt(user_text: str, style: str = 'detailed', lang: str = 'uk') -> str:
+    """Build a professional prompt for Claude from a raw task description.
+
+    lang  — language of the final answer ('uk', 'en', 'es', …); the prompt
+            scaffolding is Ukrainian for 'uk' and English otherwise.
+    style — detailed | concise | expert | creative | technical
+    """
     try:
-        text = user_text.strip()
+        text = (user_text or '').strip()
         if not text:
             return ''
+        ui = 'uk' if lang == 'uk' else 'en'
+        uk = ui == 'uk'
+        style = style if style in ('detailed', 'concise', 'expert', 'creative', 'technical') else 'detailed'
+        concise = style == 'concise'
+        rigorous = style in ('detailed', 'expert', 'technical')
 
-        classification = DomainClassifier.classify(text)
-        domain = classification['domain']
-        
-        # 1. Role Selection
-        role = ExpertRoles.get_role(domain, lang)
-        
-        # 2. Research Principles
-        research_principles = _build_research_principles(domain, lang)
-        
-        # 3. Research Objective
-        research_objective = _build_research_objective(text, domain, lang)
-        
-        # 4. Scope Definition
-        scope = _build_scope(domain, lang)
-        
-        # 5. Methodology
-        methodology = Methodologies.get_methodology(domain, lang)
-        if not methodology:
-            methodology = Methodologies.get_general_methodology(lang)
-        
-        # 6. Information Requirements
-        info_requirements = _build_information_requirements(domain, text, lang)
-        
-        # 7. Tasks
-        tasks = _build_tasks(text, domain, lang)
-        
-        # 8. Deliverables
-        deliverables = _build_deliverables(domain, lang)
-        
-        # 9. Quality Controls
-        confidence = ConfidenceAssessor.assess(domain, {'text': text, 'domain': domain})
-        hallucination_controls = AntiHallucinationControls.format_controls(domain, lang)
-        bias_controls = _build_bias_controls(domain, lang)
-        
-        # 10. Output Format
-        output_format = _build_output_format(domain, style, lang)
-        
-        # 11. Probability Yardstick (new)
-        probability_yardstick = _build_probability_yardstick(domain, lang)
-        
-        # 12. Examples Clause (new)
-        examples_clause = _build_examples_clause(domain, lang)
-        
-        # 13. Assemble Prompt
-        prompt = _assemble_prompt(
-            role=role,
-            research_principles=research_principles,
-            research_objective=research_objective,
-            scope=scope,
-            methodology=methodology,
-            info_requirements=info_requirements,
-            tasks=tasks,
-            deliverables=deliverables,
-            confidence=confidence,
-            hallucination_controls=hallucination_controls,
-            bias_controls=bias_controls,
-            output_format=output_format,
-            probability_yardstick=probability_yardstick,
-            examples_clause=examples_clause,
-            lang=lang,
-            domain=domain
-        )
-        
-        return _strip_emoji(prompt)
-        
+        domain = DomainClassifier.classify(text).get('domain', 'general')
+        if style == 'technical' and domain == 'general':
+            domain = 'programming'
+        analytical = domain in _PG_ANALYTICAL and style != 'creative'
+        formats = _pg_detect_formats(text)
+        doc_formats = [f for f in formats if f in ('docx', 'md')]
+        lang_name = _PG_LANG_NAMES[ui].get(lang, _PG_LANG_NAMES[ui]['en'])
+        label = _PG_DOMAIN_LABEL.get(domain, _PG_DOMAIN_LABEL['general'])[0 if uk else 1]
+
+        parts = []
+
+        # ── Title + language directive ─────────────────────────────
+        parts.append(('# Промт для Claude: %s' % label) if uk else ('# Prompt for Claude: %s' % label.capitalize()))
+        parts.append(('Відповідай повністю %s мовою, незалежно від мови цих інструкцій і прикладів.' % lang_name) if uk else
+                     ('Write your entire response in %s, regardless of the language of these instructions and examples.' % lang_name))
+
+        # ── Role ────────────────────────────────────────────────────
+        head, expertise, approach = _pg_role_parts(domain, ui)
+        if style == 'creative':
+            if domain == 'general':
+                head = 'досвідчений автор і креативний редактор' if uk else 'an experienced writer and creative editor'
+            else:
+                head = ('досвідчений автор і креативний редактор, який поєднує оригінальність із фаховим знанням (%s)' % label) if uk else \\
+                       ('an experienced writer and creative editor who combines originality with expertise in %s' % label)
+        if uk:
+            # lower-case a Cyrillic first word ("Старший аналітик" → "старший аналітик"), keep acronyms/English titles
+            first = head.split(' ', 1)[0]
+            if re.match(r'^[А-ЯІЇЄҐ][а-яіїєґ\\'-]+[,]?$', first):
+                head = head[:1].lower() + head[1:]
+            role = 'Ти — %s.' % head
+        else:
+            art = 'an' if head[:1].lower() in 'aeiou' else 'a'
+            role = 'You are %s %s.' % (art, head) if not head.startswith('an ') else 'You are %s.' % head
+        if not concise and expertise and style != 'creative':
+            role += '\\n' + '\\n'.join('- ' + x for x in expertise[:4])
+        parts.append(_pg_section('role', role))
+
+        # ── Context (purpose / motivation) ─────────────────────────
+        if not concise:
+            if style == 'creative':
+                ctx = ('Користувач очікує оригінальний, живий текст, який точно відповідає задуму з <task>. '
+                       'Цінуються свіжі образи, природна мова та чітка структура; шаблонні звороти знижують цінність результату.') if uk else \\
+                      ('The user expects an original, vivid piece that precisely fits the brief in <task>. '
+                       'Fresh imagery, natural language and a clear structure matter; clichés reduce the value of the result.')
+            elif domain in ('programming', 'data_science') or style == 'technical':
+                ctx = ('Код використовуватиметься в реальному проєкті, тому він має бути коректним, безпечним, зрозумілим і готовим до запуску без доопрацювань. '
+                       'Завдання користувача наведено дослівно в <task> — це головне джерело вимог.') if uk else \\
+                      ('The code will be used in a real project, so it must be correct, secure, readable and ready to run without further edits. '
+                       'The user\\'s request is quoted verbatim in <task> and is the primary source of requirements.')
+            else:
+                ctx = ('Результат використовуватиметься для ухвалення рішень, тому точність, перевірюваність і практична цінність важливіші за обсяг. '
+                       'Завдання користувача наведено дослівно в <task> — це головне джерело вимог.') if uk else \\
+                      ('The result will be used to make decisions, so accuracy, verifiability and practical value matter more than length. '
+                       'The user\\'s request is quoted verbatim in <task> and is the primary source of requirements.')
+            if doc_formats:
+                ctx += (' Кінцевий результат — готовий до використання документ (%s), тож оформлення має бути професійним і стильним.' % ', '.join('.' + f for f in doc_formats)) if uk else \\
+                       (' The final deliverable is a ready-to-use document (%s), so its design must be professional and polished.' % ', '.join('.' + f for f in doc_formats))
+            parts.append(_pg_section('context', ctx))
+
+        # ── Task (verbatim) ─────────────────────────────────────────
+        parts.append(_pg_section('task', text))
+
+        # ── Instructions ────────────────────────────────────────────
+        steps = []
+        if uk:
+            steps.append('Уважно проаналізуй завдання в <task>: визнач мету, цільову аудиторію, обмеження та ознаки якісного результату.')
+            if not concise:
+                steps.append('Якщо для повної відповіді бракує даних, не зупиняйся: сформулюй розумні припущення, явно познач їх і продовжуй; відкриті питання перелічи наприкінці.')
+        else:
+            steps.append('Read the task in <task> carefully: identify the goal, the target audience, the constraints and what a high-quality result looks like.')
+            if not concise:
+                steps.append('If information is missing, do not stop: make reasonable assumptions, label them explicitly and continue; list open questions at the end.')
+        if style == 'creative':
+            steps += (['Запропонуй ідею або кут подачі, а потім розгорни її у цілісний текст із виразним голосом.',
+                       'Уникай кліше та загальних фраз; кожен абзац має працювати на задум.'] if uk else
+                      ['Settle on an idea or angle, then develop it into a cohesive piece with a distinct voice.',
+                       'Avoid clichés and filler; every paragraph should serve the concept.'])
+        else:
+            steps += (['Дотримуйся методології з <methodology> у межах, доречних для цього завдання.'] if uk else
+                      ['Follow the approach in <methodology> to the extent it fits this task.']) if not concise else []
+            steps += [x for x in (_PG_DOMAIN_RULES.get(domain) or _PG_DOMAIN_RULES['general'])[0 if uk else 1]][: (2 if concise else 3)]
+        if style == 'technical':
+            steps += (['Зазнач версії мови, бібліотек і середовища; дотримуйся загальноприйнятих конвенцій мови (типізація, docstring, лінтер).',
+                       'Додай інструкції запуску та тести, що підтверджують коректність.'] if uk else
+                      ['State language, library and runtime versions; follow the language\\'s conventions (type hints, docstrings, linting).',
+                       'Include run instructions and tests that demonstrate correctness.'])
+        if style == 'expert':
+            steps += (['Перевір ключові припущення, розглянь альтернативні гіпотези та контраргументи (red team) і проведи аналіз чутливості висновків.'] if uk else
+                      ['Run a key-assumptions check, weigh alternative hypotheses and counter-arguments (red team), and test how sensitive the conclusions are.'])
+        if rigorous:
+            steps.append('Перш ніж писати відповідь, продумай її крок за кроком (якщо доступне розширене мислення — використай його); у фінальну відповідь виклади лише результат.' if uk else
+                         'Think the problem through step by step before writing (use extended thinking if available); put only the result in the final answer.')
+        steps.append('Перед відправленням перевір відповідь за критеріями з <success_criteria> і виправ невідповідності.' if uk else
+                     'Before finishing, check the answer against <success_criteria> and fix any gaps.')
+        parts.append(_pg_section('instructions', '\\n'.join('%d. %s' % (i + 1, s) for i, s in enumerate(steps))))
+
+        # ── Methodology (domain) ───────────────────────────────────
+        if not concise and style != 'creative':
+            parts.append(_pg_section('methodology', _pg_methodology(domain, ui)))
+
+        # ── Quality standards ──────────────────────────────────────
+        q = []
+        if style == 'creative':
+            q += (['Факти, імена, дати та цитати, якщо вони є, мають бути достовірними; вигадане позначай як художній елемент.'] if uk else
+                  ['Any facts, names, dates and quotes must be accurate; mark invented elements as fiction.'])
+        else:
+            q += (['Розрізняй факти, оцінки та припущення; припущення позначай явно.',
+                   'Не вигадуй джерел, цитат, посилань, чисел чи назв. Якщо даних немає або ти не впевнений, прямо скажи про це.',
+                   'Для показників, що змінюються з часом, зазначай дату або період актуальності.'] if uk else
+                  ['Distinguish facts, estimates and assumptions; label assumptions explicitly.',
+                   'Do not invent sources, quotes, links, numbers or names. If data is missing or you are unsure, say so plainly.',
+                   'For figures that change over time, state the date or period they refer to.'])
+            if analytical:
+                q += (['Для ключових висновків вказуй рівень впевненості (високий / середній / низький) з коротким обґрунтуванням.',
+                       'Розглядай альтернативні пояснення та дані, що суперечать основному висновку; уникай упередження підтвердження та «якоря».'] if uk else
+                      ['Give a confidence level (high / moderate / low) with a brief rationale for key conclusions.',
+                       'Consider alternative explanations and disconfirming evidence; guard against confirmation and anchoring bias.'])
+            if not concise and rigorous:
+                q.append('Ключові твердження супроводжуй джерелом (назва, рік, за можливості — посилання).' if uk else
+                         'Back key claims with a source (title, year and, where possible, a link).')
+        quality = '\\n'.join('- ' + x for x in q)
+        if analytical and rigorous and domain in ('intelligence_analysis', 'osint', 'strategic_risk',
+                                                    'financial_analysis', 'medical_diagnostics',
+                                                    'legal_analysis', 'scientific_research'):
+            yard = _build_probability_yardstick(domain, ui)
+            yard = re.sub(r'^## .*\\n+', '', yard.strip())
+            # calm wording: current Claude models follow plain instructions precisely
+            for a_, b_ in (('ЛИШЕ', 'лише'), ('ПОВИННА', 'має'), ('ONLY', 'only'), ('ALL', 'all'), ('MUST', 'should')):
+                yard = yard.replace(a_, b_)
+            quality += '\\n\\n' + yard
+        parts.append(_pg_section('quality_standards', quality))
+
+        # ── Output format ──────────────────────────────────────────
+        of = []
+        if style == 'technical':
+            of.append(('Структура відповіді:\\n1. Короткий опис рішення та архітектури\\n2. Повний код у блоках з огородженням і назвою мови (з назвами файлів)\\n'
+                       '3. Інструкції запуску та налаштування\\n4. Тести\\n5. Обмеження, складність і можливі покращення') if uk else
+                      ('Response structure:\\n1. Brief overview of the solution and architecture\\n2. Complete code in fenced blocks with a language tag (and file names)\\n'
+                       '3. Setup and run instructions\\n4. Tests\\n5. Limitations, complexity and possible improvements'))
+        elif style == 'creative':
+            of.append('Подай готовий текст із виразною структурою (заголовок, за потреби — підзаголовки). Без пояснень про процес написання, якщо їх не просили.' if uk else
+                      'Deliver the finished piece with a clear structure (title and, if useful, subheadings). Do not explain the writing process unless asked.')
+        else:
+            structure = _build_output_format(domain, style, ui).strip()
+            structure = re.sub(r'\\n?\\*\\*(Форматування|Formatting)\\*\\*:.*$', '', structure).strip()
+            of.append(('Структура відповіді (адаптуй під завдання, прибери нерелевантні розділи):\\n' if uk else
+                       'Response structure (adapt to the task and drop sections that do not apply):\\n') + structure)
+        if doc_formats:
+            for f in doc_formats:
+                of.append(_pg_doc_design(f, ui))
+        else:
+            of.append('Форматування: Markdown — ## для розділів, ### для підрозділів, таблиці для порівнянь, **жирний** лише для ключових термінів. Без емодзі.' if uk else
+                      'Formatting: Markdown — ## for sections, ### for subsections, tables for comparisons, **bold** only for key terms. No emoji.')
+        other = [f for f in formats if f not in ('docx', 'md')]
+        if other:
+            of.append(('Також підготуй результат у форматі: %s — з тими самими вимогами до професійного оформлення без емодзі.' if uk else
+                       'Also prepare the result as: %s — with the same professional, emoji-free design requirements.') % ', '.join('.' + f for f in other))
+        length = {'concise': ('Обсяг: стисло — лише суттєве, без вступів і повторів.', 'Length: concise — essentials only, no preamble or repetition.'),
+                  'expert':  ('Обсяг: глибоко й вичерпно; щільний професійний текст без «води».', 'Length: deep and thorough; dense professional prose without filler.')}
+        of.append(length.get(style, ('Обсяг: достатній для повного розкриття завдання, без повторів і загальних фраз.',
+                                     'Length: whatever fully covers the task — no repetition or generic filler.'))[0 if uk else 1])
+        parts.append(_pg_section('output_format', '\\n\\n'.join(x for x in of if x)))
+
+        # ── Examples (calibration, non-general analytical domains) ─
+        if style in ('detailed', 'expert') and domain != 'general':
+            ex = _build_examples_clause(domain, ui).strip()
+            ex = re.sub(r'^## .*\\n+', '', ex)
+            if ex:
+                parts.append(_pg_section('examples', (
+                    'Приклади нижче показують очікуваний рівень конкретики; не копіюй їхній зміст.\\n\\n' if uk else
+                    'The examples below show the expected level of specificity; do not copy their content.\\n\\n') + ex))
+
+        # ── Success criteria ───────────────────────────────────────
+        sc = (['Відповідь виконує всі вимоги з <task> і нічого не пропускає.'] +
+              ([] if style == 'creative' else ['Висновки конкретні, обґрунтовані та придатні до дії.']) + [
+               'Кожне ключове твердження має джерело або позначене як припущення/оцінка.' if style != 'creative' else
+               'Текст оригінальний, цілісний і відповідає задуму, тону та аудиторії.',
+               'Формат і оформлення відповідають <output_format>.'] if uk else
+              ['The answer meets every requirement in <task> and omits nothing.'] +
+              ([] if style == 'creative' else ['Conclusions are specific, justified and actionable.']) + [
+               'Every key claim has a source or is labelled as an assumption/estimate.' if style != 'creative' else
+               'The piece is original, cohesive and fits the brief, tone and audience.',
+               'Format and design follow <output_format>.'])
+        if doc_formats:
+            sc.append('Документ стильний, послідовно оформлений і не містить жодного емодзі.' if uk else
+                      'The document is polished, consistently styled and contains no emoji at all.')
+        sc.append(('Уся відповідь написана %s мовою.' % lang_name) if uk else ('The whole answer is written in %s.' % lang_name))
+        parts.append(_pg_section('success_criteria', '\\n'.join('- ' + x for x in sc)))
+
+        # ── Closing instruction ─────────────────────────────────────
+        parts.append('Виконай завдання з <task>, дотримуючись усіх інструкцій вище.' if uk else
+                     'Now complete the task in <task>, following all of the instructions above.')
+
+        prompt = '\\n\\n'.join(p for p in parts if p)
+        return _strip_emoji(prompt).strip() + '\\n'
     except Exception:
         return user_text
 
-def _build_research_principles(domain: str, lang: str) -> str:
-    """Build research principles section."""
-    uk = lang == 'uk'
-    
-    principles = {
-        'uk': '''## Принципи дослідження
-- **Об'єктивність**: Аналізувати факти без упереджень та викривлень
-- **Доказовість**: Усі твердження підкріплювати доказами та джерелами
-- **Прозорість**: Чітко розрізняти факти, оцінки, припущення та прогнози
-- **Критичне мислення**: Систематично оцінювати докази та альтернативні інтерпретації
-- **Етичність**: Дотримуватися професійних та етичних стандартів аналізу''',
-        'en': '''## Research Principles
-- **Objectivity**: Analyze facts without bias or distortion
-- **Evidence-based**: All claims supported by evidence and sources
-- **Transparency**: Clearly distinguish facts, assessments, assumptions, and forecasts
-- **Critical Thinking**: Systematically evaluate evidence and alternative interpretations
-- **Ethical Conduct**: Adhere to professional and ethical analysis standards'''
-    }
-    
-    return principles.get('uk' if uk else 'en', principles.get('en', ''))
-
-def _build_research_objective(text: str, domain: str, lang: str) -> str:
-    """Build research objective section."""
-    uk = lang == 'uk'
-    
-    template = {
-        'uk': '''## Дослідницька мета
-
-### Мета аналізу
-{goal}
-
-### Очікувані результати
-- [Результат 1]
-- [Результат 2]
-- [Результат 3]
-
-### Аналітичні межі
-- [Обмеження 1]
-- [Обмеження 2]
-- [Обмеження 3]
-
-### Критерії успіху
-- [Критерій 1]
-- [Критерій 2]
-- [Критерій 3]''',
-        'en': '''## Research Objective
-
-### Analysis Goal
-{goal}
-
-### Expected Outputs
-- [Output 1]
-- [Output 2]
-- [Output 3]
-
-### Analytical Boundaries
-- [Boundary 1]
-- [Boundary 2]
-- [Boundary 3]
-
-### Success Criteria
-- [Criteria 1]
-- [Criteria 2]
-- [Criteria 3]'''
-    }
-    
-    goal = {
-        'uk': f'Провести аналіз на основі наданого запиту: "{text[:200]}..." та отримати структуровані, доказові результати.',
-        'en': f'Conduct analysis based on the provided request: "{text[:200]}..." and produce structured, evidence-based results.'
-    }
-    
-    t = template.get('uk' if uk else 'en', template.get('en', ''))
-    return t.format(goal=goal.get('uk' if uk else 'en', goal['en']))
-
-def _build_scope(domain: str, lang: str) -> str:
-    """Build scope definition section."""
-    uk = lang == 'uk'
-    
-    scopes = {
-        'intelligence_analysis': {
-            'uk': '''## Обсяг аналізу
-- **Географічні межі**: [Визначити географічний фокус]
-- **Часові межі**: [Визначити період аналізу]
-- **Тематичний фокус**: [Визначити основні теми]
-- **Обмеження**: [Визначити обмеження аналізу]''',
-            'en': '''## Scope of Analysis
-- **Geographic Boundaries**: [Define geographic focus]
-- **Temporal Boundaries**: [Define analysis period]
-- **Thematic Focus**: [Define core themes]
-- **Limitations**: [Define analysis limitations]'''
-        },
-        'medical_diagnostics': {
-            'uk': '''## Обсяг діагностики
-- **Клінічний контекст**: [Визначити клінічний контекст]
-- **Діагностичні межі**: [Визначити межі діагностики]
-- **Доступна інформація**: [Визначити доступну інформацію]
-- **Обмеження**: [Визначити обмеження]''',
-            'en': '''## Diagnostic Scope
-- **Clinical Context**: [Define clinical context]
-- **Diagnostic Boundaries**: [Define diagnostic boundaries]
-- **Available Information**: [Define available information]
-- **Limitations**: [Define limitations]'''
-        },
-        'cybersecurity': {
-            'uk': '''## Обсяг оцінки безпеки
-- **Системні межі**: [Визначити межі системи]
-- **Тестові межі**: [Визначити межі тестування]
-- **Методологічні межі**: [Визначити методологічні межі]
-- **Обмеження**: [Визначити обмеження]''',
-            'en': '''## Security Assessment Scope
-- **System Boundaries**: [Define system boundaries]
-- **Test Boundaries**: [Define testing boundaries]
-- **Methodological Boundaries**: [Define methodological boundaries]
-- **Limitations**: [Define limitations]'''
-        }
-    }
-    
-    default = {
-        'uk': '''## Обсяг роботи
-- **Основні напрямки**: [Визначити основні напрямки аналізу]
-- **Межі аналізу**: [Визначити межі аналізу]
-- **Обмеження**: [Визначити обмеження]''',
-        'en': '''## Scope of Work
-- **Core Directions**: [Define core analysis directions]
-- **Analysis Boundaries**: [Define analysis boundaries]
-- **Limitations**: [Define limitations]'''
-    }
-    
-    scope = scopes.get(domain, default)
-    return scope.get('uk' if uk else 'en', scope.get('en', ''))
-
-def _build_tasks(text: str, domain: str, lang: str) -> str:
-    """Build tasks section."""
-    uk = lang == 'uk'
-    
-    template = {
-        'uk': '''## Завдання
-
-### Основні завдання
-1. {task1}
-2. {task2}
-3. {task3}
-
-### Додаткові завдання
-- [Додаткове завдання 1]
-- [Додаткове завдання 2]''',
-        'en': '''## Tasks
-
-### Primary Tasks
-1. {task1}
-2. {task2}
-3. {task3}
-
-### Additional Tasks
-- [Additional Task 1]
-- [Additional Task 2]'''
-    }
-    
-    task_templates = {
-        'intelligence_analysis': {
-            'uk': 'Провести систематичний аналіз доступної інформації, застосовуючи ACH та Red Team методики.',
-            'en': 'Conduct systematic analysis of available information using ACH and Red Team methodologies.'
-        },
-        'medical_diagnostics': {
-            'uk': 'Провести диференційну діагностику на основі EBM принципів та клінічних настанов.',
-            'en': 'Conduct differential diagnosis based on EBM principles and clinical guidelines.'
-        }
-    }
-    
-    default_task = {
-        'uk': 'Провести комплексний аналіз наданої інформації та отримати структуровані результати.',
-        'en': 'Conduct comprehensive analysis of provided information and produce structured results.'
-    }
-    
-    tasks = task_templates.get(domain, {})
-    task1 = tasks.get('uk' if uk else 'en', default_task.get('uk' if uk else 'en', default_task['en']))
-    
-    t = template.get('uk' if uk else 'en', template.get('en', ''))
-    return t.format(task1=task1, 
-                    task2='Застосувати методологію для отримання доказових висновків.',
-                    task3='Документувати всі джерела, припущення та обмеження.')
-
-def _build_deliverables(domain: str, lang: str) -> str:
-    """Build deliverables section."""
-    uk = lang == 'uk'
-    
-    template = {
-        'uk': '''## Результати
-
-### Основний звіт
-1. **Executive Summary** (1-2 сторінки)
-2. **Детальний аналіз** з доказами та джерелами
-3. **Висновки та рекомендації**
-
-### Додаткові матеріали
-- Таблиці, графіки, візуалізації (за потреби)
-- Документація джерел та методології
-- Альтернативні сценарії та аналіз чутливості''',
-        'en': '''## Deliverables
-
-### Main Report
-1. **Executive Summary** (1-2 pages)
-2. **Detailed Analysis** with evidence and sources
-3. **Conclusions and Recommendations**
-
-### Additional Materials
-- Tables, charts, visualizations (as needed)
-- Source and methodology documentation
-- Alternative scenarios and sensitivity analysis'''
-    }
-    
-    return template.get('uk' if uk else 'en', template.get('en', ''))
 
 def _build_probability_yardstick(domain: str, lang: str) -> str:
     """Build Probability Yardstick section — only for analytical domains."""
@@ -1939,73 +1720,6 @@ def _build_examples_clause(domain: str, lang: str) -> str:
     key = 'uk' if uk else 'en'
     return entry.get(key, entry.get('en', ''))
 
-
-def _assemble_prompt(role: str, research_principles: str, research_objective: str,
-                     scope: str, methodology: str, info_requirements: str,
-                     tasks: str, deliverables: str, confidence: Dict,
-                     hallucination_controls: str, bias_controls: str,
-                     output_format: str, probability_yardstick: str,
-                     examples_clause: str, lang: str, domain: str) -> str:
-    
-    labels = {
-        'title': {'uk': 'Аналітичний промт', 'en': 'Analytical Prompt'},
-        'role': {'uk': 'Роль та експертиза', 'en': 'Role & Expertise'},
-        'principles': {'uk': 'Принципи дослідження', 'en': 'Research Principles'},
-        'objective': {'uk': 'Дослідницька мета', 'en': 'Research Objective'},
-        'scope': {'uk': 'Обсяг роботи', 'en': 'Scope of Work'},
-        'methodology': {'uk': 'Методологія', 'en': 'Methodology'},
-        'info_requirements': {'uk': 'Інформаційні вимоги', 'en': 'Information Requirements'},
-        'tasks': {'uk': 'Завдання', 'en': 'Tasks'},
-        'deliverables': {'uk': 'Результати', 'en': 'Deliverables'},
-        'quality': {'uk': 'Контроль якості', 'en': 'Quality Assurance'},
-        'output': {'uk': 'Формат виводу', 'en': 'Output Format'}
-    }
-    
-    def t(k): return labels[k].get(lang, labels[k]['en'])
-    
-    confidence_section = f"""
-## Confidence Assessment
-- **Level**: {confidence['level']}
-- **Rationale**: {confidence['rationale']}
-- **Criteria**: 
-{chr(10).join(f"  - {c}" for c in confidence['criteria'])}
-"""
-    
-    prompt = f"""# {t('title')}
-
-## {t('role')}
-{role}
-
-{research_principles}
-
-{research_objective}
-
-{scope}
-
-{methodology}
-
-{info_requirements}
-
-{tasks}
-
-{deliverables}
-
-## Quality Controls
-{hallucination_controls}
-
-{bias_controls}
-
-{confidence_section}
-
-{probability_yardstick}
-
-## {t('output')}
-{output_format}
-
-{examples_clause}
-"""
-    
-    return prompt
 
 def _build_output_format(domain: str, style: str, lang: str) -> str:
     uk = lang == 'uk'
@@ -2523,154 +2237,1038 @@ def pdf_to_md(file_bytes, filename):
     except Exception as e:
         return f'# PDF Conversion Error\\n\\n> Error: {str(e)}\\n\\nPlease try again with a different PDF file.'
 
-def _run_to_md(run):
-    try:
-        t = run.text or ''
-        if not t:
-            return ''
-        try:
-            strike = run.font.strike
-        except Exception:
-            strike = False
-        try:
-            font_name = (run.font.name or '').lower()
-        except Exception:
-            font_name = ''
-        is_code = any(m in font_name for m in
-                      ('courier', 'consol', 'mono', 'code', 'lucida console'))
-        if is_code:
-            return _BT + t + _BT
-        if run.bold and run.italic: t = f'***{t}***'
-        elif run.bold: t = f'**{t}**'
-        elif run.italic: t = f'*{t}*'
-        if run.underline: t = f'__{t}__'
-        if strike: t = f'~~{t}~~'
-        return t
-    except Exception:
-        return ''
+# ══════════════════════════════════════════════════════════════
+# DOCX → Markdown converter
+# Parses the OOXML package directly (zipfile + ElementTree, stdlib only):
+# headings (styles + outline levels), real list numbering, inline formatting
+# with run merging, hyperlinks (incl. field hyperlinks), internal anchors,
+# footnotes/endnotes, tables (GFM, or linearized for layout tables), code
+# blocks, quotes, images, text boxes, equations (OMML → LaTeX), tracked changes.
+# ══════════════════════════════════════════════════════════════
+import zipfile as _dx_zip
+import posixpath as _dx_pp
+import xml.etree.ElementTree as _dx_ET
 
-def _para_to_md(para):
-    try:
-        style = (para.style.name or '').strip()
-        text = para.text.strip()
-        if not text:
-            return ''
-        hn = _safe_re_match(r'[Hh]eading\\s*(\\d)', style)
-        if hn:
-            return '#' * min(int(hn.group(1)), 4) + f' {text}'
-        if 'Title' in style: return f'# {text}'
-        if 'Subtitle' in style: return f'## {text}'
-        if 'Caption' in style: return f'*{text}*'
+_DX_NS = {
+    'w':   'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+    'r':   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+    'm':   'http://schemas.openxmlformats.org/officeDocument/2006/math',
+    'wp':  'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+    'a':   'http://schemas.openxmlformats.org/drawingml/2006/main',
+    'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
+    'mc':  'http://schemas.openxmlformats.org/markup-compatibility/2006',
+    'v':   'urn:schemas-microsoft-com:vml',
+    'pr':  'http://schemas.openxmlformats.org/package/2006/relationships',
+    'dc':  'http://purl.org/dc/elements/1.1/',
+}
+
+def _dx(tag):
+    p, n = tag.split(':')
+    return '{%s}%s' % (_DX_NS[p], n)
+
+def _dx_local(el):
+    t = el.tag
+    return t.split('}', 1)[1] if isinstance(t, str) and '}' in t else t
+
+def _dx_ns(el):
+    t = el.tag
+    return t[1:].split('}', 1)[0] if isinstance(t, str) and t.startswith('{') else ''
+
+def _dx_val(el, attr='w:val'):
+    return None if el is None else el.get(_dx(attr))
+
+def _dx_on(el):
+    """Toggle property (w:b, w:i, …): present and not explicitly false."""
+    if el is None:
+        return None
+    v = el.get(_dx('w:val'))
+    return v is None or v.lower() not in ('0', 'false', 'off', 'none')
+
+_DX_MONO = ('courier', 'consol', 'mono', 'menlo', 'monaco', 'lucida console',
+            'source code', 'fira code', 'jetbrains', 'inconsolata', 'cascadia')
+_DX_SYM = {'F0B7': '•', 'F0A7': '▪', 'F0FC': '✓', 'F0E0': '→', 'F0DF': '←',
+           'F0DE': '⇒', 'F0AE': '→', 'F0D8': '⇒', 'F0A8': '•', 'F06C': '●',
+           'F06E': '■', 'F0B0': '°', 'F0B1': '±', 'F0A3': '≤', 'F0B3': '≥'}
+
+_DX_TEX = {'Δ': '\\\\Delta ', 'δ': '\\\\delta ', 'α': '\\\\alpha ', 'β': '\\\\beta ', 'γ': '\\\\gamma ',
+           'Γ': '\\\\Gamma ', 'ε': '\\\\varepsilon ', 'θ': '\\\\theta ', 'λ': '\\\\lambda ', 'μ': '\\\\mu ',
+           'π': '\\\\pi ', 'ρ': '\\\\rho ', 'σ': '\\\\sigma ', 'Σ': '\\\\Sigma ', 'τ': '\\\\tau ', 'φ': '\\\\varphi ',
+           'ω': '\\\\omega ', 'Ω': '\\\\Omega ', '×': '\\\\times ', '·': '\\\\cdot ', '⋅': '\\\\cdot ', '≤': '\\\\le ',
+           '≥': '\\\\ge ', '≠': '\\\\ne ', '±': '\\\\pm ', '→': '\\\\to ', '∞': '\\\\infty ', '≈': '\\\\approx ',
+           '−': '-', '∑': '\\\\sum ', '√': '\\\\sqrt '}
+
+def _dx_slug(text):
+    s = re.sub(r'[^\\w\\- ]', '', text.strip().lower())
+    return re.sub(r' ', '-', s)
+
+def _dx_esc(text, table=False):
+    """Escape Markdown-significant characters in plain text."""
+    if not text:
+        return text
+    text = text.replace('\\\\', '\\\\\\\\')
+    text = re.sub('([*' + _BT + r'\\[\\]])', r'\\\\\\1', text)
+    # underscores only where they could open/close emphasis (not snake_case)
+    text = re.sub(r'(?<!\\w)_|_(?!\\w)', r'\\\\_', text)
+    text = re.sub(r'<(?=[A-Za-z/!?])', '&lt;', text)
+    if table:
+        text = text.replace('|', '\\\\|')
+    return text
+
+def _dx_esc_line_start(line):
+    """Escape a leading token that would turn a text line into a block element."""
+    if re.match(r'(#{1,6}\\s|>|[-+*]\\s|\\d{1,9}[.)]\\s|={3,}\\s*$|-{3,}\\s*$|\\s{4})', line):
+        if line.startswith('    '):
+            return line.lstrip()
+        m = re.match(r'(\\d{1,9})([.)])(\\s.*)', line, re.S)
+        if m:
+            return m.group(1) + '\\\\' + m.group(2) + m.group(3)
+        return '\\\\' + line
+    return line
+
+def _dx_roman(n):
+    vals = ((1000, 'm'), (900, 'cm'), (500, 'd'), (400, 'cd'), (100, 'c'), (90, 'xc'),
+            (50, 'l'), (40, 'xl'), (10, 'x'), (9, 'ix'), (5, 'v'), (4, 'iv'), (1, 'i'))
+    out = ''
+    for v, r in vals:
+        while n >= v:
+            out += r
+            n -= v
+    return out
+
+def _dx_num(n, fmt):
+    if fmt == 'lowerLetter':
+        return chr(ord('a') + (n - 1) % 26) * ((n - 1) // 26 + 1)
+    if fmt == 'upperLetter':
+        return chr(ord('A') + (n - 1) % 26) * ((n - 1) // 26 + 1)
+    if fmt == 'lowerRoman':
+        return _dx_roman(n)
+    if fmt == 'upperRoman':
+        return _dx_roman(n).upper()
+    if fmt == 'decimalZero':
+        return '%02d' % n
+    return str(n)
+
+_DX_SUP = dict(zip('0123456789+-=()ni', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ'))
+_DX_SUB = dict(zip('0123456789+-=()aeoxhklmnpst', '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜ'))
+
+def _dx_script(text, sup):
+    """Superscript/subscript as Unicode (x², H₂O, ref¹,²) when every character has a
+    Unicode form; otherwise fall back to <sup>/<sub> HTML."""
+    table = _DX_SUP if sup else _DX_SUB
+    core = text.strip()
+    if core and all(c in table or c in ', ' for c in core) and any(c in table for c in core):
+        return ''.join(table.get(c, c) for c in text)
+    tag = 'sup' if sup else 'sub'
+    return '<%s>%s</%s>' % (tag, text, tag)
+
+_DX_MD = {'s': ('~~', '<del>', '</del>'), 'b': ('**', '<strong>', '</strong>'), 'i': ('*', '<em>', '</em>')}
+
+def _dx_punct(c):
+    import unicodedata
+    return unicodedata.category(c)[0] in 'PS'
+
+def _dx_resolve_marks(text):
+    """Turn \\\\x00O<k>\\\\x00 / \\\\x00C<k>\\\\x00 tokens into Markdown delimiters, or into HTML tags
+    where CommonMark flanking rules would make the delimiter inert (e.g. **a -**b)."""
+    parts = re.split('(\\x00[OC][sbi]\\x00)', text)
+    real = lambda i, step: next((p[0] if step > 0 else p[-1] for p in
+                                 (parts[j] for j in range(i + step, len(parts) if step > 0 else -1, step))
+                                 if p and not p.startswith('\\x00')), ' ')
+    ok = {}
+    stack = []
+    for i, p in enumerate(parts):
+        if not p.startswith('\\x00'):
+            continue
+        prev, nxt = real(i, -1), real(i, 1)
+        if p[1] == 'O':
+            # left-flanking: next not space, and (next not punct or prev is space/punct)
+            good = not nxt.isspace() and (not _dx_punct(nxt) or prev.isspace() or _dx_punct(prev))
+            stack.append((i, good))
+        elif stack:
+            j, good_open = stack.pop()
+            good = not prev.isspace() and (not _dx_punct(prev) or nxt.isspace() or _dx_punct(nxt))
+            ok[i] = ok[j] = good_open and good
+    out = []
+    for i, p in enumerate(parts):
+        if p.startswith('\\x00'):
+            md, o, c = _DX_MD[p[2]]
+            out.append(md if ok.get(i, True) else (o if p[1] == 'O' else c))
+        else:
+            out.append(p)
+    return ''.join(out)
+
+def _dx_code_span(text):
+    ticks = max((len(m) for m in re.findall(_BT + '+', text)), default=0)
+    fence = _BT * (ticks + 1)
+    pad = ' ' if text.startswith(_BT) or text.endswith(_BT) else ''
+    return fence + pad + text + pad + fence
+
+
+class _DocxToMarkdown:
+    def __init__(self, data, filename='document.docx', images='placeholder'):
+        self.zip = _dx_zip.ZipFile(io.BytesIO(data))
+        self.names = set(self.zip.namelist())
+        self.filename = filename
+        self.images = images
+        self.doc_path = self._main_part()
+        self.rels = self._read_rels(self.doc_path)
+        self._read_styles()
+        self._read_numbering()
+        self.notes = {'footnote': self._read_notes('footnotes'),
+                      'endnote':  self._read_notes('endnotes')}
+        self.note_order = []          # [(kind, id)] in reference order
+        self.note_num = {}
+        self.list_counters = {}       # numId → {ilvl: current number}
+        self.field_stack = []         # complex fields: {'instr', 'phase', 'link'}
+        self.anchors = {}             # bookmark name → heading slug
+        self.slug_count = {}
+        self.image_count = 0
+
+    # ── package ──────────────────────────────────────────────
+    def _xml(self, path):
+        if path not in self.names:
+            return None
+        return _dx_ET.fromstring(self.zip.read(path))
+
+    def _main_part(self):
+        root = self._xml('_rels/.rels')
+        if root is not None:
+            for rel in root:
+                if rel.get('Type', '').endswith('/officeDocument'):
+                    return rel.get('Target').lstrip('/')
+        return 'word/document.xml'
+
+    def _read_rels(self, part):
+        d, b = _dx_pp.split(part)
+        root = self._xml(_dx_pp.join(d, '_rels', b + '.rels'))
+        rels = {}
+        if root is None:
+            return rels
+        for rel in root:
+            tgt = rel.get('Target', '')
+            ext = rel.get('TargetMode') == 'External'
+            if not ext:
+                tgt = _dx_pp.normpath(_dx_pp.join(d, tgt)) if not tgt.startswith('/') else tgt.lstrip('/')
+            rels[rel.get('Id')] = (rel.get('Type', ''), tgt, ext)
+        return rels
+
+    def _rel_part(self, suffix):
+        for typ, tgt, ext in self.rels.values():
+            if typ.endswith('/' + suffix) and not ext:
+                return tgt
+        return None
+
+    # ── styles ───────────────────────────────────────────────
+    def _read_styles(self):
+        self.styles, self.default_pstyle = {}, None
+        root = self._xml(self._rel_part('styles') or 'word/styles.xml')
+        if root is None:
+            return
+        for st in root.findall(_dx('w:style')):
+            sid = st.get(_dx('w:styleId'))
+            name_el = st.find(_dx('w:name'))
+            based = st.find(_dx('w:basedOn'))
+            self.styles[sid] = {
+                'type':  st.get(_dx('w:type')),
+                'name':  (_dx_val(name_el) or sid or '').strip().lower(),
+                'based': _dx_val(based),
+                'pPr':   st.find(_dx('w:pPr')),
+                'rPr':   st.find(_dx('w:rPr')),
+            }
+            if st.get(_dx('w:type')) == 'paragraph' and st.get(_dx('w:default')) in ('1', 'true'):
+                self.default_pstyle = sid
+
+    def _chain(self, sid):
+        seen = set()
+        while sid and sid in self.styles and sid not in seen:
+            seen.add(sid)
+            yield self.styles[sid]
+            sid = self.styles[sid]['based']
+
+    def _pstyle(self, p):
+        ppr = p.find(_dx('w:pPr'))
+        return _dx_val(ppr.find(_dx('w:pStyle'))) if ppr is not None and ppr.find(_dx('w:pStyle')) is not None \\
+            else self.default_pstyle
+
+    def _style_names(self, sid):
+        return [s['name'] for s in self._chain(sid)]
+
+    # ── numbering ────────────────────────────────────────────
+    def _read_numbering(self):
+        self.nums, self.abstract = {}, {}
+        root = self._xml(self._rel_part('numbering') or 'word/numbering.xml')
+        if root is None:
+            return
+        for an in root.findall(_dx('w:abstractNum')):
+            lv = {}
+            for l in an.findall(_dx('w:lvl')):
+                lv[int(l.get(_dx('w:ilvl'), 0))] = {
+                    'fmt':   _dx_val(l.find(_dx('w:numFmt'))) or 'decimal',
+                    'start': int(_dx_val(l.find(_dx('w:start'))) or 1),
+                    'text':  _dx_val(l.find(_dx('w:lvlText'))) or '',
+                    'ind':   self._ind_of(l.find(_dx('w:pPr'))),
+                }
+            link = an.find(_dx('w:numStyleLink'))
+            self.abstract[an.get(_dx('w:abstractNumId'))] = {'lvls': lv, 'link': _dx_val(link)}
+        for n in root.findall(_dx('w:num')):
+            over = {}
+            for o in n.findall(_dx('w:lvlOverride')):
+                so = o.find(_dx('w:startOverride'))
+                if so is not None:
+                    over[int(o.get(_dx('w:ilvl'), 0))] = int(_dx_val(so) or 1)
+            self.nums[n.get(_dx('w:numId'))] = {'abs': _dx_val(n.find(_dx('w:abstractNumId'))), 'over': over}
+
+    @staticmethod
+    def _ind_of(ppr):
+        ind = ppr.find(_dx('w:ind')) if ppr is not None else None
+        if ind is None:
+            return None
+        v = ind.get(_dx('w:left')) or ind.get(_dx('w:start'))
         try:
-            numPr = para._element.find(qn('w:numPr'))
-        except Exception:
-            numPr = None
-        if numPr is not None or 'List' in style:
-            try:
-                ilvl_el = numPr.find(qn('w:ilvl')) if numPr is not None else None
-                indent = int(ilvl_el.get(qn('w:val'), 0)) if ilvl_el is not None else 0
-            except Exception:
-                indent = 0
-            return '  ' * indent + '- ' + text
-        if 'Quote' in style: return '> ' + text
-        if 'Intense Quo' in style: return '> **' + text + '**'
-        if 'Code' in style or 'Preformatted' in style:
-            return _BT*3 + '\\n' + text + '\\n' + _BT*3
-        inline = ''.join(_run_to_md(r) for r in para.runs)
-        return inline if inline.strip() else text
-    except Exception:
-        return ''
+            return int(v) if v is not None else None
+        except ValueError:
+            return None
 
-def _table_docx_to_md(table):
-    try:
-        if not table.rows:
-            return []
-        rows = []
-        for row in table.rows:
-            cells = []
-            seen_ids = set()
-            for cell in row.cells:
-                try:
-                    cid = id(cell._tc)
-                except Exception:
-                    cid = None
-                if cid in seen_ids:
-                    cells.append('')
-                else:
-                    if cid is not None:
-                        seen_ids.add(cid)
-                    try:
-                        ct = ' '.join(p.text.strip() for p in cell.paragraphs
-                                      if p.text.strip()).replace('|', '/')
-                    except Exception:
-                        ct = ''
-                    cells.append(ct)
-            rows.append(cells)
-        if not rows:
-            return []
-        w = max(len(r) for r in rows)
-        rows = [r + [''] * (w - len(r)) for r in rows]
-        out = ['', '| ' + ' | '.join(rows[0]) + ' |',
-                    '| ' + ' | '.join('---' for _ in range(w)) + ' |']
-        for row in rows[1:]:
-            out.append('| ' + ' | '.join(row) + ' |')
-        out.append('')
-        return out
-    except Exception:
-        return []
+    def _indent(self, p, sid, lvl):
+        """Effective left indent in twips: paragraph > numbering level > style chain."""
+        v = self._ind_of(p.find(_dx('w:pPr')))
+        if v is None and lvl:
+            v = lvl.get('ind')
+        if v is None:
+            for st in self._chain(sid):
+                v = self._ind_of(st['pPr'])
+                if v is not None:
+                    break
+        return v
 
-def _get_ordered_body_elements(doc):
-    try:
-        body = doc.element.body
-        for child in body:
-            try:
-                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
-                if tag == 'p':
-                    from docx.text.paragraph import Paragraph
-                    yield 'para', Paragraph(child, doc)
-                elif tag == 'tbl':
-                    from docx.table import Table
-                    yield 'table', Table(child, doc)
-            except Exception:
+    def _lvl(self, num_id, ilvl):
+        num = self.nums.get(num_id)
+        if not num:
+            return None
+        ab = self.abstract.get(num['abs'])
+        if ab and not ab['lvls'] and ab['link']:
+            # numStyleLink → the numbering style's own numId
+            for s in self._chain(ab['link']):
+                np_ = s['pPr'].find(_dx('w:numPr')) if s['pPr'] is not None else None
+                if np_ is not None:
+                    return self._lvl(_dx_val(np_.find(_dx('w:numId'))), ilvl)
+        if not ab:
+            return None
+        lvl = dict(ab['lvls'].get(ilvl) or {'fmt': 'bullet', 'start': 1, 'text': ''})
+        if ilvl in num['over']:
+            lvl['start'] = num['over'][ilvl]
+        return lvl
+
+    def _count(self, num_id, ilvl, lvl):
+        c = self.list_counters.setdefault(num_id, {})
+        for deeper in [k for k in c if k > ilvl]:
+            del c[deeper]
+        c[ilvl] = c.get(ilvl, lvl['start'] - 1) + 1
+        return c
+
+    def _label(self, num_id, ilvl, counters):
+        """Expand lvlText like '%1.%2.' using the current counters."""
+        lvl = self._lvl(num_id, ilvl) or {}
+        def rep(m):
+            k = int(m.group(1)) - 1
+            lk = self._lvl(num_id, k) or {'fmt': 'decimal', 'start': 1}
+            return _dx_num(counters.get(k, lk['start']), lk['fmt'])
+        return re.sub(r'%(\\d)', rep, lvl.get('text', '')).strip()
+
+    def _numpr(self, p, sid):
+        ppr = p.find(_dx('w:pPr'))
+        src = ppr.find(_dx('w:numPr')) if ppr is not None else None
+        if src is None:
+            for s in self._chain(sid):
+                if s['pPr'] is not None and s['pPr'].find(_dx('w:numPr')) is not None:
+                    src = s['pPr'].find(_dx('w:numPr'))
+                    break
+        if src is None:
+            return None
+        num_id = _dx_val(src.find(_dx('w:numId')))
+        if not num_id or num_id == '0':
+            return None
+        ilvl = int(_dx_val(src.find(_dx('w:ilvl'))) or 0)
+        return num_id, ilvl
+
+    # ── notes ────────────────────────────────────────────────
+    def _read_notes(self, kind):
+        root = self._xml(self._rel_part(kind) or 'word/%s.xml' % kind)
+        notes = {}
+        if root is None:
+            return notes
+        for n in root:
+            if n.get(_dx('w:type')) in ('separator', 'continuationSeparator', 'continuationNotice'):
                 continue
-    except Exception:
-        return
+            notes[n.get(_dx('w:id'))] = n
+        return notes
 
-def docx_to_md(file_bytes, filename):
-    if not _DOCX_OK:
-        return "**Error**: python-docx package not installed. Please use the Converter tab to trigger installation."
-    try:
-        doc = Document(io.BytesIO(file_bytes))
-        base_name = _safe_re_sub(r'\\.docx$', '', filename, flags=re.IGNORECASE)
-        md_out = [
-            f'# {base_name}', '',
-            f'> Converted from DOCX  •  {datetime.now().strftime("%Y-%m-%d %H:%M")}', '',
-        ]
-        try:
-            props = doc.core_properties
-            if props.author:
-                md_out.append(f'> Author: {props.author}')
-            if props.created:
-                md_out.append(f'> Created: {props.created.strftime("%Y-%m-%d")}')
-            if props.author or props.created:
-                md_out.append('')
-        except Exception:
-            pass
-        prev_empty = False
-        for kind, el in _get_ordered_body_elements(doc):
-            if kind == 'para':
-                line = _para_to_md(el)
-                if not line:
-                    if not prev_empty:
-                        md_out.append('')
-                        prev_empty = True
+    # ── paragraph classification ─────────────────────────────
+    def _heading_level(self, p, sid):
+        names = self._style_names(sid)
+        for n in names:
+            m = re.match(r'(heading|заголовок|überschrift|titre|título|nagłówek)\\s*(\\d)$', n)
+            if m:
+                return min(int(m.group(2)), 6)
+            if n in ('title', 'назва'):
+                return 1
+        ppr = p.find(_dx('w:pPr'))
+        cands = [ppr] + [s['pPr'] for s in self._chain(sid)]
+        for c in cands:
+            if c is not None and c.find(_dx('w:outlineLvl')) is not None:
+                lv = int(_dx_val(c.find(_dx('w:outlineLvl'))) or 9)
+                return lv + 1 if lv < 6 else None
+        return None
+
+    def _style_has(self, sid, *keys):
+        return any(k in n for n in self._style_names(sid) for k in keys)
+
+    # ── run properties ───────────────────────────────────────
+    def _rprop(self, r, sid, tag):
+        rpr = r.find(_dx('w:rPr'))
+        if rpr is not None:
+            el = rpr.find(_dx(tag))
+            if el is not None:
+                return el
+            rs = rpr.find(_dx('w:rStyle'))
+            for s in self._chain(_dx_val(rs)) if rs is not None else ():
+                if s['rPr'] is not None and s['rPr'].find(_dx(tag)) is not None:
+                    return s['rPr'].find(_dx(tag))
+        for s in self._chain(sid):
+            if s['rPr'] is not None and s['rPr'].find(_dx(tag)) is not None:
+                return s['rPr'].find(_dx(tag))
+        return None
+
+    def _run_fmt(self, r, sid):
+        g = lambda t: _dx_on(self._rprop(r, sid, t))
+        fonts = self._rprop(r, sid, 'w:rFonts')
+        fname = ' '.join(filter(None, [fonts.get(_dx('w:ascii')), fonts.get(_dx('w:hAnsi'))])).lower() \\
+            if fonts is not None else ''
+        rs = r.find(_dx('w:rPr'))
+        rstyle = _dx_val(rs.find(_dx('w:rStyle'))) if rs is not None and rs.find(_dx('w:rStyle')) is not None else None
+        va = _dx_val(self._rprop(r, sid, 'w:vertAlign'))
+        code = any(m in fname for m in _DX_MONO) or \\
+            any(k in n for n in self._style_names(rstyle) for k in ('code', 'html', 'verbatim'))
+        return {
+            'b': bool(g('w:b')), 'i': bool(g('w:i')),
+            's': bool(g('w:strike') or g('w:dstrike')),
+            'code': code, 'sup': va == 'superscript', 'sub': va == 'subscript',
+            'caps': bool(g('w:caps')), 'hidden': bool(g('w:vanish') or g('w:webHidden')),
+        }
+
+    # ── inline content → segments ────────────────────────────
+    def _collect(self, el, sid, ctx, link=None):
+        """Walk inline markup; append segments {t, fmt, link} / {img} / {raw} to ctx['segs']."""
+        for ch in el:
+            ln, ns = _dx_local(ch), _dx_ns(ch)
+            if ns == _DX_NS['m'] and ln in ('oMath', 'oMathPara'):
+                tex = self._omml(ch).strip()
+                if tex:
+                    ctx['segs'].append({'raw': '$' + tex + '$', 'math': True})
+                continue
+            if ns == _DX_NS['mc'] and ln == 'AlternateContent':
+                choice = ch.find(_dx('mc:Choice'))
+                self._collect(choice if choice is not None else ch, sid, ctx, link)
+                continue
+            if ns != _DX_NS['w']:
+                continue
+            if ln == 'r':
+                self._run(ch, sid, ctx, link)
+            elif ln == 'hyperlink':
+                href = None
+                rid = ch.get(_dx('r:id'))
+                if rid and rid in self.rels:
+                    href = self.rels[rid][1]
+                    if ch.get(_dx('w:anchor')):
+                        href += '#' + ch.get(_dx('w:anchor'))
+                elif ch.get(_dx('w:anchor')):
+                    href = ('anchor', ch.get(_dx('w:anchor')))
+                self._collect(ch, sid, ctx, href or link)
+            elif ln == 'fldSimple':
+                instr = (ch.get(_dx('w:instr')) or '').strip()
+                kind = instr.split(' ', 1)[0].upper() if instr else ''
+                if kind in ('PAGEREF', 'PAGE', 'NUMPAGES', 'SECTIONPAGES'):
+                    continue
+                self._collect(ch, sid, ctx, self._field_link(instr) or link)
+            elif ln in ('ins', 'moveTo', 'smartTag', 'customXml', 'dir', 'bdo'):
+                self._collect(ch, sid, ctx, link)
+            elif ln == 'sdt':
+                c = ch.find(_dx('w:sdtContent'))
+                if c is not None:
+                    self._collect(c, sid, ctx, link)
+            # w:del, w:moveFrom, bookmarks, proofErr, comments → skipped
+
+    def _field_link(self, instr):
+        m = re.match(r'\\s*HYPERLINK\\s+(?:\\\\l\\s+)?"([^"]+)"', instr or '')
+        if not m:
+            return None
+        if re.search(r'\\\\l\\s', instr) and not re.search(r'HYPERLINK\\s+"', instr.split('\\\\l')[0] + ' '):
+            return ('anchor', m.group(1))
+        return m.group(1)
+
+    def _in_hidden_field(self):
+        return any(f['phase'] == 'instr' or f['skip'] for f in self.field_stack)
+
+    def _run(self, r, sid, ctx, link):
+        fmt = self._run_fmt(r, sid)
+        for ch in r:
+            ln = _dx_local(ch)
+            if _dx_ns(ch) == _DX_NS['mc'] and ln == 'AlternateContent':
+                choice = ch.find(_dx('mc:Choice'))
+                self._run_children(choice if choice is not None else ch, sid, ctx, link, fmt)
+                continue
+            self._run_child(ch, ln, sid, ctx, link, fmt)
+
+    def _run_children(self, el, sid, ctx, link, fmt):
+        for ch in el:
+            self._run_child(ch, _dx_local(ch), sid, ctx, link, fmt)
+
+    def _run_child(self, ch, ln, sid, ctx, link, fmt):
+        if ln == 'fldChar':
+            t = ch.get(_dx('w:fldCharType'))
+            if t == 'begin':
+                self.field_stack.append({'instr': '', 'phase': 'instr', 'skip': False, 'link': None})
+            elif t == 'separate' and self.field_stack:
+                f = self.field_stack[-1]
+                f['phase'] = 'result'
+                kind = f['instr'].strip().split(' ', 1)[0].upper() if f['instr'].strip() else ''
+                f['skip'] = kind in ('PAGEREF', 'PAGE', 'NUMPAGES', 'SECTIONPAGES')
+                f['link'] = self._field_link(f['instr'])
+            elif t == 'end' and self.field_stack:
+                self.field_stack.pop()
+            return
+        if ln == 'instrText':
+            if self.field_stack and self.field_stack[-1]['phase'] == 'instr':
+                self.field_stack[-1]['instr'] += ch.text or ''
+            return
+        if self._in_hidden_field() or fmt['hidden']:
+            return
+        flink = next((f['link'] for f in reversed(self.field_stack) if f['link']), None)
+        lk = link or flink
+        if ln == 't':
+            txt = ch.text or ''
+            if fmt['caps']:
+                txt = txt.upper()
+            self._push(ctx, txt, fmt, lk)
+        elif ln == 'tab' or ln == 'ptab':
+            self._push(ctx, '\\t', fmt, lk)
+        elif ln in ('br', 'cr'):
+            if ch.get(_dx('w:type')) in ('page', 'column'):
+                return
+            self._push(ctx, '\\n', fmt, lk)
+        elif ln == 'noBreakHyphen':
+            self._push(ctx, '-', fmt, lk)
+        elif ln == 'sym':
+            c = (ch.get(_dx('w:char')) or '').upper()
+            self._push(ctx, _DX_SYM.get(c, chr(int(c, 16)) if c and not c.startswith('F0') else ''), fmt, lk)
+        elif ln in ('drawing', 'pict', 'object'):
+            self._image(ch, ctx, lk)
+        elif ln in ('footnoteReference', 'endnoteReference'):
+            kind = 'footnote' if ln.startswith('foot') else 'endnote'
+            nid = ch.get(_dx('w:id'))
+            key = (kind, nid)
+            if nid in self.notes[kind]:
+                if key not in self.note_num:
+                    self.note_order.append(key)
+                    self.note_num[key] = len(self.note_order)
+                ctx['segs'].append({'raw': '[^%d]' % self.note_num[key]})
+
+    def _push(self, ctx, text, fmt, link):
+        if text:
+            ctx['segs'].append({'t': text, 'fmt': fmt, 'link': link})
+
+    def _image(self, el, ctx, link):
+        # text boxes inside shapes → separate blocks after this paragraph
+        for tb in el.iter(_dx('w:txbxContent')):
+            ctx['textboxes'].append(tb)
+        alt, target = '', None
+        for dp in el.iter(_dx('wp:docPr')):
+            alt = (dp.get('descr') or dp.get('title') or '').strip()
+            break
+        for blip in el.iter(_dx('a:blip')):
+            rid = blip.get(_dx('r:embed')) or blip.get(_dx('r:link'))
+            if rid in self.rels:
+                target = self.rels[rid][1]
+            break
+        if target is None:
+            for im in el.iter(_dx('v:imagedata')):
+                rid = im.get(_dx('r:id'))
+                if rid in self.rels:
+                    target = self.rels[rid][1]
+                    alt = alt or im.get('{urn:schemas-microsoft-com:office:office}title') or ''
+                break
+        if target is None:
+            return
+        self.image_count += 1
+        alt = alt.replace('\\n', ' ').replace('[', '(').replace(']', ')')
+        src = target
+        if self.images == 'embed':
+            src = self._data_uri(target) or target
+        elif not str(target).startswith(('http://', 'https://')):
+            src = 'media/' + _dx_pp.basename(target)
+        ctx['segs'].append({'raw': '![%s](%s)' % (alt, src.replace(' ', '%20'))})
+
+    def _data_uri(self, path):
+        if path not in self.names:
+            return None
+        import base64
+        ext = path.rsplit('.', 1)[-1].lower()
+        mime = {'jpg': 'jpeg', 'jpeg': 'jpeg', 'png': 'png', 'gif': 'gif', 'svg': 'svg+xml',
+                'webp': 'webp', 'bmp': 'bmp'}.get(ext)
+        if not mime:
+            return None
+        return 'data:image/%s;base64,%s' % (mime, base64.b64encode(self.zip.read(path)).decode())
+
+    # ── segments → Markdown ──────────────────────────────────
+    def _render(self, segs, table=False, no_bold=False, code=False):
+        if code:
+            return ''.join(s.get('t', '') for s in segs if 't' in s)
+        nl = '<br>' if table else '  \\n'
+        # 1) merge adjacent text segments with identical formatting + link;
+        #    whitespace-only text joins the previous segment (avoids marker churn)
+        items = []
+        for s in segs:
+            if 'raw' in s:
+                items.append(dict(s))
+                continue
+            f = dict(s['fmt'])
+            if no_bold:
+                f['b'] = False
+            key = (f['b'], f['i'], f['s'], f['code'], f['sup'], f['sub'])
+            prev = items[-1] if items and 't' in items[-1] else None
+            if prev and (prev['key'] == key or not s['t'].strip()) and prev['link'] == s['link']:
+                prev['t'] += s['t']
+            elif prev and not prev['t'].strip() and prev['link'] == s['link']:
+                prev.update({'t': prev['t'] + s['t'], 'key': key, 'f': f})
+            else:
+                items.append({'t': s['t'], 'key': key, 'f': f, 'link': s['link']})
+        # 2) group by link, render emphasis with a marker stack inside each group
+        out, i = [], 0
+        while i < len(items):
+            it = items[i]
+            if 'raw' in it:
+                raw = it['raw']
+                if it.get('math'):
+                    # Word spaces equations visually; the text around them often has no spaces
+                    if out and out[-1] and not out[-1][-1].isspace() and out[-1][-1] not in '([{"\\'«':
+                        raw = ' ' + raw
+                    nxt = items[i + 1] if i + 1 < len(items) else None
+                    if nxt and 't' in nxt and nxt['t'][:1].isalnum():
+                        raw += ' '
+                out.append(raw)
+                i += 1
+                continue
+            j = i
+            while j < len(items) and 't' in items[j] and items[j]['link'] == it['link']:
+                j += 1
+            body = self._emph(items[i:j], table, nl)
+            href = self._href(it['link']) if it['link'] else None
+            if href and body.strip():
+                lead = body[:len(body) - len(body.lstrip())]
+                trail = body[len(body.rstrip()):]
+                label = body.strip()
+                if label in (href, _dx_esc(href, table)) and re.match(r'(https?://|mailto:)', href):
+                    out.append(lead + '<' + href + '>' + trail)
                 else:
-                    md_out.append(line)
-                    prev_empty = False
-            elif kind == 'table':
-                md_out += _table_docx_to_md(el)
-                prev_empty = False
-        return postprocess_text('\\n'.join(md_out))
+                    out.append(lead + '[' + label + '](' + href.replace(' ', '%20').replace(')', '%29') + ')' + trail)
+            else:
+                out.append(body)
+            i = j
+        return ''.join(out).replace('\\t', ' ')
+
+    def _emph(self, items, table, nl):
+        out, stack = [], []
+        order = (('s', '~~'), ('b', '**'), ('i', '*'))
+
+        def close_to(keep):
+            # pop markers until every remaining one is wanted; move trailing spaces outside
+            while stack and (stack[-1] not in keep or any(m not in keep for m in stack)):
+                txt = ''.join(out)
+                stripped = txt.rstrip()          # incl. NBSP and other Unicode spaces
+                ws = txt[len(stripped):]
+                out[:] = [stripped, '\\x00C' + stack.pop() + '\\x00', ws]
+
+        # split at hard line breaks: emphasis is closed and reopened around each break
+        pieces = []
+        for it in items:
+            for n, part in enumerate(it['t'].split('\\n')):
+                if n:
+                    pieces.append(None)
+                if part:
+                    pieces.append({'f': it['f'], 't': part})
+        for it in pieces:
+            if it is None:
+                close_to([])
+                out.append(nl)
+                continue
+            f, t = it['f'], it['t']
+            want = [k for k, _ in order if f[k]]
+            if not t.strip():
+                out.append(t)
+                continue
+            close_to(want)
+            lead = t[:len(t) - len(t.lstrip())]
+            core = t[len(lead):]
+            trail = core[len(core.rstrip()):]
+            core = core[:len(core) - len(trail)] if trail else core
+            out.append(lead)
+            for k, m in order:
+                if f[k] and k not in stack:
+                    stack.append(k)
+                    out.append('\\x00O' + k + '\\x00')
+            piece = _dx_code_span(core) if f['code'] else _dx_esc(core, table)
+            if (f['sup'] or f['sub']) and not f['code']:
+                piece = _dx_script(piece, f['sup'])
+            out.append(piece)
+            out.append(trail)
+        close_to([])
+        return _dx_resolve_marks(''.join(out))
+
+    def _href(self, link):
+        if isinstance(link, tuple):
+            target = self.anchors.get(link[1])
+            return '#' + target if target else None
+        return link
+
+    # ── blocks ───────────────────────────────────────────────
+    def _blocks(self, parent, out, in_table=False):
+        for ch in parent:
+            if _dx_ns(ch) != _DX_NS['w']:
+                if _dx_ns(ch) == _DX_NS['mc'] and _dx_local(ch) == 'AlternateContent':
+                    c = ch.find(_dx('mc:Choice'))
+                    if c is not None:
+                        self._blocks(c, out, in_table)
+                continue
+            ln = _dx_local(ch)
+            if ln == 'p':
+                self._paragraph(ch, out, in_table)
+            elif ln == 'tbl':
+                self._table(ch, out)
+            elif ln == 'sdt':
+                pr = ch.find(_dx('w:sdtPr'))
+                c = ch.find(_dx('w:sdtContent'))
+                if c is not None:
+                    self._blocks(c, out, in_table)
+            elif ln in ('ins', 'moveTo', 'customXml'):
+                self._blocks(ch, out, in_table)
+
+    def _paragraph(self, p, out, in_table):
+        sid = self._pstyle(p)
+        names = self._style_names(sid)
+        ctx = {'segs': [], 'textboxes': []}
+        self._collect(p, sid, ctx)
+        toc = next((re.match(r'(?:toc|зміст)\\s*(\\d)', n) for n in names
+                    if re.match(r'(?:toc|зміст)\\s*\\d', n)), None)
+        if toc:
+            # TOC entry → bullet link to the heading (page numbers are dropped)
+            text = re.sub(r'[\\s.…]*\\d*\\s*$', '', self._render(ctx['segs']).replace('\\t', ' ')).strip()
+            text = re.sub(r'\\s*\\.{3,}\\s*(?=\\]|$)', '', text)
+            if text:
+                out.append({'type': 'li', 'level': int(toc.group(1)) - 1, 'ordered': False, 'n': None,
+                            'text': re.sub(r' {2,}', ' ', text), 'ind': 720 * int(toc.group(1))})
+            return
+        segs = ctx['segs']
+        plain = ''.join(s.get('t', '') for s in segs)
+        has_raw = any('raw' in s for s in segs)
+
+        level = self._heading_level(p, sid)
+        numpr = self._numpr(p, sid)
+        is_code = self._style_has(sid, 'code', 'html preformatted', 'preformatted', 'source', 'listing', 'verbatim')
+        text_segs = [s for s in segs if 't' in s and s['t'].strip()]
+        if not is_code and text_segs and all(s['fmt']['code'] for s in text_segs) and not has_raw \\
+                and level is None and numpr is None:
+            is_code = True
+
+        if not plain.strip() and not has_raw:
+            ppr = p.find(_dx('w:pPr'))
+            bdr = ppr.find(_dx('w:pBdr')) if ppr is not None else None
+            if bdr is not None and bdr.find(_dx('w:bottom')) is not None and not in_table:
+                out.append({'type': 'hr'})
+            self._textboxes(ctx, out, in_table)
+            return
+
+        if level is not None:
+            text = self._render(segs, no_bold=True).replace('  \\n', ' ').strip()
+            if text and numpr is not None:
+                lvl = self._lvl(numpr[0], numpr[1])
+                if lvl and lvl['fmt'] not in ('bullet', 'none'):
+                    label = self._label(numpr[0], numpr[1], self._count(numpr[0], numpr[1], lvl))
+                    if label and not text.startswith(label):
+                        text = _dx_esc(label) + ' ' + text
+            if text:
+                slug = self._register_heading(p, plain)
+                out.append({'type': 'h', 'level': level, 'text': text, 'slug': slug})
+        elif is_code:
+            out.append({'type': 'code', 'text': self._render(segs, code=True).rstrip()})
+        elif numpr is not None:
+            num_id, ilvl = numpr
+            lvl = self._lvl(num_id, ilvl) or {'fmt': 'bullet', 'start': 1}
+            ordered = lvl['fmt'] not in ('bullet', 'none')
+            n = None
+            if ordered:
+                n = self._count(num_id, ilvl, lvl)[ilvl]
+            text = self._render(segs).strip()
+            if lvl['fmt'] == 'none':
+                out.append({'type': 'p', 'text': text})
+            else:
+                ind = self._indent(p, sid, self._lvl(num_id, ilvl))
+                out.append({'type': 'li', 'level': ilvl, 'ordered': ordered, 'n': n, 'text': text,
+                            'num': num_id, 'ind': ind if ind is not None else 720 * (ilvl + 1)})
+        elif self._style_has(sid, 'quote', 'цитата'):
+            out.append({'type': 'quote', 'text': self._render(segs).strip()})
+        elif self._style_has(sid, 'caption', 'назва об'):
+            t = self._render(segs).strip()
+            out.append({'type': 'p', 'text': '*' + t + '*' if not t.startswith('*') else t})
+        else:
+            out.append({'type': 'p', 'text': self._render(segs).strip()})
+        self._textboxes(ctx, out, in_table)
+
+    def _textboxes(self, ctx, out, in_table):
+        for tb in ctx['textboxes']:
+            self._blocks(tb, out, in_table)
+
+    def _register_heading(self, p, plain):
+        base = _dx_slug(plain) or 'section'
+        n = self.slug_count.get(base, 0)
+        self.slug_count[base] = n + 1
+        slug = base if n == 0 else '%s-%d' % (base, n)
+        for bm in p.iter(_dx('w:bookmarkStart')):
+            name = bm.get(_dx('w:name'))
+            if name:
+                self.anchors[name] = slug
+        return slug
+
+    def _prescan_anchors(self, body):
+        """Map heading bookmarks to slugs before rendering, so links resolve forward."""
+        saved = dict(self.slug_count)
+        for p in body.iter(_dx('w:p')):
+            sid = self._pstyle(p)
+            if self._heading_level(p, sid) is None:
+                continue
+            plain = ''.join(t.text or '' for t in p.iter(_dx('w:t')))
+            if plain.strip():
+                self._register_heading(p, plain)
+        self.slug_count = saved
+
+    # ── tables ───────────────────────────────────────────────
+    def _table(self, tbl, out):
+        rows = []
+        for tr in self._direct(tbl, 'tr'):
+            cells = []
+            for cell in self._direct(tr, 'tc'):
+                pr = cell.find(_dx('w:tcPr'))
+                span = int(_dx_val(pr.find(_dx('w:gridSpan'))) or 1) if pr is not None and pr.find(_dx('w:gridSpan')) is not None else 1
+                vm = pr.find(_dx('w:vMerge')) if pr is not None else None
+                cont = vm is not None and (_dx_val(vm) or 'continue') == 'continue'
+                blocks = []
+                if not cont:
+                    self._blocks(cell, blocks, in_table=True)
+                cells.append({'blocks': blocks, 'span': span, 'cont': cont})
+            rows.append(cells)
+        rows = [r for r in rows if r]
+        if not rows:
+            return
+        ncols = max(sum(c['span'] for c in r) for r in rows)
+        complex_ = ncols == 1 or any(
+            b['type'] in ('h', 'li', 'code', 'table', 'quote', 'hr') or
+            (b['type'] == 'p' and b['text'].count('\\n') > 6)
+            for r in rows for c in r for b in c['blocks']) or \\
+            any(sum(1 for b in c['blocks']) > 6 for r in rows for c in r)
+        if complex_:
+            # Layout table / callout box → linearize cell content as normal blocks
+            inner = []
+            for r in rows:
+                for c in r:
+                    inner.extend(c['blocks'])
+            if ncols == 1 and len(rows) == 1 and all(b['type'] in ('p', 'li', 'quote', 'code') for b in inner):
+                out.append({'type': 'callout', 'blocks': inner})
+            else:
+                out.extend(inner)
+            return
+        grid = []
+        for r in rows:
+            line = []
+            for c in r:
+                txt = '' if c['cont'] else self._cell_text(c['blocks'])
+                line.append(txt)
+                line.extend([''] * (c['span'] - 1))
+            line += [''] * (ncols - len(line))
+            grid.append(line)
+        if all(not x.strip() for row in grid for x in row):
+            return
+        out.append({'type': 'table', 'rows': grid})
+
+    def _direct(self, el, name):
+        # children named w:<name>, looking through sdt / customXml wrappers
+        for ch in el:
+            ln = _dx_local(ch)
+            if ln == name:
+                yield ch
+            elif ln in ('sdt', 'sdtContent', 'customXml'):
+                yield from self._direct(ch, name)
+
+    def _cell_text(self, blocks):
+        parts = []
+        for b in blocks:
+            if b['type'] == 'li':
+                parts.append(('%d. ' % b['n'] if b['ordered'] else '• ') + b['text'])
+            elif b['type'] in ('p', 'quote', 'h'):
+                parts.append(b['text'])
+            elif b['type'] == 'code':
+                parts.append(_dx_code_span(b['text'].replace('\\n', ' ')))
+        parts = ['\\\\' + x if re.match(r'^:?-{3,}:?$', x.strip()) else x for x in parts]
+        txt = '<br>'.join(x for x in parts if x)
+        txt = txt.replace('  \\n', '<br>').replace('\\n', ' ')
+        return re.sub(r'(?<!\\\\)\\|', r'\\\\|', txt)
+
+    # ── equations (OMML → LaTeX) ─────────────────────────────
+    def _omml(self, el):
+        ln = _dx_local(el)
+        k = lambda name: el.find(_dx('m:' + name))
+        sub = lambda name: self._omml(k(name)) if k(name) is not None else ''
+        if ln == 't':
+            return ''.join(_DX_TEX.get(c, c) for c in (el.text or '').replace('\\\\', '\\\\backslash '))
+        if ln == 'f':
+            return '\\\\frac{%s}{%s}' % (sub('num'), sub('den'))
+        if ln == 'sSup':
+            return '{%s}^{%s}' % (sub('e'), sub('sup'))
+        if ln == 'sSub':
+            return '{%s}_{%s}' % (sub('e'), sub('sub'))
+        if ln == 'sSubSup':
+            return '{%s}_{%s}^{%s}' % (sub('e'), sub('sub'), sub('sup'))
+        if ln == 'rad':
+            deg = sub('deg')
+            return ('\\\\sqrt[%s]{%s}' % (deg, sub('e'))) if deg.strip() else '\\\\sqrt{%s}' % sub('e')
+        if ln == 'd':
+            pr = k('dPr')
+            beg = _dx_val(pr.find(_dx('m:begChr')), 'm:val') if pr is not None and pr.find(_dx('m:begChr')) is not None else '('
+            end = _dx_val(pr.find(_dx('m:endChr')), 'm:val') if pr is not None and pr.find(_dx('m:endChr')) is not None else ')'
+            inner = ', '.join(self._omml(e) for e in el.findall(_dx('m:e')))
+            return '\\\\left%s %s \\\\right%s' % (beg or '.', inner, end or '.')
+        if ln == 'nary':
+            pr = k('naryPr')
+            chr_ = _dx_val(pr.find(_dx('m:chr')), 'm:val') if pr is not None and pr.find(_dx('m:chr')) is not None else '∫'
+            op = {'∑': '\\\\sum', '∏': '\\\\prod', '∫': '\\\\int', '∬': '\\\\iint', '∮': '\\\\oint', '⋃': '\\\\bigcup', '⋂': '\\\\bigcap'}.get(chr_, chr_)
+            s, p_ = sub('sub'), sub('sup')
+            return op + ('_{%s}' % s if s else '') + ('^{%s}' % p_ if p_ else '') + ' ' + sub('e')
+        if ln == 'func':
+            return '%s %s' % (sub('fName'), sub('e'))
+        if ln == 'bar':
+            return '\\\\overline{%s}' % sub('e')
+        if ln == 'acc':
+            return '\\\\hat{%s}' % sub('e')
+        if ln in ('rPr', 'ctrlPr', 'fPr', 'sSupPr', 'sSubPr', 'radPr', 'dPr', 'naryPr', 'funcPr',
+                  'barPr', 'accPr', 'oMathParaPr', 'degHide') or _dx_ns(el) == _DX_NS['w'] and ln == 'rPr':
+            return ''
+        return ''.join(self._omml(c) for c in el)
+
+    # ── serialization ────────────────────────────────────────
+    def _serialize(self, blocks):
+        out = []
+        prev = None
+        depth_stack = []          # ilvl of each open list level
+        i = 0
+        while i < len(blocks):
+            b = blocks[i]
+            t = b['type']
+            if t != 'li':
+                depth_stack = []
+            if t == 'code':
+                lines = [b['text']]
+                while i + 1 < len(blocks) and blocks[i + 1]['type'] == 'code':
+                    i += 1
+                    lines.append(blocks[i]['text'])
+                body = '\\n'.join(lines)
+                fence = _BT * max(3, max((len(m) for m in re.findall(_BT + '+', body)), default=0) + 1)
+                out += ['', fence, body, fence]
+            elif t == 'h':
+                out += ['', '#' * b['level'] + ' ' + b['text']]
+            elif t == 'li':
+                # nesting follows the visual indentation (ilvl alone misses
+                # "List Bullet 2"-style lists that restart at ilvl 0 with a deeper indent)
+                ind = b['ind']
+                while depth_stack and depth_stack[-1] > ind + 90:
+                    depth_stack.pop()
+                if not depth_stack or ind > depth_stack[-1] + 90:
+                    depth_stack.append(ind)
+                depth = len(depth_stack) - 1
+                marker = '%d.' % b['n'] if b['ordered'] else '-'
+                text = b['text'].replace('  \\n', '  \\n' + '    ' * (depth + 1))
+                pb = blocks[i - 1] if i else None
+                if prev != 'li' or (depth == 0 and pb.get('ordered') != b['ordered']):
+                    out.append('')
+                elif depth == 0 and b['ordered'] and pb.get('ordered') and pb.get('num') != b.get('num') \\
+                        and b['n'] <= pb['n']:
+                    out += ['', '<!-- -->', '']     # a new numbered list starts here
+                out.append('    ' * depth + marker + ' ' + text)
+            elif t == 'quote':
+                out += [''] + ['> ' + l for l in b['text'].split('\\n')]
+            elif t == 'callout':
+                inner = self._serialize(b['blocks']).split('\\n')
+                out += [''] + [('> ' + l).rstrip() if l.strip() else '>' for l in inner]
+            elif t == 'hr':
+                out += ['', '---']
+            elif t == 'table':
+                rows = b['rows']
+                out += ['', '| ' + ' | '.join(rows[0]) + ' |',
+                        '|' + '|'.join(' --- ' for _ in rows[0]) + '|']
+                out += ['| ' + ' | '.join(r) + ' |' for r in rows[1:]]
+            else:  # paragraph
+                if b['text']:
+                    lines = b['text'].split('\\n')
+                    lines[0] = _dx_esc_line_start(lines[0])
+                    lines = [lines[0]] + [_dx_esc_line_start(l) for l in lines[1:]]
+                    out += [''] + ['\\n'.join(lines)]
+            prev = t
+            i += 1
+        text = '\\n'.join(out)
+        text = re.sub(r'\\n{3,}', '\\n\\n', text)
+        return text.strip('\\n')
+
+    def _notes_md(self):
+        if not self.note_order:
+            return ''
+        out = []
+        for kind, nid in self.note_order:
+            blocks = []
+            self._blocks(self.notes[kind][nid], blocks)
+            body = ' '.join(b.get('text', '') for b in blocks if b.get('text')).strip()
+            out.append('[^%d]: %s' % (self.note_num[(kind, nid)], body))
+        return '\\n'.join(out)
+
+    def _core_props(self):
+        root = self._xml('docProps/core.xml')
+        if root is None:
+            return {}
+        t = root.find(_dx('dc:title'))
+        return {'title': (t.text or '').strip() if t is not None else ''}
+
+    def convert(self):
+        root = self._xml(self.doc_path)
+        if root is None:
+            raise ValueError('word/document.xml not found — not a valid DOCX file')
+        body = root.find(_dx('w:body'))
+        self._prescan_anchors(body)
+        self.list_counters, self.field_stack = {}, []
+        blocks = []
+        self._blocks(body, blocks)
+        md = self._serialize(blocks)
+        if not any(b['type'] == 'h' for b in blocks):
+            title = self._core_props().get('title') or re.sub(r'\\.docx$', '', self.filename, flags=re.I)
+            md = '# ' + _dx_esc(title) + '\\n\\n' + md
+        notes = self._notes_md()
+        if notes:
+            md += '\\n\\n' + notes
+        md = '\\n'.join(l.rstrip() if not l.endswith('  ') or not l.strip() else l for l in md.split('\\n'))
+        return md.strip() + '\\n'
+
+
+def docx_to_md(file_bytes, filename, images='placeholder'):
+    """Convert DOCX bytes to Markdown. images: 'placeholder' (media/… links) or 'embed' (data URIs)."""
+    try:
+        return _DocxToMarkdown(bytes(file_bytes), filename, images).convert()
+    except _dx_zip.BadZipFile:
+        return '# DOCX Conversion Error\\n\\n> The file is not a valid DOCX (ZIP) package. Old .doc files must be re-saved as .docx.'
     except Exception as e:
         return f'# DOCX Conversion Error\\n\\n> Error: {str(e)}\\n\\nPlease try again with a different DOCX file.'
 
@@ -2851,7 +3449,9 @@ def _scribe_detect_tables(pages):
 def md_to_html(md):
     try:
         import re as _re
-        lines = md.split('\\n')
+        from html import escape as _esc
+        # Escape every source line first so HTML in the input renders as text
+        lines = [_esc(l, quote=False) for l in md.split('\\n')]
         html = []
         in_code = False
         in_list = False
@@ -2865,8 +3465,10 @@ def md_to_html(md):
                     in_code = True
                 continue
             if in_code:
-                html.append(_re.escape(line))
+                html.append(line)          # already HTML-escaped above
                 continue
+            # re-allow a whitelist of attribute-less inline tags (x<sup>2</sup>, H<sub>2</sub>O, <br>)
+            line = _re.sub(r'&lt;(/?)(sup|sub|br|b|i|strong|em|del|s|u|kbd|mark)\\s*/?&gt;', r'<\\1\\2>', line)
             if not line.strip():
                 if in_list:
                     html.append('</ul>')
@@ -2881,7 +3483,7 @@ def md_to_html(md):
                     html.append('<ul>')
                     in_list = True
                 html.append(f'<li>{line[2:]}</li>')
-            elif line.startswith('> '): html.append(f'<blockquote>{line[2:]}</blockquote>')
+            elif line.startswith('&gt; '): html.append(f'<blockquote>{line[5:]}</blockquote>')  # '> ' after escaping
             else:
                 if in_list:
                     html.append('</ul>')
@@ -2901,6 +3503,10 @@ def md_to_html(md):
 # ═══════════════════════════════════════════════════════════════════════════
 # TEXT CHECKER — функції перевірки якості тексту
 # ═══════════════════════════════════════════════════════════════════════════
+# Every stage skips "protected" regions that are not prose: fenced and inline
+# code, URLs, e-mails, file names / extensions (.md, report.docx), paths,
+# version numbers and Markdown table rows. Rules use word boundaries, and
+# overlapping findings are resolved so "Apply all fixes" never corrupts text.
 
 import re as _re_c
 
@@ -2921,184 +3527,393 @@ def _make_error(pos, end, word, msg, etype, suggestions=None, msg_key=None, msg_
         'sugg_key': sugg_key, 'sugg_args': sugg_args or {}
     }
 
+# ── Protected (non-prose) regions ─────────────────────────────────────────
+_PROTECT_RX = [
+    _BT * 3 + r'[\\s\\S]*?(?:' + _BT * 3 + r'|\\Z)',          # fenced code blocks
+    r'~~~[\\s\\S]*?(?:~~~|\\Z)',
+    _BT + '[^' + _BT + r'\\n]+' + _BT,                  # inline code
+    r'\\b(?:https?|ftp)://[^\\s<>()\\[\\]]+',             # URLs
+    r'\\bwww\\.[^\\s<>()\\[\\]]+',
+    r'\\b[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+',                # e-mails
+    r'(?<![\\w.])\\.[A-Za-z0-9]{1,8}\\b',                # bare extensions: .md, .docx, .NET
+    r'\\b[\\w-]+(?:\\.[A-Za-z0-9]{1,8})+\\b',             # file / host names: report.md, docxmd.pp.ua
+    r'(?:\\.{1,2}|~)?/[\\w.\\-/]+',                      # unix paths, ../dir
+    r'\\b[A-Za-z]:\\\\[^\\s]*',                           # windows paths
+    r'\\bv?\\d+(?:\\.\\d+){1,3}\\b',                       # versions, numbers 1.2.3, 3.14
+    r'\\d+\\.{2,3}\\d+',                                 # ranges 1..5
+    r'^[ \\t]*\\|.*\\|[ \\t]*$',                          # Markdown table rows
+    r'^(?: {4}|\\t).*$',                               # indented code
+]
+_PROTECT_ONE = _re_c.compile('|'.join('(?:%s)' % p for p in _PROTECT_RX), _re_c.M)
+_SPAN_CACHE = {'text': None, 'spans': []}
+
+def _protected_spans(text):
+    if _SPAN_CACHE['text'] is not text:
+        _SPAN_CACHE['text'] = text
+        _SPAN_CACHE['spans'] = [(m.start(), m.end()) for m in _PROTECT_ONE.finditer(text) if m.end() > m.start()]
+    return _SPAN_CACHE['spans']
+
+def _is_protected(text, start, end=None):
+    end = start + 1 if end is None or end <= start else end
+    return any(s < end and start < e for s, e in _protected_spans(text))
+
+def _cap_like(src, repl):
+    """Keep the source's leading capital: 'В рамках' → 'У межах'."""
+    return repl[:1].upper() + repl[1:] if src[:1].isupper() else repl
+
+# ── Stage 1: repeated words ──────────────────────────────────────────────
 def check_stage_repeats(text):
-    """Знаходить повторення слів поруч."""
+    """Знаходить повторення слів поруч (лише через пробіли, не через розділові знаки)."""
     errors = []
-    words = list(_re_c.finditer(r'\b(\w+)\b', text, _re_c.IGNORECASE))
-    for i in range(1, len(words)):
-        w1, w2 = words[i-1], words[i]
-        if w1.group().lower() == w2.group().lower() and len(w1.group()) > 2:
-            errors.append(_make_error(
-                w2.start(), w2.end(), w2.group(),
-                'Повтор слова \u00ab' + w2.group() + '\u00bb', 'repeat',
-                ['(видалити)'],
-                msg_key='err.msg.repeat', msg_args={'word': w2.group()}
-            ))
+    for m in _re_c.finditer(r'\\b(\\w{3,})\\b([ \\t]+)(\\1)\\b', text, _re_c.IGNORECASE):
+        if m.group(1).isdigit() or _is_protected(text, m.start(), m.end()):
+            continue
+        w2 = m.group(3)
+        errors.append(_make_error(
+            m.start(3), m.end(3), w2,
+            'Повтор слова «' + w2 + '»', 'repeat', ['(видалити)'],
+            msg_key='err.msg.repeat', msg_args={'word': w2}
+        ))
     return errors
 
+# ── Stage 2: spacing ─────────────────────────────────────────────────────
 def check_stage_spaces(text):
-    """Знаходить зайві пробіли."""
+    """Зайві пробіли всередині рядка та пробіл перед розділовим знаком."""
     errors = []
-    for m in _re_c.finditer(r'[ \t]{2,}', text):
+    # 2+ spaces between words; indentation and Markdown hard breaks (trailing "  ") are fine
+    for m in _re_c.finditer(r'(?<=\\S)[ \\t]{2,}(?=\\S)', text):
+        if _is_protected(text, m.start(), m.end()):
+            continue
         errors.append(_make_error(
-            m.start(), m.end(), m.group(),
-            'Зайві пробіли', 'space', [' '],
-            msg_key='err.msg.extraSpaces'
-        ))
-    for m in _re_c.finditer(r'[ \t]+([,\.!?;:])', text):
+            m.start(), m.end(), m.group(), 'Зайві пробіли', 'space', [' '],
+            msg_key='err.msg.extraSpaces'))
+    # space before , . ! ? ; : — but not when the mark starts a token (.md, .5, ...)
+    for m in _re_c.finditer(r'(?<=\\w)[ \\t]+([,.!?;:])(?![\\w.\\\\/])', text):
+        if _is_protected(text, m.start(), m.end()):
+            continue
         errors.append(_make_error(
-            m.start(), m.end(), m.group(),
-            'Пробіл перед знаком пунктуації', 'space',
-            [m.group(1)],
-            msg_key='err.msg.spaceBeforePunct'
-        ))
+            m.start(), m.end(), m.group(), 'Пробіл перед знаком пунктуації', 'space',
+            [m.group(1)], msg_key='err.msg.spaceBeforePunct'))
     return errors
+
+# ── Stage 3: punctuation ─────────────────────────────────────────────────
+_PUNCT_OK = {'...', '…', '?!', '!?', '?!?', '!!', '??', '!!!', '???'}
 
 def check_stage_punct(text):
-    """Знаходить проблеми з пунктуацією."""
+    """Подвійна пунктуація (крім трикрапки, ?!, !!, діапазонів і шляхів)."""
     errors = []
     for m in _re_c.finditer(r'[.!?,;]{2,}', text):
-        if m.group() not in ('...', '\u2026', '!!', '??'):
-            errors.append(_make_error(
-                m.start(), m.end(), m.group(),
-                'Подвійна пунктуація', 'punct', [m.group()[0]],
-                msg_key='err.msg.doublePunct'
-            ))
+        g = m.group()
+        if g in _PUNCT_OK or _is_protected(text, m.start(), m.end()):
+            continue
+        errors.append(_make_error(
+            m.start(), m.end(), g, 'Подвійна пунктуація', 'punct',
+            ['...' if set(g) == {'.'} else g[0]], msg_key='err.msg.doublePunct'))
     return errors
+
+# ── Stage 4: sentence capitalisation ─────────────────────────────────────
+_ABBR = {
+    # English
+    'e.g', 'i.e', 'etc', 'vs', 'cf', 'approx', 'ca', 'no', 'fig', 'figs', 'vol', 'p', 'pp',
+    'mr', 'mrs', 'ms', 'dr', 'prof', 'st', 'jr', 'sr', 'inc', 'ltd', 'co', 'corp', 'dept',
+    'est', 'min', 'max', 'avg', 'al', 'resp', 'incl', 'excl', 'approx',
+    # Ukrainian
+    'т.д', 'т.п', 'т.ч', 'т.зв', 'і.т.д', 'напр', 'див', 'с', 'ст', 'п', 'пп', 'р', 'рр',
+    'м', 'вул', 'просп', 'обл', 'тис', 'млн', 'млрд', 'грн', 'коп', 'проф', 'акад', 'ін',
+    'інш', 'під', 'гл', 'ред', 'вид', 'ч', 'т', 'стор',
+}
 
 def check_stage_dict(text, lang):
-    """Перевірка великої літери на початку речень."""
+    """Речення, що починається з малої літери (без хибних спрацювань після скорочень)."""
     errors = []
-    for m in _re_c.finditer(r'(?:(?<=[.!?]\s))([a-z\u0430-\u044f\u0456\u0457\u0454\u0491])', text):
+    for m in _re_c.finditer(r'([.!?])([ \\t]+|\\n)([a-zа-яіїєґ])', text):
+        mark, letter_pos = m.group(1), m.start(3)
+        if _is_protected(text, m.start(), m.end()):
+            continue
+        before = text[:m.start(1)]
+        tok = _re_c.search(r'([\\w.]+)$', before)
+        word = (tok.group(1) if tok else '').lower().strip('.')
+        if mark == '.':
+            if word in _ABBR or _re_c.fullmatch(r'(?:\\w\\.)*\\w', word) and len(word.replace('.', '')) <= 2:
+                continue                                  # e.g. / т.д. / U.S.
+            if before.endswith('..') or before.endswith('…'):
+                continue                                  # ellipsis inside a sentence
+            if _re_c.search(r'(?:^|\\n)[ \\t]*\\d{1,3}$', before):
+                continue                                  # numbered list marker "1. item"
         errors.append(_make_error(
-            m.start(1), m.end(1), m.group(1),
-            'Речення починається з малої літери', 'capital',
-            [m.group(1).upper()],
-            msg_key='err.msg.lowercaseStart'
-        ))
+            letter_pos, letter_pos + 1, m.group(3),
+            'Речення починається з малої літери', 'capital', [m.group(3).upper()],
+            msg_key='err.msg.lowercaseStart'))
     return errors
+
+# ── Stage 5: spelling ────────────────────────────────────────────────────
+_SPELL = {'checker': None, 'failed': False}
+_CAPS_OK = {'НАТО', 'НАБУ', 'НАЗК', 'ДБР', 'СБУ', 'ЗСУ', 'ООН', 'ЄСПЛ', 'МВФ', 'ВООЗ', 'ВРУ',
+            'НБУ', 'КМУ', 'ДСНС', 'ЄБРР', 'ОБСЄ', 'МКБ', 'ПДВ', 'ФОП', 'ТОВ', 'ПАТ', 'ПрАТ',
+            'АТ', 'КПК', 'ЦПК', 'ККУ', 'ГПУ', 'ОДА', 'ЦВК', 'УРСР', 'СРСР', 'США', 'ЄС', 'РФ'}
+
+# Technical / domain words that general dictionaries lack (prompts are full of them)
+_SPELL_EXTRA = (
+    'markdown json yaml toml html xhtml css scss http https api apis pdf docx xlsx pptx csv tsv '
+    'javascript typescript python pyodide github gitlab bitbucket npm pnpm yarn nginx apache '
+    'frontend backend fullstack devops devsecops kubernetes docker dockerfile postgres postgresql '
+    'mysql sqlite nosql mongodb redis webhook webhooks chatbot chatbots prompt prompts llm llms '
+    'chatgpt claude deepseek gemini openai anthropic mistral llama saas paas iaas url urls uri '
+    'email emails online offline login logout signup username usernames dataset datasets workflow '
+    'workflows timestamp timestamps metadata linter linters refactor refactoring async await '
+    'boolean enum enums utf regex localhost plugin plugins toolchain codebase onboarding roadmap '
+    'roadmaps stakeholder stakeholders middleware microservice microservices serverless runtime '
+    'runtimes subfolder subfolders repo repos changelog readme config configs env dotenv cli gui '
+    'sdk sdks oauth jwt csrf xss cors cdn dns ssl tls vpn ssh sftp ftp osint geolocation '
+    'cybersecurity pentest pentesting fintech edtech healthtech blockchain crypto tokenomics defi '
+    'nft nfts esg kpi kpis okr okrs roi capex opex ebitda lexer lexers parser parsers tokenizer '
+    'tokenizers linting minify minified hotfix hotfixes'
+).split()
+
+_SPELL_EXTRA += 'bulleted docstring docstrings emoji emojis multilevel'.split()
+
+def _spell_variants(w):
+    """Plural, possessive and British spellings of a word (dictionaries list mostly US lemmas)."""
+    v = set()
+    if w.endswith('ies'):
+        v.add(w[:-3] + 'y')
+    if w.endswith('es'):
+        v.add(w[:-2])
+    if w.endswith('s'):
+        v.add(w[:-1])
+    for a, b in (('our', 'or'), ('isation', 'ization'), ('ised', 'ized'), ('ise', 'ize'),
+                 ('ising', 'izing'), ('yse', 'yze'), ('ysed', 'yzed'), ('ysing', 'yzing'),
+                 ('lled', 'led'), ('lling', 'ling'), ('tre', 'ter'), ('ence', 'ense'), ('ogue', 'og')):
+        if a in w:
+            v.add(w.replace(a, b))
+    return {x for x in v if len(x) >= 3}
+
+def _spell_en():
+    if _SPELL['checker'] is None and not _SPELL['failed']:
+        try:
+            from spellchecker import SpellChecker
+            sc = SpellChecker(language='en')
+            sc.word_frequency.load_words(_SPELL_EXTRA)
+            _SPELL['checker'] = sc
+        except Exception:
+            _SPELL['failed'] = True
+    return _SPELL['checker']
 
 def check_stage_spellcheck(text, lang, prior_errors):
-    """Знаходить слова що написані ВЕЛИКИМИ ЛІТЕРАМИ (крім коротких абревіатур)."""
+    """EN: справжня перевірка орфографії (pyspellchecker). UK: слова, набрані CAPS LOCK."""
     errors = []
-    prior_pos = {e['pos'] for e in prior_errors}
-    for m in _re_c.finditer(r'\b[А-ЯІЇЄҐ]{4,}\b', text):
-        if m.start() not in prior_pos:
-            errors.append(_make_error(
-                m.start(), m.end(), m.group(),
-                'Можливо, CAPS LOCK увімкнений', 'spelling',
-                [m.group().capitalize()],
-                msg_key='err.msg.capsLock'
-            ))
+    prior = [(e['pos'], e['end']) for e in (prior_errors or [])]
+    taken = lambda s, e: any(ps < e and s < pe for ps, pe in prior)
+
+    # Ukrainian (and any Cyrillic in mixed text): long all-caps words outside headings
+    for m in _re_c.finditer(r'(?<![\\w-])[А-ЯІЇЄҐ]{6,}(?![\\w-])', text):
+        word = m.group()
+        line_start = text.rfind('\\n', 0, m.start()) + 1
+        line_end = text.find('\\n', m.end())
+        line = text[line_start: line_end if line_end != -1 else len(text)]
+        letters = [c for c in line if c.isalpha()]
+        is_heading = line.lstrip().startswith('#') or (letters and sum(c.isupper() for c in letters) / len(letters) > 0.7)
+        if word in _CAPS_OK or is_heading or taken(m.start(), m.end()) or _is_protected(text, m.start(), m.end()):
+            continue
+        errors.append(_make_error(
+            m.start(), m.end(), word, 'Можливо, CAPS LOCK увімкнений', 'spelling',
+            [word.capitalize()], msg_key='err.msg.capsLock'))
+
+    if lang != 'en':
+        return errors
+    sc = _spell_en()
+    if sc is None:
+        return errors
+    candidates = []
+    for m in _re_c.finditer(r"(?<![\\w'\\-@#$/\\\\])([A-Za-z][a-z]{3,})(?![\\w'\\-@(])", text):
+        w = m.group(1)
+        if _is_protected(text, m.start(), m.end()) or taken(m.start(), m.end()):
+            continue
+        if w[0].isupper():
+            # Title-case: only check it at a sentence start (otherwise likely a proper noun)
+            prev = text[:m.start()].rstrip(' \\t')
+            if prev and prev[-1] not in '.!?\\n:"“(' :
+                continue
+        candidates.append(m)
+    unknown = sc.unknown([m.group(1).lower() for m in candidates])
+    for m in candidates:
+        w = m.group(1)
+        if w.lower() not in unknown:
+            continue
+        variants = _spell_variants(w.lower())
+        if variants and sc.known(variants):
+            continue                       # a plural / British / inflected form of a known word
+        fix = sc.correction(w.lower())
+        # typos rarely change the first letter — a different one usually means an unknown term
+        if not fix or fix == w.lower() or fix[0] != w[0].lower() or "'" in fix:
+            continue
+        errors.append(_make_error(
+            m.start(1), m.end(1), w, 'Можлива орфографічна помилка', 'spelling',
+            [_cap_like(w, fix)], msg_key='err.msg.spelling', msg_args={'word': w}))
     return errors
 
+# ── Stage 6: grammar / calques (Ukrainian) ───────────────────────────────
+# (pattern, replacement, safe_to_auto_apply)
 _UK_GRAMMAR_PAIRS = [
-    (r'взагалі то', 'взагалі-то'),
-    (r'як що', 'якщо'),
-    (r'по відношенню до', 'щодо'),
-    (r'по крайній мірі', 'принаймні'),
-    (r'в рамках', 'у межах'),
-    (r'на даний час', 'наразі'),
-    (r'з метою', 'щоб'),
-    (r'у будь якому', 'у будь-якому'),
-    (r'як найкраще', 'якнайкраще'),
+    (r'взагалі то', 'взагалі-то', True),
+    (r'як що', 'якщо', False),               # often legitimate: «так, як що…» is rare but possible
+    (r'по відношенню до', 'щодо', True),
+    (r'по крайній мірі', 'принаймні', True),
+    (r'в рамках', 'у межах', True),
+    (r'на даний час', 'наразі', True),
+    (r'на даний момент', 'наразі', True),
+    (r'у будь якому', 'у будь-якому', True),
+    (r'як найкраще', 'якнайкраще', True),
+    (r'приймати участь', 'брати участь', True),
+    (r'приймає участь', 'бере участь', True),
+    (r'являється', 'є', False),
+    (r'слідуючий', 'наступний', True),
+    (r'співпадає', 'збігається', True),
+    (r'вірно', 'правильно', False),
 ]
+_UK_GRAMMAR_RX = [(_re_c.compile(r'(?<![\\w-])' + p + r'(?![\\w-])', _re_c.IGNORECASE), s, a)
+                  for p, s, a in _UK_GRAMMAR_PAIRS]
 
 def check_stage_grammar(text, lang):
-    """Граматичні помилки та русизми."""
+    """Граматичні помилки та русизми (лише цілі слова; регістр першої літери зберігається)."""
     errors = []
-    if lang == 'uk':
-        for pattern, suggestion in _UK_GRAMMAR_PAIRS:
-            for m in _re_c.finditer(pattern, text, _re_c.IGNORECASE):
-                errors.append(_make_error(
-                    m.start(), m.end(), m.group(),
-                    'Граматична помилка або русизм \u2192 \u00ab' + suggestion + '\u00bb',
-                    'grammar', [suggestion],
-                    msg_key='err.msg.grammarRu', msg_args={'suggestion': suggestion}
-                ))
+    if lang != 'uk':
+        return errors
+    for rx, suggestion, auto in _UK_GRAMMAR_RX:
+        for m in rx.finditer(text):
+            if _is_protected(text, m.start(), m.end()):
+                continue
+            fix = _cap_like(m.group(), suggestion)
+            err = _make_error(
+                m.start(), m.end(), m.group(),
+                'Граматична помилка або русизм → «' + fix + '»', 'grammar', [fix],
+                msg_key='err.msg.grammarRu', msg_args={'suggestion': fix})
+            err['auto'] = auto     # False → shown and clickable, but skipped by "Apply all fixes"
+            errors.append(err)
     return errors
 
+# ── Stage 7: style / clichés ─────────────────────────────────────────────
 _STYLE_WORDS_UK = [
     'здійснювати', 'проводити заходи', 'забезпечувати', 'реалізовувати',
-    'є наявним', 'в цілому', 'таким чином', 'в свою чергу',
+    'є наявним', 'в цілому', 'таким чином', 'в свою чергу', 'з метою',
 ]
 _STYLE_WORDS_EN = [
-    'utilize', 'leverage', 'synergy', 'paradigm',
-    'going forward', 'in order to',
+    'utilize', 'utilise', 'leverage', 'synergy', 'paradigm',
+    'going forward', 'in order to', 'at this point in time', 'due to the fact that',
 ]
 
 def check_stage_style(text, lang):
-    """Знаходить канцеляризми та кліше."""
+    """Канцеляризми та кліше (лише цілі слова; порада, без автозаміни)."""
     errors = []
     words = _STYLE_WORDS_UK if lang == 'uk' else _STYLE_WORDS_EN
     for w in words:
-        for m in _re_c.finditer(_re_c.escape(w), text, _re_c.IGNORECASE):
+        for m in _re_c.finditer(r'(?<![\\w-])' + _re_c.escape(w) + r'(?![\\w-])', text, _re_c.IGNORECASE):
+            if _is_protected(text, m.start(), m.end()):
+                continue
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
-                'Канцеляризм або кліше: \u00ab' + w + '\u00bb', 'style', ['(спростити)'],
-                msg_key='err.msg.cliche', msg_args={'word': w}
-            ))
+                'Канцеляризм або кліше: «' + w + '»', 'style', ['(спростити)'],
+                msg_key='err.msg.cliche', msg_args={'word': w}))
     return errors
 
+# ── Stage 8: passive voice ───────────────────────────────────────────────
+_EN_IRREGULAR_PP = ('taken|given|written|seen|known|shown|chosen|driven|broken|spoken|forgotten|hidden|'
+                    'eaten|beaten|made|done|built|sent|held|found|paid|told|kept|left|brought|thought|'
+                    'bought|caught|taught|put|set|cut|read|led|won|lost|run|begun|drawn|grown|thrown')
 def check_stage_passive(text, lang):
-    """Знаходить пасивний стан."""
+    """Пасивний стан (порада)."""
     errors = []
     if lang == 'uk':
-        patterns = [r'\bбуло\s+\w+ено\b', r'\bбула\s+\w+ена\b', r'\bбуло\s+\w+ано\b']
+        patterns = [r'\\b(?:було|була|був|були)\\s+\\w+(?:ено|ано|ена|ана|ений|аний|ені|ані)\\b']
     else:
-        patterns = [r'\bwas\s+\w+ed\b', r'\bwere\s+\w+ed\b', r'\bbeing\s+\w+ed\b']
+        patterns = [r'\\b(?:was|were|is|are|been|being|be)\\s+(?:\\w+ly\\s+)?(?:\\w+ed|' + _EN_IRREGULAR_PP + r')\\b']
     for pat in patterns:
         for m in _re_c.finditer(pat, text, _re_c.IGNORECASE):
+            if _is_protected(text, m.start(), m.end()):
+                continue
             errors.append(_make_error(
                 m.start(), m.end(), m.group(),
                 'Пасивний стан — розгляньте активний', 'passive', ['(активний стан)'],
-                msg_key='err.msg.passive'
-            ))
+                msg_key='err.msg.passive'))
     return errors
 
+# ── Stage 9: prompt structure ────────────────────────────────────────────
+_RX_ROLE = _re_c.compile(
+    r'\\b(?:you are|act as|acting as|as an? (?:expert|senior|experienced|professional)|your role|role:|persona)\\b'
+    r'|(?<![\\w-])(?:ти|ви)\\s*(?:—|-|–|є|виступаєш|виступаєте|працюєш)'
+    r'|(?<![\\w-])(?:виступай|виступайте|уяви, що ти|роль|як експерт)',
+    _re_c.IGNORECASE)
+_RX_TASK = _re_c.compile(
+    r'\\b(?:task|goal|objective|analy[sz]e|analysis|write|create|generate|provide|prepare|conduct|gather|'
+    r'collect|explain|describe|summari[sz]e|compare|evaluate|assess|identify|list|draft|review|design|'
+    r'build|develop|plan|translate|calculate|forecast|investigate|research|find|propose|recommend)\\b'
+    r'|(?<![\\w-])(?:завдання|мета|потрібно|необхідно|зроби|зробіть|проаналізуй|проаналізуйте|підготуй|'
+    r'підготуйте|напиши|напишіть|створи|створіть|опиши|опишіть|поясни|поясніть|порівняй|порівняйте|оціни|'
+    r'оцініть|розроби|розробіть|знайди|знайдіть|склади|складіть|надай|надайте|визнач|визначте|переклади|'
+    r'перекладіть|зберіть|збери|спрогнозуй|запропонуй|запропонуйте|дослідіть|досліди)',
+    _re_c.IGNORECASE)
+_RX_OUTPUT = _re_c.compile(
+    r'\\b(?:output|format|response|report|table|list|summary|json|csv|markdown|bullet|sections?|words?)\\b'
+    r'|\\.(?:md|docx|pdf|xlsx|pptx|json|csv|html)\\b'
+    r'|(?<![\\w-])(?:результат|формат|відповід|звіт|таблиц|список|перелік|резюме|розділ)',
+    _re_c.IGNORECASE)
+
 def check_stage_structure(text, lang):
-    """Перевіряє структуру промту."""
+    """Структура промту: роль, завдання, очікуваний результат (порада)."""
     errors = []
     if len(text) < 100:
         return errors
-    has_role   = bool(_re_c.search(r'role|ти|you are|act as|ролі|роль', text, _re_c.IGNORECASE))
-    has_task   = bool(_re_c.search(r'task|завдання|мета|потрібно|необхідно|зроби|create|generate|write|analyze', text, _re_c.IGNORECASE))
-    has_output = bool(_re_c.search(r'output|format|результат|формат|відповідь|response', text, _re_c.IGNORECASE))
-    if not has_role:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a\u2026" або "Ти \u2014 ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
-    if not has_task:
+    if not _RX_ROLE.search(text):
+        errors.append(_make_error(0, 0, '', 'Відсутній опис ролі або контексту', 'structure', ['Додайте: "You are a…" або "Ти — ..."'], msg_key='err.msg.noRole', sugg_key='err.sugg.noRole'))
+    if not _RX_TASK.search(text):
         errors.append(_make_error(0, 0, '', 'Відсутнє чітке завдання', 'structure', ['Додайте конкретний опис задачі'], msg_key='err.msg.noTask', sugg_key='err.sugg.noTask'))
-    if not has_output and len(text) > 200:
-        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі\u2026"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
+    if not _RX_OUTPUT.search(text) and len(text) > 200:
+        errors.append(_make_error(0, 0, '', 'Відсутній опис очікуваного результату', 'structure', ['Додайте: "Відповідь у форматі…"'], msg_key='err.msg.noOutput', sugg_key='err.sugg.noOutput'))
     return errors
 
+# ── Merge & apply ────────────────────────────────────────────────────────
+_TYPE_PRIORITY = {'repeat': 0, 'punct': 1, 'space': 2, 'capital': 3, 'spelling': 4,
+                  'grammar': 5, 'style': 6, 'passive': 7, 'structure': 8}
+
 def check_merge(errors):
-    """Злиття та дедублікація помилок."""
-    seen = set()
-    merged = []
-    for e in errors:
+    """Дедублікація та розв'язання перекриттів (один діапазон — одна помилка)."""
+    seen, merged, kept = set(), [], []
+    ordered = sorted(errors, key=lambda e: (_TYPE_PRIORITY.get(e['type'], 9), e['pos'], -(e['end'] - e['pos'])))
+    for e in ordered:
         key = (e['pos'], e['end'], e['type'])
-        if key not in seen:
-            seen.add(key)
-            merged.append(e)
-    return sorted(merged, key=lambda x: x['pos'])
+        if key in seen:
+            continue
+        seen.add(key)
+        if e['end'] > e['pos'] and any(s < e['end'] and e['pos'] < en for s, en in kept):
+            continue                       # overlaps a higher-priority finding
+        if e['end'] > e['pos']:
+            kept.append((e['pos'], e['end']))
+        merged.append(e)
+    return sorted(merged, key=lambda x: (x['pos'], x['end']))
+
+_ADVISORY = {'(видалити)', '(активний стан)', '(спростити)'}
 
 def apply_all_fixes(text, errors):
-    """Застосовує першу пропозицію для кожної помилки (з кінця до початку)."""
+    """Застосовує першу пропозицію для кожної помилки (з кінця до початку, без перекриттів)."""
     sorted_errors = sorted(
         [e for e in errors if e.get('suggestions') and e['pos'] != e['end']],
-        key=lambda x: x['pos'], reverse=True
+        key=lambda x: (x['pos'], x['end']), reverse=True
     )
-    skip = {'(видалити)', '(активний стан)', '(спростити)'}
+    applied_from = len(text) + 1          # start of the leftmost range already changed
     for e in sorted_errors:
+        start, end = e['pos'], e['end']
+        if end > applied_from or e.get('auto') is False:
+            continue                       # overlapping range or context-dependent fix
         sugg = e['suggestions'][0]
-        if sugg and sugg not in skip:
-            text = text[:e['pos']] + sugg + text[e['end']:]
-        elif sugg == '(видалити)':
-            start = e['pos']
-            end   = e['end']
-            if start > 0 and text[start-1] == ' ':
+        if sugg == '(видалити)':
+            while start > 0 and text[start - 1] in ' \\t':   # the whole whitespace run before the word
                 start -= 1
             text = text[:start] + text[end:]
+        elif sugg and sugg not in _ADVISORY:
+            text = text[:start] + sugg + text[end:]
+        else:
+            continue
+        applied_from = start
     return text
+
 `;

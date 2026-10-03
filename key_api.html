@@ -241,7 +241,7 @@ document.getElementById('testBtn').addEventListener('click', async () => {
 
       const data = await response.json().catch(() => ({})); 
       
-      output += `✅ ${ep.name}: ${response.status} ${response.statusText}\n`;
+      output += `${response.ok ? '✅' : '❌'} ${ep.name}: ${response.status} ${response.statusText}\n`;
       output += `Response: ${JSON.stringify(data, null, 2).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}\n\n`;
     } catch (err) {
       output += `❌ ${ep.name}: Network Error.\nError: ${err.message}\n\n`;

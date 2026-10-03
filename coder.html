@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔐 Secure API Key Encryptor — Embossed Metal UI</title>
+<title>🔐 API Key Obfuscator — Embossed Metal UI</title>
 <style>
   /* ============ ТЕМИ (CSS Variables) ============ */
   :root {
@@ -396,8 +396,8 @@
 
   <!-- ЗАГОЛОВОК -->
   <header class="header">
-    <h1>🔐 Secure API Key Encryptor</h1>
-    <p>Захистіть свої API-ключі шифруванням військового рівня для клієнтських застосунків</p>
+    <h1>🔐 API Key Obfuscator</h1>
+    <p>XOR + Base64 обфускація рядків. Це <strong>не шифрування</strong>: код у браузері не може захистити API-ключ — секретний ключ теж потрапляє в клієнт. Справжні ключі тримайте на сервері (проксі).</p>
   </header>
 
   <!-- ПЕРЕМИКАЧ ТЕМ -->
@@ -453,11 +453,12 @@ function xorEncrypt(text, key) {
       text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
     );
   }
-  return btoa(result); // Base64 для безпечного зберігання
+  // UTF-8-safe Base64 (працює і з не-латинськими символами)
+  return btoa(unescape(encodeURIComponent(result)));
 }
 
 function xorDecrypt(encoded, key) {
-  const text = atob(encoded);
+  const text = decodeURIComponent(escape(atob(encoded)));
   let result = '';
   for (let i = 0; i < text.length; i++) {
     result += String.fromCharCode(
@@ -477,8 +478,8 @@ function xorDecrypt(encoded, key) {
     <div class="features-grid">
       <article class="feature-card">
         <span class="feature-icon">🔒</span>
-        <h3>XOR-шифрування</h3>
-        <p>Побітове XOR-шифрування військового рівня.</p>
+        <h3>XOR-обфускація</h3>
+        <p>Приховує ключ від випадкового погляду, але не від зловмисника: XOR із ключем у тому ж коді легко зворотний.</p>
       </article>
       <article class="feature-card">
         <span class="feature-icon">📱</span>
@@ -492,8 +493,8 @@ function xorDecrypt(encoded, key) {
       </article>
       <article class="feature-card">
         <span class="feature-icon">🛡️</span>
-        <h3>Безпечно</h3>
-        <p>Base64-кодування для безпечного зберігання.</p>
+        <h3>Обмеження</h3>
+        <p>Base64 — це кодування, а не захист. Для секретів використовуйте серверний проксі.</p>
       </article>
     </div>
   </section>
